@@ -19,15 +19,11 @@ export default function Home() {
           {/* left */}
           <div className="w-full md:w-1/2 h-1/2 md:h-full flex flex-col justify-center">
             <h2 className="mx-auto text-4xl w-[90%] md:w-[75%] mb-5 md:mb-8">
-              Software Nutricional para la gestión de pacientes, 
-              creación de fichas clínicas e informes antropométricos
+              Nutricionista Virtual 
             </h2>
             <div className="flex mx-auto w-[90%] md:w-[75%]">
-              <Link href='/registro' className="w-[200px] flex bg-green-600 py-2 rounded me-3 text-white btn-hover">
-                <p className="mx-auto">Registro</p>
-              </Link>
-              <Link href='/inicio-sesion' className="w-[200px] flex bg-green-600 py-2 rounded text-white btn-hover">
-                <p className="mx-auto">Inicio de Sesión</p>
+              <Link href='/consulta/informacion-personal' className="w-[200px] flex bg-green-600 py-2 rounded text-white btn-hover">
+                <p className="mx-auto">Iniciar consulta</p>
               </Link>
             </div>
           </div>

@@ -3,7 +3,6 @@ export * from './components/navbar-profesional';
 export * from './components/navbar-home';
 export * from './components/cont-profesional'
 export * from './components/cont-home';
-export * from './components/cont-general'
 export * from './components/title-sec'
 export * from './components/title-sub-sec'
 export * from './components/body-sub-sec'

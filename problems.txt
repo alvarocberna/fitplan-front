@@ -1,8 +1,8 @@
 PROBLEMAS POR RESOLVER:
 
-1-añadir mensaje de error al crear usuarios con correo repetido
-2-al guardar una consulta nueva, la fecha se guarda mal (un dia menos)
+1 - Añadir rutas protegidas
+2 - Ver temas de seguridad que puedan faltar
+3 - Hacer pruebas unitarias
+4 - Hacer pruebas de seguridad y Análisis de código
+5-al guardar una consulta nueva, la fecha se guarda mal (un dia menos)
   Solución: puede que sea por la zona horaria, revisar
-5-Mejorar gráficos, el de resumen debe seguir la misma lógica que los esoecíficos, y
-  el grafico general y los de composición deberían poder modificarse para ver + de una consulta
-6-Añadir rutas protegidas o privadas

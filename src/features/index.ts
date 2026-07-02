@@ -1,34 +1,15 @@
 
-//usuario - componentes paciente
-export * from './usuario/components/paciente/anamnesis';
-export * from './usuario/components/paciente/ficha-clinica';
-export * from './usuario/components/paciente/form-nuevo-paciente';
-export * from './usuario/components/paciente/mediciones';
-export * from './usuario/components/paciente/planificacion';
-export * from './usuario/components/paciente/requerimientos';
-export * from './usuario/components/profesional/form-nuevo-profesional';
-export * from "./usuario/api/usuario.service";
-export * from "./usuario/types/usuario";
-
 //consulta
-export * from "./consulta/api/consulta.service";
-export * from "./consulta/types/consulta";
-export * from "./consulta/dtos/create-consulta.dto";
-export * from "./consulta/dtos/update-consulta.dto";
-export * from "./consulta/entities/consulta.entities";
+export * from './consulta/components/chat-anamnesis';
+export * from './consulta/components/form-mediciones';
+export * from './consulta/components/form-user-info'
+export * from './consulta/components/generar-plan-nutricional'
+export * from "./consulta/services/consulta.service";
+export * from "./consulta/interfaces/mediciones.interface";
+export * from "./consulta/dtos/consulta-completa.dto";
+export * from "./consulta/dtos/anamnesis-chat.dto";
+export * from "./consulta/dtos/plan-nutricional.dto";
+export * from "./consulta/context/consulta.context";
 
-//inicio sesion
-export * from "./auth/components/form-inicio-sesion";
-
-//types
-export * from './usuario/types/forms';
-export * from './usuario/types/usuario';
-
-//graph
-export * from './consulta/graficos/resumen.graph';
-export * from './consulta/graficos/comp-corp-kg.graph';
-export * from './consulta/graficos/comp-corp-porc.graph';
-export * from './consulta/graficos/perimetros.graph';
-export * from './consulta/graficos/pliegues.graph';
-export * from './consulta/graficos/resumen-ficha.graph';
-export * from './consulta/graficos/test.graph';
+//usuario
+export * from './consulta/interfaces/info-user.interface';

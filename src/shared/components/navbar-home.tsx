@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 //fontawesomwe
 // import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import { faCalendarDays, faClipboard } from '@fortawesome/free-solid-svg-icons'
+import { faUsers } from '@fortawesome/free-solid-svg-icons'
 
 
 export function NavbarHome() {
@@ -13,8 +13,7 @@ export function NavbarHome() {
 
   // categorías del menú
   const navInfo = [
-    { nombre: "Inicio de Sesión", ruta: "/inicio-sesion", icon: faCalendarDays },
-    { nombre: "Registro", ruta: "/registro", icon: faClipboard },
+    { nombre: "Pacientes", ruta: "/pacientes", icon: faUsers },
   ];
 
   // list item
