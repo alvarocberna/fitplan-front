@@ -15,24 +15,30 @@ export interface PlanNutricionalDto {
         lipido: number
     }
     tiempos_de_comida: {
-        tiempo: string // desayuno | almuerzo | once | cena | colacion
-        hora: string | null //ej 10am
-        calorias: number 
-        proteina: number 
-        carbohidrato: number 
-        lipido: number
-        cereales: string | null 
-        verdura_libre_consumo: string | null
-        verdura_consumo_general: string | null 
-        fruta: string | null
-        proteina_alta_en_grasa: string | null 
-        proteina_baja_en_grasa: string | null
-        lacteo_alto_en_grasa: string | null
-        lacteo_medio_en_grasa: string | null
-        lacteo_bajo_en_grasa: string | null 
-        rico_en_lipidos: string | null
-        aceite: string | null
-        azucar: string | null
+        description: {
+            tiempo: string // desayuno | almuerzo | once | cena | colacion
+            hora: string | null //ej 10am
+        },
+        aporte: {
+            calorias: number 
+            proteina: number 
+            carbohidrato: number 
+            lipido: number
+        },
+        alimentos: {
+            cereales: string | null 
+            verduras_libre_consumo: string | null
+            verduras_consumo_general: string | null 
+            frutas: string | null
+            proteinas_alta_en_grasa: string | null 
+            proteinas_baja_en_grasa: string | null
+            lacteos_alto_en_grasa: string | null
+            lacteos_medio_en_grasa: string | null
+            lacteos_bajo_en_grasa: string | null 
+            ricos_en_lipidos: string | null
+            aceites: string | null
+            azucares: string | null
+        }
         ejemplos: string[] // 3 ejemplos
         comentarios: string[] 
     }[]
