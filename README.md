@@ -1,4 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nutri-Agente (Front)
+
+Aplicación web construida con [Next.js](https://nextjs.org) que sirve como interfaz de un agente de IA experto en nutrición deportiva. El sistema guía al usuario a través de un flujo de consulta (datos personales, anamnesis conversacional y evaluación física), envía la información recopilada a un backend para su procesamiento, y genera un plan nutricional en formato PDF que el usuario puede descargar o recibir por correo tras completar el pago.
+
+## Flujo principal
+
+1. **Inicio** — el usuario ingresa a la landing page y comienza la consulta.
+2. **Información personal** (`/consulta/informacion-personal`) — formulario de datos personales.
+3. **Anamnesis** (`/consulta/anamnesis`) — chat interactivo que completa progresivamente la información clínica/nutricional del usuario contra el backend.
+4. **Evaluación física** (`/consulta/evaluacion-fisica`) — mediciones (peso, talla) que se combinan con los datos anteriores y se envían al backend.
+5. **Plan nutricional** (`/consulta/plan-nutricional`) — visualización y generación del documento PDF con el plan resultante.
+
+El estado de la consulta se administra mediante `ConsultaProvider` (React Context) y persiste en `localStorage` para no perderse entre pasos. Más detalle del flujo y el modelo de datos en [`doc/readme.md`](./doc/readme.md).
+
+## Stack
+
+- [Next.js](https://nextjs.org) 15 (App Router) + React 19 + TypeScript
+- Tailwind CSS 4
+- React Hook Form para formularios
+- `@react-pdf/renderer` para la generación del plan en PDF
+- `@nivo` para gráficos
+- FontAwesome / Heroicons para iconografía
 
 ## Getting Started
 

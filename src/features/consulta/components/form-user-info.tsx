@@ -64,7 +64,7 @@ export function FormUserInfo() {
                 <option value="OTRO">Otro</option>
             </select>
             <label
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
+                className="absolute text-sm text-zinc-700 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2 
                 peer-focus:px-2 peer-focus:text-primary 
                 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 
                 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1"

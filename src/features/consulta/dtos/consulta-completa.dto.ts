@@ -107,7 +107,7 @@ export interface MedicionesDto {
 
 //Consulta Completa
 export interface ConsultaCompletaDto {
-    informacionPersonal: InformacionPersonalDto | null
+    informacion_personal: InformacionPersonalDto | null
     anamnesis: AnamnesisDto | null
     mediciones: MedicionesDto | null
 }

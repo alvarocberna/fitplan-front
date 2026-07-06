@@ -24,7 +24,7 @@ export function GenerarPlanNutricional(){
         setIsGenerando(true);
         try {
             const consultaCompleta: ConsultaCompletaDto = {
-                informacionPersonal,
+                informacion_personal: informacionPersonal,
                 anamnesis,
                 mediciones,
             };

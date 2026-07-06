@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Providers } from "@/shared/providers/toast.provider";;
+import { Providers } from "@/shared/providers/toast.provider";
+import { HomeCont } from "@/shared";
+import { NavbarLanding } from "@/features/home/components/navbar-landing";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,8 +27,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[url('/images/img-background.jpeg')] bg-cover bg-center bg-no-repeat bg-fixed`}
+      >
         <Providers />
+        <div className="fixed top-0 left-0 w-full h-32 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none" />
+        <NavbarLanding />
         {children}
       </body>
     </html>

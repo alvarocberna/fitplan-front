@@ -81,7 +81,7 @@ export function ConsultaProvider({ children }: { children: ReactNode }) {
     //accede al estado completo
     const getConsultaCompleta = (): ConsultaCompletaDto | null => {
         if (!informacionPersonal || !anamnesis || !mediciones) return null
-        return { informacionPersonal, anamnesis, mediciones }
+        return { informacion_personal: informacionPersonal, anamnesis, mediciones }
     }
 
     const reset = () => {

@@ -75,8 +75,8 @@ function FilaResumenTiempo({ tiempo }: { tiempo: TiempoDeComida }) {
     return (
         <View style={styles.tablaFila} wrap={false}>
             <View style={styles.tablaColTiempo}>
-                <Text style={styles.tablaTexto}>{capitalizar(tiempo.tiempo)}</Text>
-                {tiempo.hora && <Text style={[styles.tablaTexto, { color: paleta.textoSuave }]}>{tiempo.hora}</Text>}
+                <Text style={styles.tablaTexto}>{capitalizar(tiempo.description.tiempo)}</Text>
+                {tiempo.description.hora && <Text style={[styles.tablaTexto, { color: paleta.textoSuave }]}>{tiempo.description.hora}</Text>}
             </View>
             <View style={styles.tablaColAlimentos}>
                 {alimentos.map((a, i) => (
@@ -84,8 +84,8 @@ function FilaResumenTiempo({ tiempo }: { tiempo: TiempoDeComida }) {
                 ))}
             </View>
             <View style={styles.tablaColMacros}>
-                <Text style={styles.tablaTexto}>{tiempo.calorias} kcal</Text>
-                <Text style={styles.tablaTexto}>P: {tiempo.proteina}g · C: {tiempo.carbohidrato}g · G: {tiempo.lipido}g</Text>
+                <Text style={styles.tablaTexto}>{tiempo.aporte.calorias} kcal</Text>
+                <Text style={styles.tablaTexto}>P: {tiempo.aporte.proteina}g · C: {tiempo.aporte.carbohidrato}g · G: {tiempo.aporte.lipido}g</Text>
             </View>
         </View>
     )
@@ -160,17 +160,17 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                 const alimentos = obtenerAlimentos(tiempo)
                 return (
                     <Page key={idx} size="A4" style={styles.page} wrap>
-                        <Encabezado plan={plan} subtitulo={capitalizar(tiempo.tiempo)} />
+                        <Encabezado plan={plan} subtitulo={capitalizar(tiempo.description.tiempo)} />
                         <Text style={styles.tituloPagina}>
-                            {capitalizar(tiempo.tiempo)}{tiempo.hora ? ` · ${tiempo.hora}` : ''}
+                            {capitalizar(tiempo.description.tiempo)}{tiempo.description.hora ? ` · ${tiempo.description.hora}` : ''}
                         </Text>
 
                         {/* 1. Aporte nutricional */}
                         <AporteNutricional
-                            calorias={tiempo.calorias}
-                            proteina={tiempo.proteina}
-                            carbohidrato={tiempo.carbohidrato}
-                            lipido={tiempo.lipido}
+                            calorias={tiempo.aporte.calorias}
+                            proteina={tiempo.aporte.proteina}
+                            carbohidrato={tiempo.aporte.carbohidrato}
+                            lipido={tiempo.aporte.lipido}
                         />
 
                         {/* 2. Alimentos que incluye */}

@@ -6,7 +6,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 //toast
 import { toast } from 'react-toastify'
 //shared
-import { TitleSubSec, HeadSubSec, BodySubSec, ContSubSec, InputOutlined} from '@/shared'
+import { TitleSubSec, HeadSubSec, BodySubSec, Card, InputOutlined} from '@/shared'
 //features
 import { useConsulta, FormMedicionesInterface } from '@/features';
 
@@ -33,7 +33,7 @@ export function FormMediciones(){
 
     return(
         <form onSubmit={handleSubmit(onSubmit)}>
-            <ContSubSec>
+            <Card>
                 <HeadSubSec>
                     <div className='w-[90%] m-auto'>
                         <TitleSubSec title="Mediciones"/>
@@ -77,7 +77,7 @@ export function FormMediciones(){
                     </div>
                 </BodySubSec>
                 <div className='h-[40px]'></div>
-            </ContSubSec>
+            </Card>
             <div className='w-1/2 h-[40px] mx-auto mt-5 mb-10'>
                 <button
                     type="submit"
