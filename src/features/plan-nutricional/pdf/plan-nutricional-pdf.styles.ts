@@ -7,8 +7,8 @@ import { StyleSheet } from '@react-pdf/renderer'
 // sin tocar el resto de los estilos.
 // ============================================================
 export const paleta = {
-    primario: '#0c1ccc',       // color de marca (igual a --color-primary en globals.css)
-    primarioSuave: '#e6e9ff',  // fondo suave para bloques destacados (aporte nutricional, etc)
+    primario: '#10b968',       // color de marca (igual a --color-primary en globals.css)
+    primarioSuave: '#beffe0',  // fondo suave para bloques destacados (aporte nutricional, etc)
     texto: '#1f2937',          // gris oscuro para texto principal
     textoSuave: '#6b7280',     // gris medio para textos secundarios / labels
     borde: '#e5e7eb',          // gris claro para líneas divisorias
@@ -36,7 +36,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 20,
         paddingBottom: 8,
         borderBottomWidth: 1,
         borderBottomColor: paleta.primario,
@@ -83,7 +83,7 @@ export const styles = StyleSheet.create({
         borderColor: paleta.borde,
         borderRadius: 6,
         padding: 12,
-        marginBottom: 10,
+        marginBottom: 16,
     },
 
     // -------- Grilla de pares label/valor (informacion personal, prescripcion) --------
@@ -92,31 +92,37 @@ export const styles = StyleSheet.create({
         flexWrap: 'wrap',
         marginBottom: 4,
     },
+    columnaDatos: {
+        flexDirection: 'column',
+        marginBottom: 4,
+    },
     campoDato: {
         width: '50%',
-        marginBottom: 6,
+        marginBottom: 12,
     },
     campoDatoLabel: {
-        fontSize: 8,
-        color: paleta.textoSuave,
-        textTransform: 'uppercase',
-        marginBottom: 2,
+        fontSize: 11,
+        color: paleta.texto,
+        fontFamily: 'Helvetica-Bold', // Helvetica estándar no tiene peso "medium"; bold es el más cercano disponible sin registrar una fuente custom
+        // textTransform: 'uppercase',
+        marginBottom: 4,
     },
     campoDatoValor: {
         fontSize: 11,
-        fontFamily: 'Helvetica-Bold',
+        fontFamily: 'Helvetica',
+        color: paleta.texto,
     },
 
     // -------- Bloque de aporte nutricional (macros destacados) --------
     aporteNutricional: {
         flexDirection: 'row',
-        backgroundColor: paleta.primarioSuave,
-        borderRadius: 6,
-        padding: 10,
         marginBottom: 10,
     },
     aporteItem: {
         flex: 1,
+        backgroundColor: paleta.primarioSuave,
+        paddingVertical: 20,
+        marginRight: 2,
         alignItems: 'center',
     },
     aporteValor: {
@@ -126,55 +132,78 @@ export const styles = StyleSheet.create({
     },
     aporteLabel: {
         fontSize: 7,
-        color: paleta.textoSuave,
+        color: paleta.texto,
         textTransform: 'uppercase',
-        marginTop: 2,
+        marginTop: 4,
     },
 
     // -------- Listas simples (alimentos, ejemplos, comentarios) --------
     listaFila: {
         flexDirection: 'row',
-        marginBottom: 3,
+        marginBottom: 4,
     },
     listaBullet: {
         width: 10,
-        fontSize: 9,
+        fontSize: 10,
         color: paleta.primario,
     },
     listaTexto: {
         flex: 1,
-        fontSize: 9,
+        fontSize: 10,
         lineHeight: 1.4,
     },
     listaTextoLabel: {
         fontFamily: 'Helvetica-Bold',
     },
 
+    // -------- Tabla de alimentos por porciones (dentro de cada tiempo de comida) --------
+    tablaAlimentosFila: {
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderBottomColor: paleta.borde,
+        paddingVertical: 6,
+    },
+    tablaAlimentosFilaHeader: {
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderBottomColor: paleta.borde,
+        color: paleta.texto,
+        paddingBottom: 6,
+        marginBottom: 6,
+        fontSize: 10,
+        fontFamily: 'Helvetica-Bold',
+        // textTransform: 'uppercase',
+    },
+    tablaAlimentosColGrupo: { width: '20%', paddingHorizontal: 4 },
+    tablaAlimentosColPorciones: { width: '40%', paddingHorizontal: 4 },
+    tablaAlimentosColEquivalencia: { width: '40%', paddingHorizontal: 4 },
+
     // -------- Tabla resumen (página 2) --------
     tablaFila: {
         flexDirection: 'row',
         borderBottomWidth: 1,
         borderBottomColor: paleta.borde,
-        paddingVertical: 6,
+        paddingVertical: 10,
+        // marginBottom: 5,
     },
     tablaFilaHeader: {
         flexDirection: 'row',
         backgroundColor: paleta.primario,
         borderRadius: 4,
         paddingVertical: 6,
-        marginBottom: 2,
+        marginBottom: 10,
     },
-    tablaColTiempo: { width: '20%', paddingHorizontal: 4 },
-    tablaColAlimentos: { width: '55%', paddingHorizontal: 4 },
-    tablaColMacros: { width: '25%', paddingHorizontal: 4 },
+    tablaColTiempo: { width: '20%', paddingLeft: 8 },
+    tablaColAlimentos: { width: '50%', paddingHorizontal: 4 },
+    tablaColMacros: { width: '30%', paddingHorizontal: 4 },
     tablaHeaderTexto: {
-        fontSize: 8,
+        fontSize: 10,
         fontFamily: 'Helvetica-Bold',
         color: paleta.blanco,
         textTransform: 'uppercase',
     },
     tablaTexto: {
-        fontSize: 8,
+        fontSize: 10,
         lineHeight: 1.4,
     },
 

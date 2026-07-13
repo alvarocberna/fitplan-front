@@ -84,8 +84,8 @@ function FilaResumenTiempo({ tiempo }: { tiempo: TiempoDeComida }) {
                 ))}
             </View>
             <View style={styles.tablaColMacros}>
-                <Text style={styles.tablaTexto}>{tiempo.aporte.calorias} kcal</Text>
-                <Text style={styles.tablaTexto}>P: {tiempo.aporte.proteina}g · C: {tiempo.aporte.carbohidrato}g · G: {tiempo.aporte.lipido}g</Text>
+                <Text style={styles.tablaTexto}>E: {tiempo.aporte.calorias}kcal        P: {tiempo.aporte.proteina}g </Text>
+                <Text style={styles.tablaTexto}>C: {tiempo.aporte.carbohidrato}g              G: {tiempo.aporte.lipido}g</Text>
             </View>
         </View>
     )
@@ -115,12 +115,13 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                     </View>
                 </View>
 
-                <Text style={styles.tituloSeccion}>Prescripción</Text>
+                <Text style={styles.tituloPagina}>Prescripción</Text>
                 <View style={styles.tarjeta}>
-                    <View style={styles.filaDatos}>
+                    <View style={styles.columnaDatos}>
                         <CampoDato label="Régimen" valor={prescripcion.regimen} />
                         <CampoDato label="Objetivo" valor={prescripcion.objetivo} />
                     </View>
+                    <CampoDato label='Aporte Nutricional' valor=''/>
                     <AporteNutricional
                         calorias={prescripcion.calorias}
                         proteina={prescripcion.proteina}
@@ -137,7 +138,7 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                 (alimentos por tiempo + aporte nutricional, en formato tabla)
                ============================================================ */}
             <Page size="A4" style={styles.page} wrap>
-                <Encabezado plan={plan} subtitulo="Resumen de tiempos de comida" />
+                {/* <Encabezado plan={plan} subtitulo="Resumen de tiempos de comida" /> */}
                 <Text style={styles.tituloPagina}>Resumen de tiempos de comida</Text>
 
                 <View style={styles.tablaFilaHeader}>
@@ -160,7 +161,7 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                 const alimentos = obtenerAlimentos(tiempo)
                 return (
                     <Page key={idx} size="A4" style={styles.page} wrap>
-                        <Encabezado plan={plan} subtitulo={capitalizar(tiempo.description.tiempo)} />
+                        {/* <Encabezado plan={plan} subtitulo={capitalizar(tiempo.description.tiempo)} /> */}
                         <Text style={styles.tituloPagina}>
                             {capitalizar(tiempo.description.tiempo)}{tiempo.description.hora ? ` · ${tiempo.description.hora}` : ''}
                         </Text>
@@ -176,13 +177,16 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                         {/* 2. Alimentos que incluye */}
                         <Text style={styles.tituloSeccion}>Alimentos</Text>
                         <View style={styles.tarjeta}>
+                            <View style={styles.tablaAlimentosFilaHeader}>
+                                <Text style={[styles.tablaAlimentosColGrupo]}>Grupo</Text>
+                                <Text style={[styles.tablaAlimentosColPorciones]}>Porciones</Text>
+                                <Text style={[styles.tablaAlimentosColEquivalencia]}>Equivalencia</Text>
+                            </View>
                             {alimentos.map((a, i) => (
-                                <View key={i} style={styles.listaFila}>
-                                    <Text style={styles.listaBullet}>•</Text>
-                                    <Text style={styles.listaTexto}>
-                                        <Text style={styles.listaTextoLabel}>{a.label}: </Text>
-                                        {a.valor}
-                                    </Text>
+                                <View key={i} style={styles.tablaAlimentosFila}>
+                                    <Text style={[styles.tablaAlimentosColGrupo, styles.tablaTexto]}>{a.label}</Text>
+                                    <Text style={[styles.tablaAlimentosColPorciones, styles.tablaTexto]}>{a.valor}</Text>
+                                    <Text style={[styles.tablaAlimentosColEquivalencia, styles.tablaTexto]}></Text>
                                 </View>
                             ))}
                         </View>
@@ -226,7 +230,7 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                 ÚLTIMA PÁGINA — Suplementos + Recomendaciones deportivas
                ============================================================ */}
             <Page size="A4" style={styles.page} wrap>
-                <Encabezado plan={plan} subtitulo="Suplementos y recomendaciones" />
+                {/* <Encabezado plan={plan} subtitulo="Suplementos y recomendaciones" /> */}
 
                 <Text style={styles.tituloPagina}>Suplementos</Text>
                 {suplementos.map((s, i) => (
@@ -236,7 +240,7 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                     </View>
                 ))}
 
-                <Text style={styles.tituloSeccion}>Recomendaciones deportivas</Text>
+                <Text style={styles.tituloPagina}>Recomendaciones deportivas</Text>
                 {recomendaciones_deportivas.map((r, i) => (
                     <View key={i} style={styles.itemDestacado} wrap={false}>
                         {r.sesion && <Text style={styles.itemDestacadoTitulo}>{r.sesion}</Text>}

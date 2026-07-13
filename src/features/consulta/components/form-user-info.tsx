@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 //react
 import { useForm, SubmitHandler } from "react-hook-form"
 //features
-import { FormInfoUserInterface, useConsulta } from "@/features";
+import { FormInfoUserInterface } from "@/features";
 //shared
-import {InputOutlined} from "../../../shared";
+import {useConsulta, InputOutlined} from '@/shared';
 
 
 export function FormUserInfo() {

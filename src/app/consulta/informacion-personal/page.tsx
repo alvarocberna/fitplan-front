@@ -1,5 +1,5 @@
 //shared
-import {GeneralCont, TitleSec, TitleSubSec, HeadSubSec, Card, BodySubSec} from '@/shared'
+import {GeneralCont, TitleSubSec, HeadSubSec, Card, BodySubSec} from '@/shared'
 //feature
 import {FormUserInfo} from '@/features'
 //local

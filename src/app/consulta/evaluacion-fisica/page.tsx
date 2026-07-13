@@ -1,5 +1,5 @@
 //shared
-import {GeneralCont, TitleSec} from '@/shared'
+import {GeneralCont} from '@/shared'
 //features
 import {FormMediciones} from '@/features';
 //app

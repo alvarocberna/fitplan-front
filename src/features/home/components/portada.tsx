@@ -1,3 +1,4 @@
+//next
 import Link from "next/link";
 
 export function Portada() {
@@ -14,8 +15,8 @@ export function Portada() {
       </p>
       <Link
         href="/consulta/iniciar"
-        className="relative mt-8 px-6 py-3 rounded-lg text-white font-semibold"
-        style={{ backgroundColor: '#4ed591' }}
+        className="relative mt-8 px-6 py-3 rounded-lg text-white font-semibold "
+        style={{ backgroundColor: 'var(--color-primary)' }}
       >
         Iniciar consulta nutricional
       </Link>

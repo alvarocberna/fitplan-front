@@ -3,7 +3,7 @@
 /* definimos variables en root para que estén disponibles de forma global */
 :root {
   --background: #f6f6fd;
-  --color-primary: #00a63e;
+  --color-primary: #10b968;
   --color-secondary: #fe9a00;
 }
 /* re definimos variables según contexto, como modo oscuro */

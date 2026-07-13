@@ -6,9 +6,10 @@ import { useForm, SubmitHandler } from "react-hook-form";
 //toast
 import { toast } from 'react-toastify'
 //shared
-import { TitleSubSec, HeadSubSec, BodySubSec, Card, InputOutlined} from '@/shared'
+import { TitleSubSec, HeadSubSec, BodySubSec, Card, InputOutlined, useConsulta} from '@/shared'
 //features
-import { useConsulta, FormMedicionesInterface } from '@/features';
+import { FormMedicionesInterface } from '@/features';
+
 
 export function FormMediciones(){
     //router

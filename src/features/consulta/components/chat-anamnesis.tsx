@@ -1,8 +1,14 @@
 'use client'
+//react
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
-import { ConsultaService, useConsulta, AnamnesisDto, ChatMessageDto } from '@/features'
+//next
+import { useRouter } from 'next/navigation'
+//features
+import { ConsultaService, AnamnesisDto, ChatMessageDto } from '@/features'
+//shared
+import { useConsulta } from '@/shared';
+
 
 export function ChatAnamnesis() {
     const router = useRouter()

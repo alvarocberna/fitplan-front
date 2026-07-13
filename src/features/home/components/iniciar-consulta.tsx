@@ -1,5 +1,7 @@
+//next
 import Link from "next/link";
-import {Card, BodySubSec} from '@/shared'
+//shared
+import {Card} from '@/shared'
 
 export function IniciarConsulta() {
   return (
@@ -19,8 +21,8 @@ export function IniciarConsulta() {
 
           <Link
             href="/consulta/informacion-personal"
-            className="mt-4 mx-auto px-8 py-3 rounded-lg text-zinc-900 font-semibold"
-            style={{ backgroundColor: '#4ed591' }}
+            className="mt-4 mx-auto px-8 py-3 rounded-lg text-white font-semibold bg-green-500"
+            // style={{ backgroundColor: '#4ed591' }}
           >
             Iniciar
           </Link>

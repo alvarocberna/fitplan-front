@@ -1,5 +1,5 @@
 'use client'
-import { useConsulta } from '@/features'
+import { useConsulta } from '@/shared'
 
 export default function EstadoConsultaPage() {
     const {

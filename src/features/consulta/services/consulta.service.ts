@@ -1,8 +1,10 @@
-
+//shared
 import { apiFetch } from "../../../shared/api/client"
+//features - consulta
 import { ConsultaCompletaDto } from "../dtos/consulta-completa.dto";
 import { InputChatDto, OutputChatDto } from "../dtos/anamnesis-chat.dto";
-import { PlanNutricionalDto } from "../dtos/plan-nutricional.dto";
+//features - plan nutricional
+import { PlanNutricionalDto } from "../../plan-nutricional/dtos/plan-nutricional.dto";
 
 export class ConsultaService{
 

@@ -6,7 +6,10 @@ import { useState } from "react";
 //toast
 import { toast } from 'react-toastify'
 //features
-import { ConsultaService, ConsultaCompletaDto, useConsulta } from '@/features';
+import { ConsultaService, ConsultaCompletaDto } from '@/features';
+//shared
+import { useConsulta } from '@/shared';
+
 
 export function GenerarPlanNutricional(){
     //router

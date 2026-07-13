@@ -1,12 +1,6 @@
 'use client'
 import { createContext, useContext, useState, ReactNode } from 'react'
-import {
-    ConsultaCompletaDto,
-    InformacionPersonalDto,
-    AnamnesisDto,
-    MedicionesDto,
-} from '../dtos/consulta-completa.dto'
-import { PlanNutricionalDto } from '../dtos/plan-nutricional.dto'
+import { ConsultaCompletaDto, InformacionPersonalDto, AnamnesisDto, MedicionesDto, PlanNutricionalDto } from '@/features';
 
 const STORAGE_KEY = 'consulta_context'
 

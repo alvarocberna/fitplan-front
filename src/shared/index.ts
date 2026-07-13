@@ -14,3 +14,4 @@ export * from './components/footer-sub-sec'
 export * from './components/input-outlined'
 export * from './components/input-standar'
 export * from './components/row-sub-sec'
+export * from './context/consulta.context';
