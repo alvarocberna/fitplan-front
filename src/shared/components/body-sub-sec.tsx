@@ -5,7 +5,7 @@ interface Props {
 
 export function BodySubSec({children, width = '100%'}: Props){
     return(
-        <div className={`w-[${width}] flex flex-col justify-center items-center`}>
+        <div className={`flex flex-col justify-center items-center mx-auto`} style={{width}}>
             {children}
         </div>
     )

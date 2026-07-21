@@ -6,7 +6,7 @@ import { GeneralCont, TitleSec, Card } from '@/shared'
 //features
 import { useConsulta } from '@/shared'
 //app
-import '../../globals.css'
+// import '../../globals.css'
 
 // @react-pdf/renderer solo puede correr en el navegador, por eso el botón de descarga
 // se carga con ssr:false en vez de importarlo directo desde '@/features'.
@@ -19,10 +19,9 @@ export default function PlanNutricionalPage(){
     const { planNutricional } = useConsulta();
 
     return(
-        <GeneralCont>
-            {/* <TitleSec title="Plan Nutricional"/> */}
+        <div className='w-full min-h-screen py-24'>
             {planNutricional && (
-                <div className='w-[60%] mx-auto'>
+                <div className="max-w-2xl flex flex-col mx-auto" >
                     <Card>
                         <div className="w-[40%] m-auto mb-4 py-16 flex justify-end">
                             <DescargarPlanPdf plan={planNutricional} />
@@ -30,9 +29,6 @@ export default function PlanNutricionalPage(){
                     </Card>
                 </div>
             )}
-            {/* <pre className="w-[90%] m-auto whitespace-pre-wrap break-words">
-                {JSON.stringify(planNutricional, null, 2)}
-            </pre> */}
-        </GeneralCont>
+        </div>
     )
 }

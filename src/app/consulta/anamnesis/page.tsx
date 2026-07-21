@@ -1,15 +1,15 @@
 'use client'
 //shared
-import { GeneralCont, Card } from '@/shared'
+import { Card } from '@/shared'
 //features
 import { ChatAnamnesis } from '@/features'
 //app
-import '../../globals.css'
+// import '../../globals.css'
 
 export default function AnamnesisPage() {
     return (
-        <GeneralCont>
-            <div className='w-[60%] mx-auto'>
+        <div className='w-full min-h-screen py-24'>
+            <div className="max-w-2xl flex flex-col mx-auto" >
             <Card>
                 <div className='py-8'>
                     <ChatAnamnesis/>
@@ -17,6 +17,6 @@ export default function AnamnesisPage() {
             </Card>
 
             </div>
-        </GeneralCont>
+        </div>
     )
 }

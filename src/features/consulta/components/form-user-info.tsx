@@ -26,7 +26,7 @@ export function FormUserInfo() {
     return (
     <>
     {/* "handleSubmit" valida los inputs antes de invocar "onSubmit" */}
-    <form onSubmit={handleSubmit(onSubmit)} className="w-[90%] m-auto">
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full m-auto">
 
         {/* rut */}
         <InputOutlined label="Rut" name="rut" type="number" register={register} rules={{ required: true, minLength: {value: 7, message: 'Rut demasiado corto'}, maxLength: {value: 8, message: 'Rut demasiado largo'} }}/>

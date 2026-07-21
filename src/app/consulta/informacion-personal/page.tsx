@@ -3,24 +3,22 @@ import {GeneralCont, TitleSubSec, HeadSubSec, Card, BodySubSec} from '@/shared'
 //feature
 import {FormUserInfo} from '@/features'
 //local
-import '../../globals.css'
+// import '../../globals.css'
 
 export default function NuevoPaciente(){
     return(
-        <GeneralCont>
-            <div className='mx-auto w-[60%]'>
-            <Card>
-                <HeadSubSec>
-                    <div className='w-[90%] m-auto'>
+        // <div className="w-full min-h-screen flex flex-col items-center justify-center text-center py-24">
+        <div className='w-full min-h-screen py-24'>
+            <div className="max-w-2xl flex flex-col mx-auto" >
+                <Card widthInner='80%'>
+                    <HeadSubSec>
                         <TitleSubSec title="Información personal"/>
-                    </div>
-                </HeadSubSec>
-                <BodySubSec>
-                    <FormUserInfo/>
-                </BodySubSec>
-                <div className='h-[40px]'></div>
-            </Card>
+                    </HeadSubSec>
+                    <BodySubSec>
+                        <FormUserInfo/>
+                    </BodySubSec>
+                </Card>
             </div>
-        </GeneralCont>
+        </div>
     )
 }

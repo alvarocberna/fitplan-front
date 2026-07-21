@@ -66,7 +66,16 @@ export interface EstiloVidaSaludableDto {
     tabaco: string | null
     nivel_actividad_fisica: string | null
     deporte: string[] | null
-    sesion_entrenamiento: string[] | null
+    // sesion_entrenamiento: string[] | null
+    sesion_deportiva: {
+        descripcion: string | null,
+        disciplina: string | null,
+        duracion: number | null,
+        intensidad: string | null,
+        tipo_evento: string | null, //entrenamiento o competencia
+        dias: string | null,
+        horario: string | null,
+    }[] | null
 }
 
 export interface AnamnesisDto {

@@ -1,4 +1,11 @@
-
+//home
+export * from './home/components/navbar-landing.component';
+export * from './home/components/portada.component';
+export * from './home/components/saber-mas.component';
+export * from './home/components/consulta-descripcion.component';
+export * from './home/components/nuvi-descripcion.component';
+export * from './home/components/plan-personal-descripcion.component';
+export * from './home/components/plan-estandar-descripcion.component';
 //consulta
 export * from './consulta/components/chat-anamnesis';
 export * from './consulta/components/form-mediciones';

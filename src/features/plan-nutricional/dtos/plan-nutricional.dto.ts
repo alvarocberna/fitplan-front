@@ -1,3 +1,11 @@
+export interface SupplementPrescription {
+    supplement: string,
+    requirement: number,
+    dosageIndication: string,
+    intakeIndication: string,
+    effects: string[],
+    considerations: string[],
+}
 
 export interface PlanNutricionalDto {
     informacion_personal: {
@@ -42,10 +50,7 @@ export interface PlanNutricionalDto {
         ejemplos: string[] // 3 ejemplos
         comentarios: string[] 
     }[]
-    suplementos: {
-        suplemento: string | null   //ej creatina
-        recomendacion: string | null //ej: tomar 1v al día junto a alguna comida contundente, preferir creatina monohidratada
-    }[]
+    suplementos: SupplementPrescription[]
     recomendaciones_deportivas: {
         sesion: string | null //sesion de gimnasio
         estrategia: string | null //aportar energía para optimizar las sesiones de entrenamiento

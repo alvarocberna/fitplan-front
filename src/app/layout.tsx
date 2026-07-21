@@ -1,8 +1,11 @@
+//NEXR
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+//SHARED
 import { Providers } from "@/shared/providers/toast.provider";
-import { HomeCont } from "@/shared";
-import { NavbarLanding } from "@/features/home/components/navbar-landing";
+//FEATURES
+import { NavbarLanding } from "@/features/home/components/navbar-landing.component";
+//
 import "./globals.css";
 
 const geistSans = Geist({

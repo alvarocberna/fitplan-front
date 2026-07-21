@@ -2,13 +2,12 @@
 interface Props {
   children: React.ReactNode
   width?: string 
-  minHeight?: string
+  mb?: number
 }
 
-export function HeadSubSec({ children, width = '100%', minHeight = '80px' }: Props){
+export function HeadSubSec({ children, width = '100%', mb = 6 }: Props){
     return(
-        <div className={`w-[${width}] flex justify-between items-center`}
-                style={{minHeight: minHeight}}>
+        <div className={`mb-${mb} flex flex-col justify-between items-center mx-auto`} style={{width}}>
             {children}
         </div>
     )
