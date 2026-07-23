@@ -2,13 +2,13 @@
 //FEATURES
 import { Portada, SaberMas, NuviDescripcion, ConsultaDescripcion, PlanPersonalDescripcion, PlanEstandarDescripcion } from "@/features";
 //CSS
-import './globals.css'
+// import './globals.css'
 
 export default function Home() {
   return (
     <div>
       <Portada />
-      <SaberMas/>
+      {/* <SaberMas/> */}
       <NuviDescripcion/>
       <ConsultaDescripcion/>
       <PlanPersonalDescripcion/>

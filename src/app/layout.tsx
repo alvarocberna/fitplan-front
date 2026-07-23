@@ -31,10 +31,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[url('/images/img-background.jpeg')] bg-cover bg-center bg-no-repeat bg-fixed`}
+        // className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[url('/images/img-portada-2.jpeg')] bg-cover bg-center bg-no-repeat bg-fixed`}
+          className={`${geistSans.variable} ${geistMono.variable} `}
       >
         <Providers />
-        <div className="fixed top-0 left-0 w-full h-32 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none" />
+        {/* <div className="fixed top-0 left-0 w-full h-32 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none" /> */}
         <NavbarLanding />
         {children}
       </body>

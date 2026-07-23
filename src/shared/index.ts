@@ -1,4 +1,4 @@
-
+//COMPONENTS
 export * from './components/navbar-profesional';
 export * from './components/navbar-home';
 export * from './components/general-cont'
@@ -15,3 +15,5 @@ export * from './components/input-outlined'
 export * from './components/input-standar'
 export * from './components/row-sub-sec'
 export * from './context/consulta.context';
+//DATA
+export * from './data/data';

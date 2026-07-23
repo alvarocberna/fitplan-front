@@ -1,88 +1,73 @@
-
+//NEXT
+import Link from "next/link"
+//FONTAWESOME
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faFutbol } from "@fortawesome/free-solid-svg-icons"
+import { faArrowRight, faPills, } from "@fortawesome/free-solid-svg-icons"
+import { faClipboard, faClock } from "@fortawesome/free-regular-svg-icons"
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core"
-import { Font } from "@react-pdf/renderer"
 
-const deportes: { label: string; icon: IconDefinition }[] = [
-  { label: "futbol", icon: faFutbol },
-  { label: "futbol", icon: faFutbol },
-  { label: "futbol", icon: faFutbol },
-  { label: "futbol", icon: faFutbol },
-  { label: "futbol", icon: faFutbol },
-  { label: "futbol", icon: faFutbol },
-  { label: "futbol", icon: faFutbol },
+
+const caracteristicas: { icon: IconDefinition; title: string; description: string }[] = [
+{
+  icon: faClipboard,
+  title: "Planes especializados",
+  description: "Obtén un plan nutricional personalizado según tu objetivo, ya sea bajar de peso, aumentar masa muscular o potenciar tu rendimiento deportivo en deportes como futbol, rugby, hockey, remo, atletismo, maratón, entre otros.",
+},
+{
+  icon: faPills,
+  title: "Suplementación",
+  description: "Prescripción de suplementos respaldados por evidencia científica de alta calidad, priorizando su seguridad y efectividad.",
+},
+{
+  icon: faClock,
+  title: "Estrategias deportivas",
+  description: "Planificación de estrategias nutricionales adaptadas a tus entrenamientos y competencias, incluyendo timing nutricional y reposición de energía e hidratación.",
+},
 ]
 
 export function NuviDescripcion() {
   return (
-    <div id="que-es-nuvi" className="w-full min-h-screen flex flex-col items-center justify-center text-center px-6 mb-20">
-      <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">
-        Nuvi
-      </h2>
-      <h2 className="text-xl md:text-2xl font-bold text-white mb-6">
-        ¿Igual a un nutricionista?
-      </h2>
-
-      {/* Divs */}
-      <div className="w-2xl">
-        {/* div 1 */}
-        <div className="flex flex-col rounded-lg px-4 py-4 border bg-white/30 backdrop-blur-md border-white/40 mb-3">
-          <p className="font-semibold text-lg text-left text-zinc-900">
-            Entrenamiento
+    <div id="que-es-nuvi" className="w-full min-h-screen flex items-center justify-center text-center px-6 mb-20">
+      {/* inner container */}
+      <div className="w-[90%] md:w-[80%] mx-auto flex flex-col md:flex-row justify-between">
+        {/* left */}
+        <div className="w-full md:w-[40%] flex flex-col justify-start">
+          <h2 className="text-left text-2xl md:text-4xl font-bold text-zinc-800 mb-8">
+            Guía tu alimentación con un experto
+          </h2>
+          <p className="font-medium text-md mb-8 text-zinc-800" style={{textAlign: 'justify'}}>
+            Nuvi es un modelo de IA experto en nutrición, el cual ha sido entrenado por nutricionistas con solida experiencia
+            trabajando con deportistas de alto rendimiento. Nuvi cuenta con un modelo inteligente con la capacidad de analizar 
+            datos, razonar y planificar pautas nutricionales específicas para cada disciplina deportiva y objetivo. 
           </p>
-          <p className="font-medium text-md  text-zinc-900" style={{textAlign: 'justify'}}>
-            Nuvi es un modelo de IA experto en nutrición, el cual ha sido entrenado por nutricionistas especialistas
-            en el area deportiva. Nuvi tiene la capacidad de analizar datos y generar prexcripciones siguiendo los
-            mismos criterios que usarían profesionales expertos.
-          </p>
+          <Link
+            href="/consulta/iniciar-consulta"
+            className="self-start px-6 py-2 rounded-lg flex items-center text-white shadow-lg"
+            style={{ backgroundColor: 'var(--color-primary)' }}
+          >
+            Comenzar
+            <FontAwesomeIcon icon={faArrowRight} className="color-white ms-4" style={{width: '18px', height: '18px'}} />
+          </Link>
         </div>
-        {/* div 2 */}
-        <div className="flex flex-col rounded-lg px-4 py-4 border bg-white/30 backdrop-blur-md border-white/40 mb-3">
-          <p className="font-semibold text-lg text-left text-zinc-900">
-            Planificación
-          </p>
-          <p className="font-medium text-md  text-zinc-900" style={{textAlign: 'justify'}}>
-            Capacidad de planificar igual a un nutricionista.
-          </p>
-        </div>
-        {/* div 3 */}
-        <div className="flex flex-col rounded-lg px-4 py-4 border bg-white/30 backdrop-blur-md border-white/40 mb-3">
-          <p className="font-semibold text-lg text-left text-zinc-900">
-            Suplementación
-          </p>
-          <p className="font-medium text-md  text-zinc-900" style={{textAlign: 'justify'}}>
-            Entrenaod en suplementos
-          </p>
-        </div>
-        {/* div 4 */}
-        <div className="flex flex-col rounded-lg px-4 py-4 border bg-white/30 backdrop-blur-md border-white/40 mb-3">
-          <p className="font-semibold text-lg text-left text-zinc-900">
-            Estrategias deportivas
-          </p>
-          <p className="font-medium text-md  text-zinc-900" style={{textAlign: 'justify'}}>
-            Capacidad de analizar y elaborar estrategias deportivas para los entrenamientos y competencias
-          </p>
-        </div>
-        {/* div 5 */}
-        <div className="flex flex-col rounded-lg px-4 py-4 border bg-white/30 backdrop-blur-md border-white/40 mb-3">
-          <p className="font-semibold text-lg text-left text-zinc-900">
-            Aplicable a muchos deportes
-          </p>
-          <p className="font-medium text-md text-zinc-900 mb-4" style={{textAlign: 'justify'}}>
-            Nuvi es capaz de atender varias disciplinas deportivas: insertar imagenes d edeportes aquí abajo
-          </p>
-          <div className="flex flex-wrap justify-between">
-            {deportes.map((deporte) => (
-              <span key={deporte.label} className="flex flex-col w-[15%] px-2 py-2 mb-3 border border-gray-100 rounded-lg">
-                <p className="text-sm text-gray-100 mb-1">{deporte.label}</p>
-                <FontAwesomeIcon icon={deporte.icon} className="text-gray-100 m-auto" style={{ width: '30px', height: '30px' }}/>
-              </span>
-            ))}
-          </div>
+        {/* right */}
+        <div className="w-full md:w-[50%]">
+          {caracteristicas.map((caracteristica, index) => (
+            <div key={index} className="flex items-start mb-6">
+              <div className="w-18 h-18 shrink-0 flex rounded-md me-5" style={{border: '1px solid var(--color-primary)'}}>
+                <FontAwesomeIcon icon={caracteristica.icon} className="m-auto" style={{width: '40px', height: '40px', color: 'var(--color-primary)'}} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-lg text-left text-zinc-800 mb-1">
+                  {caracteristica.title}
+                </p>
+                <p className="font-medium text-sm text-zinc-800" style={{textAlign: 'justify'}}>
+                  {caracteristica.description}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-
     </div>
   )
 }

@@ -14,7 +14,7 @@ const pasos = [
 export function SaberMas() {
   return (
     <div id="saber-mas" className="w-full h-screen flex flex-col items-center justify-center text-center px-6">
-      <h2 className="text-2xl md:text-4xl font-bold text-white mb-8">
+      <h2 className="text-2xl md:text-4xl font-bold text-zinc-800 mb-8">
         Saber más
       </h2>
       <div className="w-2xl flex flex-col gap-3 mb-6">
@@ -22,7 +22,7 @@ export function SaberMas() {
           <Link
             key={index}
             href={item.href}
-            className="flex items-center gap-4 rounded-lg px-4 py-2 border bg-white/30 backdrop-blur-md border-white/40"
+            className="flex items-center gap-4 rounded-lg px-4 py-2 border bg-white/30 backdrop-blur-md border-zinc-200 shadow-lg"
           >
             <div
               className="flex items-center justify-center w-10 h-10 rounded-full shrink-0"
@@ -30,7 +30,7 @@ export function SaberMas() {
             >
               <FontAwesomeIcon icon={item.icon} style={{ color: 'white', width: '18px', height: '18px' }} />
             </div>
-            <p className="font-medium text-md text-left text-zinc-900" style={{textAlign: 'justify'}}>
+            <p className="font-medium text-md text-left text-zinc-800" style={{textAlign: 'justify'}}>
               {item.texto}
             </p>
           </Link>

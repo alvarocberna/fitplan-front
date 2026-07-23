@@ -9,22 +9,23 @@ export function Portada() {
 
       <div className="relative w-full md:w-[80%] lg:w-[60%] xl:w-[40%] flex flex-col items-center">
         {/* face */}
-        <div className="relative w-full flex mb-3">
+        {/* <div className="relative w-full flex mb-3">
           <Image src='/icons/face.png' className="m-auto" alt="face" width={280} height={280} />
-        </div>
+        </div> */}
+        {/* title */}
+        <h2 className="text-5xl text-zinc-900 mb-5">
+          NUVI
+        </h2>
         {/* text 1*/}
-        <p className="relative w-full text-white text-md md:text-md mb-3">
-          Soy Nuvi, nutricionista virtual entrenado por expertos en nutrición deportiva y potenciado por IA.
-        </p>
-        {/* text 2*/}
-        <p className="relative w-full text-white text-md md:text-md mb-5">
-          Inicia una consulta conmigo para obtener un plan nutricional personalizado, o también puedes obtener
-          planes pre elaborados por deporte y objetivo.
+        <p className="relative w-full text-zinc-700 text-md md:text-md mb-6 text-justify">
+          <b>Nutricionista Virtual</b> entrenado por expertos en nutrición deportiva y potenciado por IA.
+          Inicia una consulta para obtener un plan nutricional personalizado o también obtén un
+          plan pre elaborado por deporte y objetivo.
         </p>
         {/* button 1*/}
         <Link
           href="/consulta/iniciar-consulta"
-          className="relative block w-[60%] px-6 py-2 rounded-lg text-white mb-1"
+          className="relative block w-[60%] px-6 py-2 rounded-lg text-white mb-1 shadow-lg"
           style={{ backgroundColor: 'var(--color-primary)' }}
         >
           Iniciar Consulta
@@ -32,11 +33,9 @@ export function Portada() {
         {/* button 2 */}
         <Link
           href="/#saber-mas"
-          className="relative block w-[60%] px-6 py-2 text-white">
+          className="relative block w-[60%] px-6 py-2 text-zinc-600">
           Saber Más
         </Link>
-        
-
       </div>
       
     </div>
