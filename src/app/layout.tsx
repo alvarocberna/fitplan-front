@@ -6,7 +6,7 @@ import { Providers } from "@/shared/providers/toast.provider";
 //FEATURES
 import { NavbarLanding } from "@/features/home/components/navbar-landing.component";
 //
-import "./globals.css";
+// import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +36,7 @@ export default function RootLayout({
       >
         <Providers />
         {/* <div className="fixed top-0 left-0 w-full h-32 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none" /> */}
-        <NavbarLanding />
+        {/* <NavbarLanding /> */}
         {children}
       </body>
     </html>

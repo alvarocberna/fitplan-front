@@ -50,7 +50,14 @@ export interface PlanNutricionalDto {
         ejemplos: string[] // 3 ejemplos
         comentarios: string[] 
     }[]
-    suplementos: SupplementPrescription[]
+    suplementos: {
+        supplement: string,
+        requirement: number,
+        dosageIndication: string,
+        intakeIndication: string,
+        effects: string[],
+        considerations: string[],
+    }[]
     recomendaciones_deportivas: {
         sesion: string | null //sesion de gimnasio
         estrategia: string | null //aportar energía para optimizar las sesiones de entrenamiento
