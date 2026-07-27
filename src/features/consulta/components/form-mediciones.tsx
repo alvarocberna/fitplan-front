@@ -28,8 +28,8 @@ export function FormMediciones(){
         //actualiza el estado de la propiedad mediciones del context
         setMediciones(data);
 
-        //redirecciona a la ruta donde se genera el plan nutricional
-        router.push('/consulta/finalizar');
+        //redirecciona a la ruta donde se arma la orden y se realiza el pago
+        router.push('/consulta/generar-orden');
     }
 
     return(

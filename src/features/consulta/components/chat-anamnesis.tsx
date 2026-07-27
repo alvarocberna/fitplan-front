@@ -10,16 +10,21 @@ import { ConsultaService, AnamnesisDto, ChatMessageDto } from '@/features'
 import { useConsulta } from '@/shared';
 
 
+// mensaje mostrado en el chat: además de role/content (lo que viaja al backend como
+// historial), puede llevar el titleReply devuelto por el backend para ese turno
+type DisplayMessage = ChatMessageDto & { titleReply?: string }
+
 export function ChatAnamnesis() {
     const router = useRouter()
     const { anamnesis, setAnamnesis } = useConsulta()
 
-    const OPENING_MESSAGE: ChatMessageDto = {
+    const OPENING_MESSAGE: DisplayMessage = {
         role: 'assistant',
-        content: '¡¡Ahora vamos a ahondar en tus objetivos, hábutos y alimentación! Primero empieza contandome sobre ti Y cual es tu principal objetivo ¿buscas ganar masa muscular, bajar de peso, mejorar rendimiento en alguna disciplina deportiva o algo por el estilo?'
+        content: '¡Hola! ¿Cómo estás? Soy Nuvi y hoy tendré el gusto de acompañarte como tu nutricionista. Comencemos con lo más importante: ¡tus objetivos! Por favor, cuéntame qué es lo que estás buscando. ¿Quieres ganar músculo? ¿Bajar de peso? ¿Mejorar rendimiento en algún deporte? Sea cual sea tu objetivo, por favor, coméntamelo.',
+        titleReply: 'Definición de objetivos'
     }
 
-    const [messages, setMessages] = useState<ChatMessageDto[]>([OPENING_MESSAGE])
+    const [messages, setMessages] = useState<DisplayMessage[]>([OPENING_MESSAGE])
     const [currentAnamnesis, setCurrentAnamnesis] = useState<AnamnesisDto>(anamnesis ?? {} as AnamnesisDto)
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
@@ -35,17 +40,21 @@ export function ChatAnamnesis() {
         if (!input.trim() || isLoading) return
 
         const userMsg: ChatMessageDto = { role: 'user', content: input.trim() }
-        const updatedMessages: ChatMessageDto[] = [...messages, userMsg]
+        const updatedMessages: DisplayMessage[] = [...messages, userMsg]
         setMessages(updatedMessages)
         setInput('')
         setIsLoading(true)
 
         try {
+            // el backend valida messages contra { role, content } exclusivamente
+            // (forbidNonWhitelisted): se despoja titleReply antes de enviar el historial
+            const historyMessages: ChatMessageDto[] = updatedMessages.map(({ role, content }) => ({ role, content }))
+
             const res = await ConsultaService.enviarTurnoAnamnesis({
-                messages: updatedMessages,
+                messages: historyMessages,
                 anamnesis: currentAnamnesis,
             })
-            setMessages(prev => [...prev, { role: 'assistant', content: res.reply }])
+            setMessages(prev => [...prev, { role: 'assistant', content: res.reply, titleReply: res.titleReply }])
             setCurrentAnamnesis(res.anamnesis)
             setIsComplete(res.isComplete)
         } catch {
@@ -82,6 +91,9 @@ export function ChatAnamnesis() {
                                 ? 'bg-green-600 text-white rounded-br-sm'
                                 : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'
                         }`}>
+                            {msg.role === 'assistant' && msg.titleReply && (
+                                <p className="font-bold mb-1">{msg.titleReply}</p>
+                            )}
                             {msg.content}
                         </div>
                     </div>
