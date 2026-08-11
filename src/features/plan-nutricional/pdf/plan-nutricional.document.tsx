@@ -1,7 +1,7 @@
 import { Document, Page, Text, View, Svg, Polygon, Circle, Path, Rect, Line, G, Defs, LinearGradient, Stop } from '@react-pdf/renderer'
-import { PlanNutricionalDto } from '../dtos/plan-nutricional.dto'
+import { PlanNutricionalDto, SupplementPrescription } from '../dtos/plan-nutricional.dto'
 import { styles, paleta } from './plan-nutricional-pdf.styles'
-import { obtenerAlimentos, capitalizar } from './plan-nutricional-pdf.constants'
+import { obtenerAlimentos, capitalizar, sumarAporteSuplementos } from './plan-nutricional-pdf.constants'
 
 type TiempoDeComida = PlanNutricionalDto['tiempos_de_comida'][number]
 
@@ -429,6 +429,49 @@ function FilaResumenTiempo({ tiempo }: { tiempo: TiempoDeComida }) {
     )
 }
 
+// Fila de la tabla-resumen (página 2): resumen de todos los suplementos, con el mismo
+// formato que FilaResumenTiempo — pero "Tiempo" pasa a ser el título "Suplementos" y
+// el aporte nutricional es la suma de los aportes de todos los suplementos.
+function FilaResumenSuplementos({ suplementos }: { suplementos: SupplementPrescription[] }) {
+    const aporte = sumarAporteSuplementos(suplementos)
+    return (
+        <View style={styles.tablaFila} wrap={false}>
+            <View style={styles.tablaColTiempo}>
+                <View style={styles.tablaColTiempoFila}>
+                    <View style={styles.tablaColTiempoIconoBadge}>
+                        <IconHexagono color={paleta.primario} />
+                    </View>
+                    <Text style={styles.tablaTextoComida}>Suplementos</Text>
+                </View>
+            </View>
+            <View style={styles.tablaColAlimentos}>
+                {suplementos.map((s, i) => (
+                    <View key={i} style={styles.tablaAlimentoFila}>
+                        <Text style={styles.tablaTextoBullet}>•</Text>
+                        <Text style={styles.tablaTexto}>{s.supplement}: {s.requirement}</Text>
+                    </View>
+                ))}
+            </View>
+            <View style={styles.tablaColMacros}>
+                <View style={styles.tablaColMacrosSub}>
+                    <View style={styles.tablaColMacrosLinea} />
+                    <View>
+                        <Text style={styles.tablaTextoMacros}>E: {aporte.calorias} kcal</Text>
+                        <Text style={styles.tablaTextoMacros}>C: {aporte.carbohidrato} g</Text>
+                    </View>
+                </View>
+                <View style={styles.tablaColMacrosSub}>
+                    <View style={styles.tablaColMacrosLinea} />
+                    <View>
+                        <Text style={styles.tablaTextoMacros}>P: {aporte.proteina} g</Text>
+                        <Text style={styles.tablaTextoMacros}>G: {aporte.lipido} g</Text>
+                    </View>
+                </View>
+            </View>
+        </View>
+    )
+}
+
 // ============================================================
 // DOCUMENTO PRINCIPAL
 // ============================================================
@@ -482,28 +525,28 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                         <MacroStat
                             icono={<IconRayo size={22} color={paleta.azulOscuro} />}
                             color={paleta.azulOscuro}
-                            valor={prescripcion.calorias}
+                            valor={Math.round(prescripcion.calorias)}
                             unidad="kcal / día"
                             label="ENERGÍA"
                         />
                         <MacroStat
                             icono={<IconHexagono size={22} color={paleta.primarioOscuro} />}
                             color={paleta.primarioOscuro}
-                            valor={prescripcion.proteina}
+                            valor={Math.round(prescripcion.proteina)}
                             unidad="g / día"
                             label="PROTEÍNA"
                         />
                         <MacroStat
                             icono={<IconTrigo size={22} color={paleta.acentoOscuro} />}
                             color={paleta.acentoOscuro}
-                            valor={prescripcion.carbohidrato}
+                            valor={Math.round(prescripcion.carbohidrato)}
                             unidad="g / día"
                             label="CARBOHIDRATOS"
                         />
                         <MacroStat
                             icono={<IconGota size={22} color={paleta.amarilloOscuro} />}
                             color={paleta.amarilloOscuro}
-                            valor={prescripcion.lipido}
+                            valor={Math.round(prescripcion.lipido)}
                             unidad="g / día"
                             label="GRASAS"
                         />
@@ -537,6 +580,7 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                 {tiempos_de_comida.map((tiempo, idx) => (
                     <FilaResumenTiempo key={idx} tiempo={tiempo} />
                 ))}
+                {suplementos.length > 0 && <FilaResumenSuplementos suplementos={suplementos} />}
 
                 <PiePagina />
             </Page>

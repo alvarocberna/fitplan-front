@@ -6,16 +6,19 @@ export default function EstadoConsultaPage() {
         informacionPersonal,
         anamnesis,
         mediciones,
+        planNutricional,
         reset,
         resetInformacionPersonal,
         resetAnamnesis,
         resetMediciones,
+        resetPlanNutricional,
     } = useConsulta()
 
     const sections = [
         { label: 'informacionPersonal', data: informacionPersonal, onReset: resetInformacionPersonal },
         { label: 'anamnesis', data: anamnesis, onReset: resetAnamnesis },
         { label: 'mediciones', data: mediciones, onReset: resetMediciones },
+        { label: 'planNutricional', data: planNutricional, onReset: resetPlanNutricional },
     ]
 
     return (

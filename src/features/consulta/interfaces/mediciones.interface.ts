@@ -2,6 +2,7 @@
 export interface FormMedicionesInterface{
     "peso": number
     "talla": number
+    "somatotipo": string
     // "talla_sentado": number
     // "envergadura": number
     // "tricep": number

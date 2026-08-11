@@ -6,16 +6,16 @@ import { useForm, SubmitHandler } from "react-hook-form";
 //toast
 import { toast } from 'react-toastify'
 //shared
-import { TitleSubSec, HeadSubSec, BodySubSec, Card, InputOutlined, useConsulta} from '@/shared'
+import { TitleSubSec, InputOutlined, useConsulta} from '@/shared'
 //features
-import { FormMedicionesInterface } from '@/features';
+import { FormMedicionesInterface, SelectorSomatotipo } from '@/features';
 
 
 export function FormMediciones(){
     //router
     const router = useRouter();
     //llamamos al estado de InformacionPersonal y Anamnesis desde el context
-    const { informacionPersonal, anamnesis, setMediciones } = useConsulta();
+    const { informacionPersonal, anamnesis, setMediciones, isHydrated } = useConsulta();
     //hook useForm destructuring
     const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormMedicionesInterface>()
 
@@ -35,13 +35,15 @@ export function FormMediciones(){
     return(
         <form onSubmit={handleSubmit(onSubmit)} className="w-full">
             <div className='m-auto w-full'>
-                <TitleSubSec title="Mediciones básicas"/>
+                <TitleSubSec title="Mediciones básicas" bold={false}/>
                 <div className="grid grid-cols-2 gap-x-2 mb-6">
                     <InputOutlined label="Peso" name="peso" type="number" register={register} rules={{ required: true, valueAsNumber: true }}/>
                     <InputOutlined label="Talla" name="talla" type="number" register={register} rules={{ required: true, valueAsNumber: true }}/>
                     {/* <InputOutlined label="Talla sentado" name="mediciones.talla_sentado" type="number" register={register} rules={{ required: true, valueAsNumber: true }}/> */}
                     {/* <InputOutlined label="Envergadura" name="mediciones.envergadura" type="number" register={register} rules={{ required: true, valueAsNumber: true }}/> */}
                 </div>
+                <TitleSubSec title="Contextura corporal" mb={4} bold={false}/>
+                <SelectorSomatotipo register={register} genero={informacionPersonal?.genero} cargando={!isHydrated}/>
                 {/* <TitleSubSec title="Pliegues"/>
                 <div className="grid grid-cols-2 gap-x-2 mb-6">
                     <InputOutlined label="Tricep" name="mediciones.tricep" type="number" register={register} rules={{ required: true, valueAsNumber: true }}/>

@@ -1,4 +1,4 @@
-import { PlanNutricionalDto } from '../dtos/plan-nutricional.dto'
+import { PlanNutricionalDto, SupplementPrescription } from '../dtos/plan-nutricional.dto'
 
 type TiempoDeComida = PlanNutricionalDto['tiempos_de_comida'][number]
 type AlimentosTiempo = TiempoDeComida['alimentos']
@@ -16,6 +16,7 @@ export const CAMPOS_ALIMENTOS: { clave: keyof AlimentosTiempo; label: string }[]
     { clave: 'lacteos_alto_en_grasa', label: 'Lácteo alto en grasa' },
     { clave: 'lacteos_medio_en_grasa', label: 'Lácteo medio en grasa' },
     { clave: 'lacteos_bajo_en_grasa', label: 'Lácteo bajo en grasa' },
+    { clave: 'lacteos_alto_en_proteina', label: 'Lácteo alto en proteína' },
     { clave: 'ricos_en_lipidos', label: 'Rico en lípidos' },
     { clave: 'aceites', label: 'Aceite' },
     { clave: 'azucares', label: 'Azúcar' },
@@ -26,6 +27,19 @@ export function obtenerAlimentos(tiempo: TiempoDeComida): { label: string; valor
     return CAMPOS_ALIMENTOS
         .filter(({ clave }) => !!tiempo.alimentos[clave])
         .map(({ clave, label }) => ({ label, valor: tiempo.alimentos[clave] as string }))
+}
+
+// Suma el aporte nutricional de todos los suplementos (para la fila resumen de la página 2).
+export function sumarAporteSuplementos(suplementos: SupplementPrescription[]): { calorias: number; proteina: number; carbohidrato: number; lipido: number } {
+    return suplementos.reduce(
+        (total, s) => ({
+            calorias: total.calorias + s.aporte.calorias,
+            proteina: total.proteina + s.aporte.proteina,
+            carbohidrato: total.carbohidrato + s.aporte.carbohidrato,
+            lipido: total.lipido + s.aporte.lipido,
+        }),
+        { calorias: 0, proteina: 0, carbohidrato: 0, lipido: 0 }
+    )
 }
 
 // "desayuno" -> "Desayuno"

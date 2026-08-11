@@ -7,6 +7,7 @@ export interface FormInfoUserInterface {
   apellido_paterno: string
   apellido_materno: string | null
   genero: string
+  deportista: boolean
   correo: string
   // celular: number | null
   fecha_nacimiento: Date

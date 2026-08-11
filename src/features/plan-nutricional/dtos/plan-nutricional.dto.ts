@@ -5,6 +5,12 @@ export interface SupplementPrescription {
     intakeIndication: string,
     effects: string[],
     considerations: string[],
+    aporte: {
+        calorias: number,
+        proteina: number,
+        carbohidrato: number,
+        lipido: number,
+    },
 }
 
 export interface PlanNutricionalDto {
@@ -16,11 +22,30 @@ export interface PlanNutricionalDto {
     }
     prescripcion: {
         regimen: string
-        objetivo: string 
-        calorias: number 
-        proteina: number 
-        carbohidrato: number 
+        objetivo: string
+        calorias: number
+        proteina: number
+        carbohidrato: number
         lipido: number
+    }
+    // Aporte nutricional total del plan: suma de todos los tiempos_de_comida + suplemento de whey
+    // protein (si aplica). NO incluye recomendaciones_deportivas ni otros suplementos (creatina,
+    // cafeina, nitrato, bicarbonato).
+    aporte_plan: {
+        // Porcentaje de adecuación de "aporte_total" en relación a los requerimientos de "prescripcion".
+        adecuacion: {
+            calorias: number
+            proteina: number
+            carbohidrato: number
+            lipido: number
+        }
+        // Mismos valores que "adecuacion", en términos absolutos.
+        aporte_total: {
+            calorias: number
+            proteina: number
+            carbohidrato: number
+            lipido: number
+        }
     }
     tiempos_de_comida: {
         description: {
@@ -42,7 +67,8 @@ export interface PlanNutricionalDto {
             proteinas_baja_en_grasa: string | null
             lacteos_alto_en_grasa: string | null
             lacteos_medio_en_grasa: string | null
-            lacteos_bajo_en_grasa: string | null 
+            lacteos_bajo_en_grasa: string | null
+            lacteos_alto_en_proteina: string | null
             ricos_en_lipidos: string | null
             aceites: string | null
             azucares: string | null
@@ -50,14 +76,7 @@ export interface PlanNutricionalDto {
         ejemplos: string[] // 3 ejemplos
         comentarios: string[] 
     }[]
-    suplementos: {
-        supplement: string,
-        requirement: number,
-        dosageIndication: string,
-        intakeIndication: string,
-        effects: string[],
-        considerations: string[],
-    }[]
+    suplementos: SupplementPrescription[]
     recomendaciones_deportivas: {
         sesion: string | null //sesion de gimnasio
         estrategia: string | null //aportar energía para optimizar las sesiones de entrenamiento

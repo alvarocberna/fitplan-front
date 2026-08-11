@@ -73,6 +73,28 @@ export function FormUserInfo() {
             </label>
         </div>
 
+        {/* Deportista */}
+        <div className="relative w-full mt-3">
+            <select
+            {...register("deportista", {required: false, setValueAs: (value) => value === "true"})}
+                id="floating-outlined-deportista"
+                className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-800 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-primary peer"
+                defaultValue=""
+            >
+                <option value="false">No, no hago ningún deporte</option>
+                <option value="false">Sí, de forma recreacional o como hobby</option>
+                <option value="true">Sí, de forma profesional o alto rendimiento</option>
+            </select>
+            <label
+                className="absolute text-sm text-zinc-700 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2
+                peer-focus:px-2 peer-focus:text-primary
+                peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
+                peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1"
+            >
+                Deportista
+            </label>
+        </div>
+
         {/* correo */}
         <InputOutlined label="Correo" name="correo" type="email" register={register} rules={{ required: 'Campo requerido' }}/>
         {errors.correo && <span className="text-red-400 text-sm">Campo requerido</span>}

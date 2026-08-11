@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 //react
 import { useEffect, useRef, useState } from 'react'
 //shared
-import { Card, HeadSubSec, TitleSubSec } from '@/shared'
+import { Card, HeadSubSec, TitleSubSec, useConsulta } from '@/shared'
 //features
 import { ConsultaService, EstadoOrdenDto, PlanNutricionalDto } from '@/features'
 
@@ -23,6 +23,7 @@ type EstadoVista = 'cargando' | 'generando' | 'completado' | 'error'
 
 export default function OrdenPage() {
     const { id: ordenId } = useParams<{ id: string }>()
+    const { setPlanNutricional } = useConsulta()
 
     const [estadoVista, setEstadoVista] = useState<EstadoVista>('cargando')
     const [plan, setPlan] = useState<PlanNutricionalDto | null>(null)
@@ -41,6 +42,7 @@ export default function OrdenPage() {
                 if (data.estado_generacion === 'completado' && data.plan_json) {
                     detenidoRef.current = true
                     setPlan(data.plan_json)
+                    setPlanNutricional(data.plan_json)
                     setEstadoVista('completado')
                     return
                 }

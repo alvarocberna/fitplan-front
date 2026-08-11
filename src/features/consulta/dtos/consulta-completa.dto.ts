@@ -8,6 +8,7 @@ export interface InformacionPersonalDto {
     apellido_paterno: string | null
     apellido_materno: string | null
     genero: string | null
+    deportista: boolean | null
     correo: string | null
     // celular: number | null
     fecha_nacimiento: Date | null
@@ -47,6 +48,7 @@ export interface Comida {
     lacteo_alto_en_grasa: string | null
     lacteo_medio_en_grasa: string | null
     lacteo_bajo_en_grasa: string | null 
+    lacteo_alto_en_proteina: string | null
     rico_en_lipidos: string | null
     aceite: string | null
     azucar: string | null
@@ -100,6 +102,7 @@ export interface MedicionesDto {
     // básicas
     peso: number | null
     talla: number | null
+    somatotipo: string | null
     // talla_sentado: number | null
     // envergadura: number | null
     // pliegues
