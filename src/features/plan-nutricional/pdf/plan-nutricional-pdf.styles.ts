@@ -268,9 +268,9 @@ export const styles = StyleSheet.create({
         color: paleta.primario,
         textTransform: 'uppercase',
     },
-    tablaAlimentosColGrupo: { width: '20%', paddingHorizontal: 4 },
-    tablaAlimentosColPorciones: { width: '40%', paddingHorizontal: 4 },
-    tablaAlimentosColEquivalencia: { width: '40%', paddingHorizontal: 4 },
+    tablaAlimentosColGrupo: { width: '25%', paddingHorizontal: 4 },
+    tablaAlimentosColPorciones: { width: '25%', paddingHorizontal: 4 },
+    tablaAlimentosColEquivalencia: { width: '50%', paddingHorizontal: 4 },
     // línea vertical solo en las filas de datos (no en el header)
     tablaAlimentosColEquivalenciaBorde: {
         borderLeftWidth: 1,

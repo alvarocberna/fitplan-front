@@ -23,10 +23,13 @@ export const CAMPOS_ALIMENTOS: { clave: keyof AlimentosTiempo; label: string }[]
 ]
 
 // Devuelve solo los grupos de alimentos que vienen con datos (no null) para un tiempo de comida dado.
-export function obtenerAlimentos(tiempo: TiempoDeComida): { label: string; valor: string }[] {
+export function obtenerAlimentos(tiempo: TiempoDeComida): { label: string; porcion: string; equivalencia: string }[] {
     return CAMPOS_ALIMENTOS
         .filter(({ clave }) => !!tiempo.alimentos[clave])
-        .map(({ clave, label }) => ({ label, valor: tiempo.alimentos[clave] as string }))
+        .map(({ clave, label }) => {
+            const alimento = tiempo.alimentos[clave]!
+            return { label, porcion: alimento.porcion, equivalencia: alimento.equivalencia }
+        })
 }
 
 // Suma el aporte nutricional de todos los suplementos (para la fila resumen de la página 2).

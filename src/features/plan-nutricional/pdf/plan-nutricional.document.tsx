@@ -187,9 +187,24 @@ function IconLuna({ size = 20, color = paleta.primario }: { size?: number; color
     )
 }
 
+// Convierte el string de hora a un número de 0 a 23. Soporta tanto formato 24h ("08:00", "20:30")
+// como 12h con am/pm ("10am", "1:30pm") — este último es el formato documentado en el DTO
+// (plan-nutricional.dto.ts, campo "hora"), que sin esta conversión se interpretaba tal cual
+// (ej. "1pm" -> 1), haciendo que casi todas las horas PM cayeran mal.
+function horaA24Horas(hora?: string | null): number {
+    if (!hora) return NaN
+    const match = hora.trim().toLowerCase().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/)
+    if (!match) return NaN
+    let horaNum = parseInt(match[1], 10)
+    const meridiano = match[3]
+    if (meridiano === 'pm' && horaNum !== 12) horaNum += 12
+    if (meridiano === 'am' && horaNum === 12) horaNum = 0
+    return horaNum
+}
+
 // Elige el ícono de hora (sol amanecer / sol pleno / luna) según la hora del tiempo de comida.
 function IconoHora({ hora }: { hora?: string | null }) {
-    const horaNum = hora ? parseInt(hora.split(':')[0], 10) : NaN
+    const horaNum = horaA24Horas(hora)
     if (isNaN(horaNum) || (horaNum >= 12 && horaNum < 19)) return <IconSolMediodia />
     if (horaNum < 12) return <IconSolAmanecer />
     return <IconLuna />
@@ -405,7 +420,7 @@ function FilaResumenTiempo({ tiempo }: { tiempo: TiempoDeComida }) {
                 {alimentos.map((a, i) => (
                     <View key={i} style={styles.tablaAlimentoFila}>
                         <Text style={styles.tablaTextoBullet}>•</Text>
-                        <Text style={styles.tablaTexto}>{a.label}: {a.valor}</Text>
+                        <Text style={styles.tablaTexto}>{a.label}: {a.porcion}</Text>
                     </View>
                 ))}
             </View>
@@ -476,7 +491,7 @@ function FilaResumenSuplementos({ suplementos }: { suplementos: SupplementPrescr
 // DOCUMENTO PRINCIPAL
 // ============================================================
 export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) {
-    const { informacion_personal, prescripcion, tiempos_de_comida, suplementos, recomendaciones_deportivas } = plan
+    const { informacion_personal, prescripcion, aporte_plan, tiempos_de_comida, suplementos, recomendaciones_deportivas } = plan
 
     return (
         <Document>
@@ -525,28 +540,28 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                         <MacroStat
                             icono={<IconRayo size={22} color={paleta.azulOscuro} />}
                             color={paleta.azulOscuro}
-                            valor={Math.round(prescripcion.calorias)}
+                            valor={Math.round(aporte_plan.aporte_total.calorias)}
                             unidad="kcal / día"
                             label="ENERGÍA"
                         />
                         <MacroStat
                             icono={<IconHexagono size={22} color={paleta.primarioOscuro} />}
                             color={paleta.primarioOscuro}
-                            valor={Math.round(prescripcion.proteina)}
+                            valor={Math.round(aporte_plan.aporte_total.proteina)}
                             unidad="g / día"
                             label="PROTEÍNA"
                         />
                         <MacroStat
                             icono={<IconTrigo size={22} color={paleta.acentoOscuro} />}
                             color={paleta.acentoOscuro}
-                            valor={Math.round(prescripcion.carbohidrato)}
+                            valor={Math.round(aporte_plan.aporte_total.carbohidrato)}
                             unidad="g / día"
                             label="CARBOHIDRATOS"
                         />
                         <MacroStat
                             icono={<IconGota size={22} color={paleta.amarilloOscuro} />}
                             color={paleta.amarilloOscuro}
-                            valor={Math.round(prescripcion.lipido)}
+                            valor={Math.round(aporte_plan.aporte_total.lipido)}
                             unidad="g / día"
                             label="GRASAS"
                         />
@@ -622,8 +637,8 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                             {alimentos.map((a, i) => (
                                 <View key={i} style={[styles.tablaAlimentosFila, ...(i === alimentos.length - 1 ? [styles.tablaAlimentosFilaSinBorde] : [])]}>
                                     <Text style={[styles.tablaAlimentosColGrupo, styles.tablaAlimentosCelda, styles.tablaTexto]}>{a.label}</Text>
-                                    <Text style={[styles.tablaAlimentosColPorciones, styles.tablaAlimentosCelda, styles.tablaTexto]}>{a.valor}</Text>
-                                    <Text style={[styles.tablaAlimentosColEquivalencia, styles.tablaAlimentosCelda, styles.tablaTexto, styles.tablaAlimentosColEquivalenciaBorde]}></Text>
+                                    <Text style={[styles.tablaAlimentosColPorciones, styles.tablaAlimentosCelda, styles.tablaTexto]}>{a.porcion}</Text>
+                                    <Text style={[styles.tablaAlimentosColEquivalencia, styles.tablaAlimentosCelda, styles.tablaTexto, styles.tablaAlimentosColEquivalenciaBorde]}>{a.equivalencia}</Text>
                                 </View>
                             ))}
                         </View>
@@ -645,7 +660,7 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                         )}
 
                         {/* 4. Comentarios (al final, como pediste) */}
-                        {tiempo.comentarios.length > 0 && (
+                        {/* {tiempo.comentarios.length > 0 && (
                             <>
                                 <Text style={styles.tituloSeccion}>Comentarios</Text>
                                 <View style={styles.seccionLinea} />
@@ -658,7 +673,7 @@ export function PlanNutricionalDocument({ plan }: { plan: PlanNutricionalDto }) 
                                     ))}
                                 </View>
                             </>
-                        )}
+                        )} */}
 
                         <PiePagina />
                     </Page>

@@ -72,6 +72,12 @@ Al llegar el webhook de pago confirmado, el backend pasa a generar el plan de fo
 la que espera y muestra ese resultado. El enlace es reutilizable: el usuario puede cerrar la pestaña y volver
 más tarde con la misma URL.
 
+# PLAN GENERADO
+
+## Pagina 1
+- En la sección 'prescripción' se muestra el aporte real de macronutrientes del plan, y NO el calculo teorico,
+  sino el resultado del aporte nutricional de todas las porciones de alimentos prescritas.
+
 
 # ESTADO (CONTEXT)
 
@@ -121,3 +127,4 @@ quiere una nueva conversación desde cero.
 
 El objeto planNutricional se almacena en el context pero queda sin usar, ya que para generar el plan de hace
 polling al backend que provee este objeto. Se mantiene por ahora porque tampoco hace daño.
+
