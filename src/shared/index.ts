@@ -17,3 +17,8 @@ export * from './components/row-sub-sec'
 export * from './context/consulta.context';
 //DATA
 export * from './data/data';
+
+//CMS
+export * from './api/client-cms';
+export * from './components/contenedor-page.component';
+export * from './components/contenedor-sec.component';

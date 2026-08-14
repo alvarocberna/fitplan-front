@@ -27,7 +27,7 @@ const caracteristicas: { icon: IconDefinition; title: string; description: strin
 
 export function NuviDescripcion() {
   return (
-    <div id="que-es-nuvi" className="w-full min-h-screen flex items-center justify-center text-center px-6 mb-20">
+    <div id="nuvi-saber-mas" className="w-full min-h-screen flex items-center justify-center text-center px-6 mb-20">
       {/* inner container */}
       <div className="w-[90%] md:w-[80%] mx-auto flex flex-col md:flex-row justify-between">
         {/* left */}

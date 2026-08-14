@@ -21,3 +21,27 @@ export * from "./plan-nutricional/dtos/plan-nutricional.dto";
 
 //usuario
 export * from './consulta/interfaces/info-user.interface';
+
+//ARTICULOS
+export * from './articulos/components/sec-articulo.component';
+export * from './articulos/components/articulos.component';
+export * from './articulos/components/articulo.component';
+export * from './articulos/dtos/articulo.dto';
+export * from './articulos/dtos/articulos.dto';
+export * from './articulos/dtos/sec-articulo.dto';
+export * from './articulos/entities/articulo.entity';
+export * from './articulos/entities/articulos.entity';
+export * from './articulos/entities/sec-articulo.entity';
+export * from './articulos/services/articulos.service';
+
+//TESTIMONIOS
+export * from './testimonios/components/testimonios.component';
+export * from './testimonios/components/testimonio-form.component';
+export * from './testimonios/components/testimonio-card.component';
+export * from './testimonios/dtos/create-testimonio.dto';
+export * from './testimonios/entities/testimonio.entity';
+export * from './testimonios/entities/testimonios.entity';
+export * from './testimonios/services/testimonios.service';
+export * from './testimonios/components/testimonio-form.component';
+export * from './testimonios/components/testimonio-form.component';
+export * from './testimonios/components/testimonios-all.component';

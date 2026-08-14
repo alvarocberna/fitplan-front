@@ -26,7 +26,7 @@ const caracteristicas: { icon: IconDefinition; title: string; description: strin
 
 export function PlanPersonalDescripcion() {
   return (
-    <div id="que-es-nuvi" className="w-full min-h-screen flex flex-col items-center justify-center text-center px-6 mb-20">
+    <div id="plan-personal" className="w-full min-h-screen flex flex-col items-center justify-center text-center px-6 mb-20">
       {/* inner container */}
       <div className="w-[90%] md:w-[80%] mx-auto">
         {/* title */}

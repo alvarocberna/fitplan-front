@@ -32,7 +32,7 @@ export function Portada() {
         </Link>
         {/* button 2 */}
         <Link
-          href="/#saber-mas"
+          href="/#nuvi-saber-mas"
           className="relative block w-[60%] px-6 py-2 text-zinc-600">
           Saber Más
         </Link>

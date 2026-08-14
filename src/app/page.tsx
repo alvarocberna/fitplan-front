@@ -1,14 +1,12 @@
 'use client'
-//FEATURES
-import { Portada, SaberMas, NuviDescripcion, ConsultaDescripcion, PlanPersonalDescripcion, PlanEstandarDescripcion } from "@/features";
-//CSS
-// import './globals.css'
+//features
+import { Portada, NuviDescripcion, ConsultaDescripcion, PlanPersonalDescripcion, PlanEstandarDescripcion } from "@/features";
+
 
 export default function Home() {
   return (
     <div>
       <Portada />
-      {/* <SaberMas/> */}
       <NuviDescripcion/>
       <ConsultaDescripcion/>
       <PlanPersonalDescripcion/>
