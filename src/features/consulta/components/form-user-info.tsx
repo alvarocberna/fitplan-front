@@ -106,7 +106,7 @@ export function FormUserInfo() {
         <InputOutlined label="Fecha nacimiento" name="fecha_nacimiento" type="date" register={register} rules={{ required: 'Campo requerido' }}/>
         {errors.fecha_nacimiento && <span className="text-red-400 text-sm">Campo requerido</span>}
 
-       <div className='w-1/2 h-[40px] mx-auto mt-10'>
+       <div className='w-50 h-10 mx-auto mt-10'>
             <input className='primary-btn' type='submit' value='Siguiente'/>
         </div>
 

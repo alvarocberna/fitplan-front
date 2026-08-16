@@ -117,6 +117,14 @@ body {
   background: var(--color-primary);
   color: var(--pub-texto-invertido);
   border-color: var(--color-primary);
+  width: 100%;
+  height: 100%;
+  /* color: white; */
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .btn-primary:hover:not(:disabled),
 .primary-btn:hover:not(:disabled) { background: var(--pub-lila-oscuro); border-color: var(--pub-lila-oscuro); }
@@ -172,18 +180,6 @@ body {
   padding-left: 10px;
   font-size: 16px;
 }
-
-/* .primary-btn{
-  width: 100%;
-  height: 100%;
-  background-color: #00A63E;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-} */
 
 .hover-primary{
   cursor: pointer;

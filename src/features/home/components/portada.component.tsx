@@ -1,43 +1,92 @@
 //NEXT
 import Link from "next/link";
 import Image from "next/image";
+//FONTAWESOME
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUserDoctor, faClipboardList, faCapsules, faDumbbell } from '@fortawesome/free-solid-svg-icons'
+//FEATURES
+import { VistaNuvi } from "./vista-nuvi.component";
+
+const caracteristicas = [
+  { texto: 'Nutricionista virtual', descripcion: 'Entrenado por expertos en nutrición deportiva', icon: faUserDoctor },
+  { texto: 'Planes personalizados', descripcion: 'Adaptados a tus objetivos, tu deporte y tu estilo de vida.', icon: faClipboardList },
+  { texto: 'Suplementación', descripcion: 'Recomendaciones seguras y ajustadas a tus necesidades.', icon: faCapsules },
+  { texto: 'Estrategias deportivas', descripcion: 'Mejora el rendimiento en entrenamientos y competencias.', icon: faDumbbell },
+]
 
 export function Portada() {
   return (
-    <div className="relative w-full h-screen flex flex-col items-center justify-center text-center px-6">
-      {/* <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/20"/> */}
-
-      <div className="relative w-full md:w-[80%] lg:w-[60%] xl:w-[40%] flex flex-col items-center">
-        {/* face */}
-        {/* <div className="relative w-full flex mb-3">
-          <Image src='/icons/face.png' className="m-auto" alt="face" width={280} height={280} />
-        </div> */}
-        {/* title */}
-        <h2 className="text-5xl text-zinc-900 mb-5">
-          NUVI
-        </h2>
-        {/* text 1*/}
-        <p className="relative w-full text-zinc-700 text-md md:text-md mb-6 text-justify">
-          <b>Nutricionista Virtual</b> entrenado por expertos en nutrición deportiva y potenciado por IA.
-          Inicia una consulta para obtener un plan nutricional personalizado o también obtén un
-          plan pre elaborado por deporte y objetivo.
-        </p>
-        {/* button 1*/}
-        <Link
-          href="/consulta/iniciar-consulta"
-          className="relative block w-[60%] px-6 py-2 rounded-lg text-white mb-1 shadow-lg"
-          style={{ backgroundColor: 'var(--color-primary)' }}
-        >
-          Iniciar Consulta
-        </Link>
-        {/* button 2 */}
-        <Link
-          href="/#nuvi-saber-mas"
-          className="relative block w-[60%] px-6 py-2 text-zinc-600">
-          Saber Más
-        </Link>
+    <div className="relative w-full h-screen flex flex-row items-center px-6">
+      <Image
+        src="/images/img-background-city.jpeg"
+        alt=""
+        fill
+        priority
+        className="object-cover -z-20"
+      />
+      <div className="absolute inset-y-0 left-0 h-full w-[50%] -z-10" >
+        <Image
+          src="/images/img-1-back.png"
+          alt=""
+          fill
+          priority
+        />
       </div>
-      
+      <div className="absolute inset-0 bg-white/20 -z-10" />
+
+      <div className="relative w-1/2 h-full flex flex-col items-center justify-center text-center" >
+        <div className="w-full md:w-[80%] lg:w-[80%] xl:w-[80%] flex flex-col items-start"
+        >
+          {/* title */}
+          <h2 className="w-full text-5xl text-left mb-10" style={{fontWeight: 600 }} >
+            <span className="text-zinc-800">Alcanza tu mejor </span> <br/>
+            <span style={{ color: 'var(--color-primary)' }}>versión, cada día</span>
+          </h2>
+          {/* caracteristicas */}
+          <div className="w-full md:w-[70%] flex flex-col gap-3 mb-6">
+            {caracteristicas.map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-4 rounded-lg px-4 py-2 bg-white/70 ">
+                {/* icon */}
+                <div
+                  className="flex items-center justify-center w-8 h-8 rounded-full shrink-0"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                >
+                  <FontAwesomeIcon icon={item.icon} style={{ color: 'white', width: '16px', height: '16px' }} />
+                </div>
+                {/* texto */}
+                <div className="text-left" style={{ textAlign: 'justify' }}>
+                  <p className="font-medium text-sm text-zinc-800">
+                    {item.texto}
+                  </p>
+                  <p className="text-xs text-zinc-600">
+                    {item.descripcion}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* button 1*/}
+          <Link
+            href="/consulta/iniciar-consulta"
+            className="relative text-sm block w-full md:w-[70%] px-6 py-2 rounded-lg text-white mb-1 shadow-lg text-center"
+            style={{ backgroundColor: 'var(--color-primary)' }}
+          >
+            Iniciar Consulta
+          </Link>
+          {/* button 2 */}
+          <Link
+            href="/#nuvi-saber-mas"
+            className="relative block w-full md:w-[70%] px-6 py-2 text-sm text-zinc-600">
+            Saber Más
+          </Link>
+        </div>
+      </div>
+
+      <div className="relative w-1/2 h-full flex items-center justify-center">
+        <VistaNuvi />
+      </div>
     </div>
   )
 }

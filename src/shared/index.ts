@@ -1,8 +1,5 @@
 //COMPONENTS
-export * from './components/navbar-profesional';
-export * from './components/navbar-home';
 export * from './components/general-cont'
-export * from './components/cont-home';
 export * from './components/title-sec'
 export * from './components/title-sub-sec'
 export * from './components/body-sub-sec'

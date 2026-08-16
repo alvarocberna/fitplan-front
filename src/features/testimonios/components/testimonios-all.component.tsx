@@ -25,12 +25,14 @@ export function TestimoniosAllPublic({dataTestimonios}: Props) {
                     <h3 className="text-2xl md:text-4xl font-bold text-zinc-800 mb-8">
                         {dataTestimonios.titulo}
                     </h3>
-                    <button
-                        onClick={() => setModalAbierto(true)}
-                        className="btn primary-btn text-sm"
-                    >
-                        Escribir testimonio
-                    </button>
+                    <div className='w-40 h-10'>
+                        <button
+                            onClick={() => setModalAbierto(true)}
+                            className="btn primary-btn text-sm"
+                        >
+                            Escribir testimonio
+                        </button>
+                    </div>
                 </div>
 
                 {dataTestimonios.descripcion && (
