@@ -1,31 +1,34 @@
-const EYE_ROW_HEIGHT = 3;
-const EYE_PIXEL_ROWS = [
-  { w: 9, y: 8.5 },
-  { w: 15, y: 11.5 },
-  { w: 15, y: 14.5 },
-  { w: 21, y: 17.5 },
-  { w: 21, y: 20.5 },
-  { w: 21, y: 23.5 },
-  { w: 15, y: 26.5 },
-  { w: 15, y: 29.5 },
-  { w: 9, y: 32.5 },
-];
+// ojos: fila por fila a partir de una elipse, para un óvalo pixelado fino
+const EYE_ROW_HEIGHT = 1.35;
+const EYE_CENTER_Y = 22;
+const EYE_RADIUS_X = 10.5;
+const EYE_RADIUS_Y = 13.5;
+const EYE_ROW_COUNT = Math.round((EYE_RADIUS_Y * 2) / EYE_ROW_HEIGHT);
+const EYE_PIXEL_ROWS = Array.from({ length: EYE_ROW_COUNT }, (_, i) => {
+  const y = EYE_CENTER_Y - EYE_RADIUS_Y + i * EYE_ROW_HEIGHT;
+  const dy = y + EYE_ROW_HEIGHT / 2 - EYE_CENTER_Y;
+  const ratio = Math.max(0, 1 - (dy / EYE_RADIUS_Y) ** 2);
+  return { w: 2 * EYE_RADIUS_X * Math.sqrt(ratio), y };
+});
 
-const MOUTH_PIXEL_WIDTH = 6;
+// boca: curva continua (seno) en vez de puntos interpolados linealmente,
+// para evitar quiebres rectos entre tramos y lograr un arco de sonrisa fluido
+const MOUTH_PIXEL_WIDTH = 3;
 const MOUTH_PIXEL_HEIGHT = 8;
-const MOUTH_PIXEL_COLS = [
-  { x: 28, y: 60 },
-  { x: 34, y: 64 },
-  { x: 41, y: 68 },
-  { x: 47, y: 72 },
-  { x: 54, y: 72 },
-  { x: 60, y: 72 },
-  { x: 66, y: 72 },
-  { x: 73, y: 72 },
-  { x: 79, y: 68 },
-  { x: 86, y: 64 },
-  { x: 92, y: 60 },
-];
+const MOUTH_START_X = 28;
+const MOUTH_SPAN = 64; // ancho de la boca (comisura a comisura)
+const MOUTH_TOP_Y = 60; // altura de las comisuras
+const MOUTH_DEPTH = 12; // cuánto baja el centro respecto a las comisuras
+const mouthCurveY = (x: number) => {
+  const t = Math.min(1, Math.max(0, (x - MOUTH_START_X) / MOUTH_SPAN));
+  return MOUTH_TOP_Y + MOUTH_DEPTH * Math.sin(Math.PI * t);
+};
+const MOUTH_END_X = MOUTH_START_X + MOUTH_SPAN + MOUTH_PIXEL_WIDTH;
+const MOUTH_COL_COUNT = Math.round((MOUTH_END_X - MOUTH_START_X) / MOUTH_PIXEL_WIDTH);
+const MOUTH_PIXEL_COLS = Array.from({ length: MOUTH_COL_COUNT }, (_, i) => {
+  const x = MOUTH_START_X + i * MOUTH_PIXEL_WIDTH;
+  return { x, y: mouthCurveY(x) };
+});
 
 export function VistaNuvi() {
   return (
