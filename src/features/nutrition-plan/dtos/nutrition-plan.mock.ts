@@ -1,0 +1,167 @@
+import { NutritionPlanDto } from './nutrition-plan.dto'
+
+// Dato de ejemplo que cumple NutritionPlanDto, con todas las secciones
+// completas (varios tiempos de comida, suplementos y recomendaciones deportivas).
+// Sirve para previsualizar el PDF sin depender del formulario ni del chat.
+export const nutritionPlanMock: NutritionPlanDto = {
+    personalInfo: {
+        name: 'Juana',
+        lastName: 'Pérez',
+        age: '28',
+        date: '13/07/2026',
+    },
+    prescription: {
+        regimen: 'Normocalórico',
+        goal: 'Mantención de peso y composición corporal',
+        calories: 1800,
+        protein: 110,
+        carbohydrate: 190,
+        fat: 55,
+    },
+    planIntake: {
+        adequacy: { calories: 100, protein: 100, carbohydrate: 100, fat: 100 },
+        totalIntake: { calories: 1800, protein: 110, carbohydrate: 190, fat: 55 },
+    },
+    mealTimes: [
+        {
+            description: { time: 'desayuno', hour: '08:00' },
+            intake: { calories: 420, protein: 25, carbohydrate: 45, fat: 14 },
+            foods: {
+                cereals: { portion: '2 porciones', equivalence: 'pan integral 1 rebanada (30g), arroz integral 1/2 taza (90g), papa cocida 1 unidad mediana (150g)' },
+                freeConsumptionVegetables: null,
+                generalConsumptionVegetables: null,
+                fruits: { portion: '1 porción', equivalence: 'manzana 1 unidad mediana, plátano 1 unidad pequeña, naranja 1 unidad mediana' },
+                highFatProteins: null,
+                lowFatProteins: { portion: '1 porción', equivalence: 'pechuga de pollo 100g, clara de huevo 3 unidades, atún al agua 1 lata pequeña' },
+                highFatDairy: null,
+                mediumFatDairy: { portion: '1 porción', equivalence: 'yogur natural 1 taza, leche semidescremada 1 taza, queso fresco 1 rebanada' },
+                lowFatDairy: null,
+                highProteinDairy: null,
+                highLipidFoods: { portion: '1 porción', equivalence: 'palta 1/4 unidad, mantequilla de maní 1 cucharada, nueces 6 unidades' },
+                oils: null,
+                sugars: null,
+            },
+            examples: [
+                '2 tostadas integrales + 2 claras de huevo + 1/2 palta',
+                'Yogur natural + granola casera + fruta picada',
+                'Avena cocida con leche descremada + plátano',
+            ],
+            comments: ['Evitar azúcar agregada.', 'Preferir pan integral por sobre pan blanco.'],
+        },
+        {
+            description: { time: 'almuerzo', hour: '13:30' },
+            intake: { calories: 620, protein: 40, carbohydrate: 65, fat: 18 },
+            foods: {
+                cereals: { portion: '3 porciones', equivalence: 'arroz blanco 1 taza (180g), fideos cocidos 1 taza (140g), quínoa cocida 1 taza (185g)' },
+                freeConsumptionVegetables: { portion: '1 porción', equivalence: 'lechuga a discreción, pepino a discreción, tomate a discreción' },
+                generalConsumptionVegetables: { portion: '1 porción', equivalence: 'zanahoria cocida 1/2 taza, betarraga 1/2 taza, zapallo 1/2 taza' },
+                fruits: null,
+                highFatProteins: null,
+                lowFatProteins: { portion: '2 porciones', equivalence: 'pechuga de pollo 150g, salmón 120g, lentejas cocidas 1 taza' },
+                highFatDairy: null,
+                mediumFatDairy: null,
+                lowFatDairy: null,
+                highProteinDairy: null,
+                highLipidFoods: null,
+                oils: { portion: '1 cucharadita', equivalence: 'aceite de oliva 1 cucharadita, aceite de canola 1 cucharadita, aceite de maravilla 1 cucharadita' },
+                sugars: null,
+            },
+            examples: [
+                'Pechuga de pollo a la plancha + arroz integral + ensalada verde',
+                'Salmón al horno + puré de camote + brócoli al vapor',
+                'Lentejas guisadas + arroz + ensalada de tomate',
+            ],
+            comments: ['Priorizar cocciones al horno, plancha o vapor por sobre fritos.'],
+        },
+        {
+            description: { time: 'once', hour: '17:00' },
+            intake: { calories: 260, protein: 15, carbohydrate: 30, fat: 8 },
+            foods: {
+                cereals: { portion: '1 porción', equivalence: 'pan integral 1 rebanada (30g), galletas de arroz 2 unidades, avena cruda 3 cucharadas' },
+                freeConsumptionVegetables: null,
+                generalConsumptionVegetables: null,
+                fruits: { portion: '1 porción', equivalence: 'pera 1 unidad mediana, frutillas 1 taza, mandarina 2 unidades pequeñas' },
+                highFatProteins: null,
+                lowFatProteins: null,
+                highFatDairy: null,
+                mediumFatDairy: { portion: '1 porción', equivalence: 'yogur natural 1 taza, leche semidescremada 1 taza, queso fresco 1 rebanada' },
+                lowFatDairy: null,
+                highProteinDairy: null,
+                highLipidFoods: null,
+                oils: null,
+                sugars: null,
+            },
+            examples: [
+                'Yogur natural + fruta picada',
+                'Sándwich integral de queso fresco',
+                'Batido de leche con fruta',
+            ],
+            comments: [],
+        },
+        {
+            description: { time: 'cena', hour: '20:30' },
+            intake: { calories: 500, protein: 30, carbohydrate: 50, fat: 15 },
+            foods: {
+                cereals: { portion: '2 porciones', equivalence: 'arroz blanco 1 taza (180g), papa cocida 2 unidades medianas (300g), quínoa cocida 1 taza (185g)' },
+                freeConsumptionVegetables: { portion: '1 porción', equivalence: 'lechuga a discreción, pepino a discreción, tomate a discreción' },
+                generalConsumptionVegetables: null,
+                fruits: null,
+                highFatProteins: null,
+                lowFatProteins: { portion: '2 porciones', equivalence: 'pescado al vapor 150g, pechuga de pavo 150g, tofu firme 200g' },
+                highFatDairy: null,
+                mediumFatDairy: null,
+                lowFatDairy: null,
+                highProteinDairy: null,
+                highLipidFoods: { portion: '1 porción', equivalence: 'palta 1/4 unidad, aceitunas 8 unidades, almendras 8 unidades' },
+                oils: null,
+                sugars: null,
+            },
+            examples: [
+                'Omelette de verduras + tostada integral',
+                'Pescado al vapor + quínoa + ensalada',
+                'Wrap integral de pollo y vegetales',
+            ],
+            comments: ['Evitar comidas muy pesadas antes de dormir.'],
+        },
+    ],
+    supplements: [
+        {
+            supplement: 'Creatina monohidratada',
+            requirement: 5,
+            dosageIndication: '5g al día',
+            intakeIndication: 'Junto a alguna comida contundente',
+            effects: [
+                'Mejora el rendimiento en esfuerzos de alta intensidad',
+                'Favorece la recuperación muscular',
+            ],
+            considerations: [
+                'Mantener una buena hidratación durante el día',
+                'No requiere fase de carga',
+            ],
+            intake: { calories: 0, protein: 0, carbohydrate: 0, fat: 0 },
+        },
+        {
+            supplement: 'Omega 3',
+            requirement: 1,
+            dosageIndication: '1 cápsula al día',
+            intakeIndication: 'Junto a una comida con lípidos',
+            effects: [
+                'Efecto antiinflamatorio',
+                'Apoyo a la salud cardiovascular',
+            ],
+            considerations: [
+                'Preferir marcas certificadas por pureza y concentración de EPA/DHA',
+            ],
+            intake: { calories: 0, protein: 0, carbohydrate: 0, fat: 0 },
+        },
+    ],
+    sportsRecommendations: [
+        {
+            session: 'Sesión de gimnasio (fuerza)',
+            strategy: 'Aportar energía suficiente para optimizar el rendimiento en la sesión.',
+            preActivity: 'Colación con carbohidratos 60-90 min antes de entrenar.',
+            duringActivity: 'Hidratación con agua, sin necesidad de bebida deportiva.',
+            postActivity: 'Consumir proteína y carbohidrato dentro de los primeros 60 min post entrenamiento.',
+        },
+    ],
+}

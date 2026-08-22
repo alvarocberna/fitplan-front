@@ -18,14 +18,14 @@ export function NavbarLanding() {
         <Link href="/#plan-estandarizado-por-disciplina" className="hidden md:inline text-zinc-700 font-medium hover:text-zinc-700/80">
           Planes Estandar
         </Link>
-        <Link href="/articulos" className="hidden md:inline text-zinc-700 font-medium hover:text-zinc-700/80">
+        <Link href="/articles" className="hidden md:inline text-zinc-700 font-medium hover:text-zinc-700/80">
           Blog
         </Link>
-        <Link href="/testimonios" className="hidden md:inline text-zinc-700 font-medium hover:text-zinc-700/80">
+        <Link href="/testimonials" className="hidden md:inline text-zinc-700 font-medium hover:text-zinc-700/80">
           Opiniones
         </Link>
         <Link
-          href="/consulta/iniciar-consulta"
+          href="/consultation/start"
           className="px-6 py-2 rounded-lg text-white"
           style={{ backgroundColor: 'var(--color-primary)' }}
         >

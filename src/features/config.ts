@@ -6,28 +6,28 @@
  * y estilo por defecto en todos los componentes que los consumen.
  */
 
-export type Comportamiento = 'navegar' | 'modal';
-export type EstiloDosVariantes = 'estilo1' | 'estilo2';
-export type EstiloTresVariantes = 'estilo1' | 'estilo2' | 'estilo3';
+export type Behavior = 'navigate' | 'modal';
+export type TwoVariantStyle = 'style1' | 'style2';
+export type ThreeVariantStyle = 'style1' | 'style2' | 'style3';
 
 export const INTEGRATION_CONFIG = {
-    articulo: {
-        estilo: 'estilo2' as EstiloDosVariantes,
+    article: {
+        style: 'style2' as TwoVariantStyle,
     },
-    empleado: {
-        comportamiento: 'modal' as Comportamiento,
-        estilo: 'estilo1' as EstiloDosVariantes,
+    employee: {
+        behavior: 'modal' as Behavior,
+        style: 'style1' as TwoVariantStyle,
     },
-    equipo: {
-        comportamiento: 'modal' as Comportamiento,
-        estilo: 'estilo1' as EstiloDosVariantes,
+    team: {
+        behavior: 'modal' as Behavior,
+        style: 'style1' as TwoVariantStyle,
     },
-    servicio: {
-        comportamiento: 'modal' as Comportamiento,
-        estilo: 'estilo1' as EstiloTresVariantes,
+    service: {
+        behavior: 'modal' as Behavior,
+        style: 'style1' as ThreeVariantStyle,
     },
-    servicios: {
-        comportamiento: 'modal' as Comportamiento,
-        estilo: 'estilo1' as EstiloTresVariantes,
+    services: {
+        behavior: 'modal' as Behavior,
+        style: 'style1' as ThreeVariantStyle,
     },
 };

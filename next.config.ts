@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const backendUrl =
   process.env.NEXT_PUBLIC_BACKEND_CMS_URL || "http://localhost:3001";
+const apiUrl =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -46,9 +48,9 @@ const nextConfig: NextConfig = {
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline'",
             "style-src 'self' 'unsafe-inline'",
-            `img-src 'self' data: blob: ${backendUrl} ${s3Bucket}`,
+            `img-src 'self' data: blob: ${backendUrl} ${apiUrl} ${s3Bucket}`,
             "font-src 'self'",
-            `connect-src 'self' ${backendUrl}`,
+            `connect-src 'self' ${backendUrl} ${apiUrl}`,
             "object-src 'none'",
             "base-uri 'self'",
             "frame-ancestors 'none'",
@@ -59,9 +61,9 @@ const nextConfig: NextConfig = {
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
             "style-src 'self' 'unsafe-inline'",
-            `img-src 'self' data: blob: ${backendUrl} ${s3Bucket}`,
+            `img-src 'self' data: blob: ${backendUrl} ${apiUrl} ${s3Bucket}`,
             "font-src 'self'",
-            `connect-src 'self' ${backendUrl}`,
+            `connect-src 'self' ${backendUrl} ${apiUrl}`,
           ]
     ).join("; ");
 

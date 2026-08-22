@@ -1,16 +1,16 @@
 'use client'
 //features
-import { Portada, NuviDescripcion, ConsultaDescripcion, PlanPersonalDescripcion, PlanEstandarDescripcion } from "@/features";
+import { Hero, NuviDescription, ConsultationDescription, PersonalPlanDescription, StandardPlanDescription } from "@/features";
 
 
 export default function Home() {
   return (
     <div>
-      <Portada />
-      <NuviDescripcion/>
-      <ConsultaDescripcion/>
-      <PlanPersonalDescripcion/>
-      <PlanEstandarDescripcion/>
+      <Hero />
+      <NuviDescription/>
+      <ConsultationDescription/>
+      <PersonalPlanDescription/>
+      <StandardPlanDescription/>
     </div>
   );
 }

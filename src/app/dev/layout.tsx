@@ -1,5 +1,5 @@
-import { ConsultaProvider } from '@/shared'
+import { ConsultationProvider } from '@/shared'
 
 export default function DevLayout({ children }: { children: React.ReactNode }) {
-    return <ConsultaProvider>{children}</ConsultaProvider>
+    return <ConsultationProvider>{children}</ConsultationProvider>
 }
