@@ -29,18 +29,24 @@ export default function OrderPage() {
     const [plan, setPlan] = useState<NutritionPlanDto | null>(null)
     const [isDelayed, setIsDelayed] = useState(false)
 
-    //referencias para controlar el polling sin re-crear el intervalo en cada render
+    //referencia para calcular cuánto tiempo lleva generando, sin re-crear el intervalo en cada render
     const startRef = useRef(Date.now())
-    const stoppedRef = useRef(false)
 
     useEffect(() => {
+        // variable local (no un ref) a propósito: cada invocación de este efecto necesita su
+        // propia bandera. Con un ref compartido, el doble montaje de Strict Mode en desarrollo
+        // (mount -> cleanup -> mount) deja `stopped` en `true` para siempre desde el primer
+        // cleanup, y el polling del segundo montaje real nunca vuelve a ejecutarse.
+        let cancelled = false
+
         const checkStatus = async () => {
-            if (stoppedRef.current) return
+            if (cancelled) return
             try {
                 const data: OrderStatusDto = await ConsultationService.getOrderStatus(orderId)
+                if (cancelled) return
 
                 if (data.generationStatus === 'completado' && data.planJson) {
-                    stoppedRef.current = true
+                    cancelled = true
                     setPlan(data.planJson)
                     setNutritionPlan(data.planJson)
                     setViewState('completed')
@@ -48,7 +54,7 @@ export default function OrderPage() {
                 }
 
                 if (data.generationStatus === 'error') {
-                    stoppedRef.current = true
+                    cancelled = true
                     setViewState('error')
                     return
                 }
@@ -66,7 +72,7 @@ export default function OrderPage() {
         checkStatus()
         const intervalId = setInterval(checkStatus, POLLING_INTERVAL_MS)
         return () => {
-            stoppedRef.current = true
+            cancelled = true
             clearInterval(intervalId)
         }
     }, [orderId])

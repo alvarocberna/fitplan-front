@@ -61,7 +61,21 @@ Backend data model (separate repo, NestJS + SQLite): a single `orden` entity hol
 
 After making a **large or structurally significant** change — a new route/page, a new feature directory, a change to the consultation/payment/order flow, a new or changed backend integration/API contract, or a project-wide naming/convention change — invoke the `doc-writer` subagent (via the Agent tool) to update `README.md` and/or `doc/` accordingly. Small or purely internal changes (refactors with no behavior/contract change, styling, bugfixes) don't need it. This is not wired to a hook — you (Claude) are responsible for deciding when a change qualifies and triggering it yourself.
 
+## Test maintenance
+
+The project has unit tests (Vitest + React Testing Library, see `vitest.config.ts`) and e2e tests (Playwright, see `playwright.config.ts`), documented in `doc/testing.md`. After changing code covered by an existing test — or adding a component/service/page in an already-covered area (consultation feature, `shared/api`, `shared/context`, `nutrition-plan`) — invoke the `test-maintainer` subagent (via the Agent tool) to update or extend the relevant tests. Not wired to a hook — you (Claude) decide when it applies and trigger it yourself.
+
 ## Known technical debt (from README)
 
 - The order/consultation backend URL is exposed as a public env var (`NEXT_PUBLIC_BACKEND_URL`) and fetched directly from the browser with no auth — unlike the CMS client, it has no cookie/CSRF handling. Intended fix: make it private and proxy it like the CMS backend does.
 - Anamnesis state is only persisted to context/localStorage once the chat completes; a mid-chat reload re-runs (and re-bills, token-wise) the whole conversation. Intended fix: persist incrementally per turn, plus add an explicit reset action for users who want to restart.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -61,7 +61,6 @@ export function FormUserInfo() {
                 {/* <option value="" disabled hidden></option> */}
                 <option value="MASCULINO">Masculino</option>
                 <option value="FEMENINO">Femenino</option>
-                <option value="OTRO">Otro</option>
             </select>
             <label
                 className="absolute text-sm text-zinc-700 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2 
