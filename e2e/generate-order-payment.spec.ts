@@ -10,23 +10,23 @@ test.describe('Consultation - generate order', () => {
   test('creates the order and navigates to the simulated payment page', async ({ page }) => {
     await seedConsultationContext(page, { personalInfo: VALID_PERSONAL_INFO, anamnesis: VALID_ANAMNESIS, measurements: VALID_MEASUREMENTS });
     await mockCreateOrder(page, { orderId: 'order-e2e-123' });
-    await page.goto('/consultation/generate-order');
+    await page.goto('/consulta/generar-orden');
 
     await expect(page.getByText('$5').first()).toBeVisible();
     await page.getByRole('button', { name: 'Realizar pago' }).click();
 
-    await expect(page).toHaveURL(/\/payment\/order-e2e-123$/);
+    await expect(page).toHaveURL(/\/pago\/order-e2e-123$/);
   });
 
   test('shows an error toast and stays on the page when order creation fails', async ({ page }) => {
     await seedConsultationContext(page, { personalInfo: VALID_PERSONAL_INFO, anamnesis: VALID_ANAMNESIS, measurements: VALID_MEASUREMENTS });
     await mockCreateOrder(page, { fail: true });
-    await page.goto('/consultation/generate-order');
+    await page.goto('/consulta/generar-orden');
 
     await page.getByRole('button', { name: 'Realizar pago' }).click();
 
     await expect(page.getByText('Error al crear la orden')).toBeVisible();
-    await expect(page).toHaveURL(/\/consultation\/generate-order$/);
+    await expect(page).toHaveURL(/\/consulta\/generar-orden$/);
   });
 
   test('does not call the backend and shows a toast when previous-step data is incomplete', async ({ page }) => {
@@ -36,7 +36,7 @@ test.describe('Consultation - generate order', () => {
       createOrderCalled = true;
       return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
     });
-    await page.goto('/consultation/generate-order');
+    await page.goto('/consulta/generar-orden');
 
     await page.getByRole('button', { name: 'Realizar pago' }).click();
 
@@ -48,20 +48,20 @@ test.describe('Consultation - generate order', () => {
 test.describe('Consultation - simulated payment', () => {
   test('pays and navigates to the order status page', async ({ page }) => {
     await mockSimulatePayment(page);
-    await page.goto('/payment/order-e2e-123');
+    await page.goto('/pago/order-e2e-123');
 
     await page.getByRole('button', { name: 'Pagar' }).click();
 
-    await expect(page).toHaveURL(/\/orders\/order-e2e-123$/);
+    await expect(page).toHaveURL(/\/ordenes\/order-e2e-123$/);
   });
 
   test('shows an error toast and stays on the page when payment simulation fails', async ({ page }) => {
     await mockSimulatePayment(page, { fail: true });
-    await page.goto('/payment/order-e2e-123');
+    await page.goto('/pago/order-e2e-123');
 
     await page.getByRole('button', { name: 'Pagar' }).click();
 
     await expect(page.getByText('Error al procesar el pago')).toBeVisible();
-    await expect(page).toHaveURL(/\/payment\/order-e2e-123$/);
+    await expect(page).toHaveURL(/\/pago\/order-e2e-123$/);
   });
 });

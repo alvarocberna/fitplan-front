@@ -17,7 +17,7 @@ export default defineConfig({
   },
   webServer: {
     // `next dev` (Turbopack) en vez de build+start: un build de producción intenta pre-renderizar
-    // /articles en build-time contra NEXT_PUBLIC_BACKEND_CMS_URL, que acá es un host dummy
+    // /articulos en build-time contra NEXT_PUBLIC_BACKEND_CMS_URL, que acá es un host dummy
     // (ver .env.test) — el mock de red de Playwright solo intercepta fetches del NAVEGADOR, no
     // los que Next hace en el servidor durante el build, así que un build real falla. `next dev`
     // no pre-renderiza en build-time y evita ese conflicto.

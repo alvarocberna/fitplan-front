@@ -36,13 +36,13 @@ export default function Plans() {
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                   <Link
-                    href={`/plans/${plan.slug}`}
+                    href={`/planes/${plan.slug}`}
                     className="w-36 px-4 py-1.5 rounded-full bg-white text-zinc-800 text-sm font-semibold text-center hover:bg-zinc-100 transition-colors"
                   >
                     Ver más
                   </Link>
                   <Link
-                    href="/cart"
+                    href="/carrito"
                     className="w-36 px-4 py-1.5 rounded-full text-white text-sm font-semibold text-center hover:opacity-90 transition-opacity"
                     style={{ backgroundColor: 'var(--color-primary)' }}
                   >

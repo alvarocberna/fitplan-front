@@ -69,7 +69,7 @@ export function Hero() {
           </div>
           {/* button 1*/}
           <Link
-            href="/consultation/start"
+            href="/consulta/inicio"
             className="relative text-sm block w-full md:w-[70%] px-6 py-2 rounded-lg text-white mb-1 shadow-lg text-center"
             style={{ backgroundColor: 'var(--color-primary)' }}
           >

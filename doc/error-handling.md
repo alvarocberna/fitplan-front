@@ -1,0 +1,89 @@
+# Manejo de errores (error boundaries)
+
+## Contexto
+
+Un escaneo OWASP ZAP sobre `http://localhost:3000` reportó "Divulgación de error de aplicación" en
+`/testimonios`: el mensaje de error podía revelar información sensible (ruta del archivo que produjo la
+excepción, stack trace).
+
+Al revisar el flujo se confirmó que el problema era real y no estaba acotado a esa página: **el proyecto no
+tenía ningún `error.tsx` ni `global-error.tsx` en `src/app`**, en ninguna ruta. Sin un boundary de error, un
+`throw` no controlado durante el render de un Server Component llega hasta el overlay de error de desarrollo
+de Next.js, que sí incluye stack trace completo, fragmento de código fuente y ruta del archivo — exactamente
+lo que detectó ZAP.
+
+Caso concreto que dispara el problema: `src/app/testimonios/page.tsx` hace
+`await TestimonialsServicePublic.getTestimonials()`, que internamente usa `apiFetchCMS`
+(`src/shared/api/client-cms.ts`). `apiFetchCMS` lanza (`throw new Error(...)`) si el backend CMS no responde,
+devuelve un HTTP de error, o el JSON viene malformado. Ese throw no estaba envuelto en ningún `try/catch`.
+
+## Solución: boundaries de error a nivel de app
+
+Se agregaron dos archivos en la raíz de `src/app`:
+
+### `src/app/error.tsx`
+
+Boundary de error genérico para toda la aplicación. En App Router, un `error.tsx` captura los errores de su
+propio segmento **y de todos los segmentos anidados por debajo**, hasta encontrar otro `error.tsx` más
+cercano en el árbol. Como no hay ningún `error.tsx` más específico en ninguna ruta, este único archivo cubre
+hoy todas las rutas existentes (`testimonios`, `articulos`, `planes`, `consulta/*`, `ordenes/*`,
+`pago/*`, `carrito`, `dev/*`).
+
+Comportamiento:
+- Debe ser Client Component (`'use client'`), requisito de Next.js para archivos `error.tsx`.
+- Loguea el error completo (`error`, `error.digest`) solo en consola/servidor vía `console.error` — nunca se
+  renderiza `error.message` ni el stack al cliente.
+- Al usuario se le muestra un mensaje genérico y, si existe, el `digest` — el id de correlación que Next.js
+  genera automáticamente para errores de Server Components — como referencia que puede reportar a soporte.
+- Ofrece un botón "Reintentar" que llama a `reset()` (vuelve a intentar renderizar el segmento).
+- Reutiliza los componentes compartidos `Card`, `SubsectionHead`, `SubsectionTitle` y la clase `btn
+  primary-btn`, para mantener el mismo lenguaje visual que el estado de error ya existente en
+  `src/app/ordenes/[id]/page.tsx`.
+
+### `src/app/global-error.tsx`
+
+Cubre el único caso que `error.tsx` no puede capturar: un error en el propio `src/app/layout.tsx` (root
+layout). Next.js exige que este archivo defina su propio `<html>`/`<body>`, porque reemplaza el layout raíz
+completo (se pierde `NavbarLanding`, `Providers`, fuentes, etc.).
+
+Por eso es deliberadamente autocontenido:
+- No importa componentes compartidos ni depende de `Providers`/fuentes — podrían ser parte de lo que falló.
+- Usa estilos inline en vez de clases de Tailwind/`globals.css`, ya que ese CSS se carga hoy de forma
+  transitiva a través de otros componentes (ver nota abajo) que este archivo no renderiza.
+- Mismo criterio que `error.tsx`: solo `digest` + botón "Reintentar", detalle completo solo en consola.
+
+## Qué NO se expone al usuario
+
+En ambos archivos, lo único visible en el navegador es:
+- Un mensaje genérico en español ("Algo salió mal", "Ocurrió un error inesperado...").
+- El `digest` del error, si Next.js lo generó (string opaco, no revela nada del código fuente).
+- Un botón para reintentar.
+
+`error.message` y el stack trace nunca se renderizan — solo van a `console.error`, que en producción no
+llega al cliente.
+
+## Nota: carga de `globals.css`
+
+`src/app/layout.tsx` tiene el import de `./globals.css` comentado; el CSS global termina cargándose de forma
+indirecta porque `src/shared/components/subsection-row.tsx` lo importa (`import '../../app/globals.css'`) y
+ese componente se usa en páginas reales. Esto es preexistente y no se tocó como parte de este cambio, pero es
+la razón por la que `error.tsx` (que sí se renderiza dentro del layout normal, junto a `NavbarLanding`) puede
+confiar en las clases de Tailwind/`globals.css`, mientras que `global-error.tsx` (que reemplaza el layout
+completo) no puede y usa estilos inline.
+
+## Extensión futura (opcional)
+
+Un `error.tsx` en un segmento anidado (por ejemplo `src/app/consulta/error.tsx` u
+`src/app/ordenes/error.tsx`) reemplazaría solo el contenido de esa sección, manteniendo visible el `layout.tsx`
+propio de esa sección (navbar/stepper). Hoy un error en esas rutas cae directo al `error.tsx` genérico de
+raíz, perdiendo ese contexto visual. No es necesario por seguridad — el boundary de raíz ya cierra el hallazgo
+de ZAP — pero podría agregarse más adelante como mejora de UX si alguna sección lo justifica.
+
+## Verificación
+
+- `tsc --noEmit` sin errores tras agregar ambos archivos.
+- No se pudo correr `npm run lint` (`next lint`) para validar este cambio: falla con
+  `Invalid project directory provided, no such directory: .../lint`, un problema preexistente de
+  configuración del proyecto no relacionado con este cambio.
+- Pendiente: volver a correr el escaneo ZAP contra `/testimonios` (idealmente también contra
+  `npm run build && npm run start`, no solo `npm run dev`) para confirmar que la alerta ya no aparece.

@@ -12,7 +12,7 @@ export class ConsultationService{
         return apiFetch<{ orderId: string }>('ordenes/crear', 'POST', completeConsultation )
     }
 
-    //llamado desde la pasarela de pago simulada (/payment/[orderId]). Golpea el mismo endpoint
+    //llamado desde la pasarela de pago simulada (/pago/[orderId]). Golpea el mismo endpoint
     //que usaría el webhook real de una pasarela de pago una vez que se integre una.
     public static async simulatePayment(orderId: string): Promise<{ status: string }> {
         return apiFetch<{ status: string }>(`webhooks/ordenes/${orderId}/simular-pago`, 'POST')

@@ -29,7 +29,7 @@ export function FormMeasurements(){
         setMeasurements(data);
 
         //redirecciona a la ruta donde se arma la orden y se realiza el pago
-        router.push('/consultation/generate-order');
+        router.push('/consulta/generar-orden');
     }
 
     return(

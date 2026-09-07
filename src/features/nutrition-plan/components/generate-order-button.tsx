@@ -36,9 +36,9 @@ export function GenerateOrderButton(){
             //solo se dispara cuando el pago se confirma (webhook), para no gastar en usuarios que no pagan.
             const { orderId } = await ConsultationService.createOrder(completeConsultation);
 
-            //redirige a la pasarela de pago. Hoy es una pasarela simulada (/payment/[orderId]);
+            //redirige a la pasarela de pago. Hoy es una pasarela simulada (/pago/[orderId]);
             //cuando se integre un proveedor real, esta es la línea que cambia por la URL de checkout real.
-            router.push(`/payment/${orderId}`);
+            router.push(`/pago/${orderId}`);
         } catch (error: any) {
             toast.error(error.message || 'Error al iniciar la consulta');
             setIsCreatingOrder(false);

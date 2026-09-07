@@ -9,7 +9,7 @@ import { Card, SubsectionHead, SubsectionTitle, useConsultation } from '@/shared
 //features
 import { ConsultationService, OrderStatusDto, NutritionPlanDto } from '@/features'
 
-// @react-pdf/renderer solo puede correr en el navegador (igual que en /consultation/nutrition-plan)
+// @react-pdf/renderer solo puede correr en el navegador (igual que en /consulta/plan-nutricional)
 const DownloadPlanPdf = dynamic(
     () => import('@/features/nutrition-plan/components/download-plan-pdf').then(m => m.DownloadPlanPdf),
     { ssr: false, loading: () => <span className="text-sm text-gray-400">Cargando botón de descarga...</span> }

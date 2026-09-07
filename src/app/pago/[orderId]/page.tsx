@@ -22,7 +22,7 @@ export default function SimulatedPaymentPage() {
         try {
             //dispara la misma lógica que ejecutaría el webhook real de la pasarela
             await ConsultationService.simulatePayment(orderId)
-            router.push(`/orders/${orderId}`)
+            router.push(`/ordenes/${orderId}`)
         } catch (error: any) {
             toast.error(error.message || 'Error al procesar el pago')
             setIsPaying(false)

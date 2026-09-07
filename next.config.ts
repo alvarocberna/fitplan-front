@@ -1,19 +1,20 @@
 import type { NextConfig } from "next";
 
-const backendUrl =
+const apiCMSUrl =
   process.env.NEXT_PUBLIC_BACKEND_CMS_URL || "http://localhost:3001";
-const apiUrl =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
 const nextConfig: NextConfig = {
   /* config options here */
+
+  // Evita que Next.js agregue el header "X-Powered-By: Next.js" a las respuestas
+  poweredByHeader: false,
 
   // 🔥 REWRITE PARA PROXY A NEST
   async rewrites() {
     return [
       {
         source: "/api/:path*",
-        destination: `${backendUrl}/:path*`,
+        destination: `${apiCMSUrl}/:path*`,
       },
     ];
   },
@@ -38,34 +39,9 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
+    // El Content-Security-Policy se genera por request (con nonce) en
+    // src/proxy.ts, no aquí, porque el nonce debe cambiar en cada respuesta.
     const isProd = process.env.NODE_ENV === "production";
-    const s3Bucket =
-      "https://web-core-storage.s3.us-east-1.amazonaws.com";
-
-    const csp = (
-      isProd
-        ? [
-            "default-src 'self'",
-            "script-src 'self' 'unsafe-inline'",
-            "style-src 'self' 'unsafe-inline'",
-            `img-src 'self' data: blob: ${backendUrl} ${apiUrl} ${s3Bucket}`,
-            "font-src 'self'",
-            `connect-src 'self' ${backendUrl} ${apiUrl}`,
-            "object-src 'none'",
-            "base-uri 'self'",
-            "frame-ancestors 'none'",
-            "form-action 'self'",
-            "upgrade-insecure-requests",
-          ]
-        : [
-            "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-            "style-src 'self' 'unsafe-inline'",
-            `img-src 'self' data: blob: ${backendUrl} ${apiUrl} ${s3Bucket}`,
-            "font-src 'self'",
-            `connect-src 'self' ${backendUrl} ${apiUrl}`,
-          ]
-    ).join("; ");
 
     const securityHeaders: { key: string; value: string }[] = [
       {
@@ -83,10 +59,6 @@ const nextConfig: NextConfig = {
       {
         key: "Referrer-Policy",
         value: "strict-origin-when-cross-origin",
-      },
-      {
-        key: "Content-Security-Policy",
-        value: csp,
       },
     ];
 

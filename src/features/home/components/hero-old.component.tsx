@@ -24,7 +24,7 @@ export function HeroOld() {
         </p>
         {/* button 1*/}
         <Link
-          href="/consultation/start"
+          href="/consulta/inicio"
           className="relative block w-[60%] px-6 py-2 rounded-lg text-white mb-1 shadow-lg"
           style={{ backgroundColor: 'var(--color-primary)' }}
         >

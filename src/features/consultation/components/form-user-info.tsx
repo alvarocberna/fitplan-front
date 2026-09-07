@@ -20,7 +20,7 @@ export function FormUserInfo() {
     //on submit
     const onSubmit: SubmitHandler<FormPersonalInfoInterface> = (data) => {
         setPersonalInfo(data) //actualizamos los datos del context
-        router.push('/consultation/anamnesis'); //enviamos al siguiente paso
+        router.push('/consulta/anamnesis'); //enviamos al siguiente paso
     }
 
     return (

@@ -41,7 +41,7 @@ export function NuviDescription() {
             datos, razonar y planificar pautas nutricionales específicas para cada disciplina deportiva y objetivo. 
           </p>
           <Link
-            href="/consultation/start"
+            href="/consulta/inicio"
             className="self-start px-6 py-2 rounded-lg flex items-center text-white shadow-lg"
             style={{ backgroundColor: 'var(--color-primary)' }}
           >

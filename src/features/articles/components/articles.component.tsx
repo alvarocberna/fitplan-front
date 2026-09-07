@@ -149,7 +149,7 @@ export function ArticlesPublic({ articlesData }: ArticlesPublicProps) {
                         {/* Ver todos */}
                         <div className="body-element flex justify-center mt-10">
                             <Link
-                                href="/articles"
+                                href="/articulos"
                                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-lila text-lila text-sm font-semibold hover:bg-lila hover:text-texto-invertido transition-colors duration-200"
                             >
                                 Ver todos los artículos

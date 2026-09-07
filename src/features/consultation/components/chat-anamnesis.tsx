@@ -75,7 +75,7 @@ export function ChatAnamnesis() {
     //actualiza context y redirecciona al formulario de evaluacion-fisica
     const handleNext = () => {
         setAnamnesis(currentAnamnesis)
-        router.push('/consultation/physical-assessment')
+        router.push('/consulta/evaluacion-fisica')
     }
 
     

@@ -22,7 +22,7 @@ test('completes the full consultation flow end-to-end: personal info -> anamnesi
     { paymentStatus: 'pagado', generationStatus: 'completado', planJson: nutritionPlanMock },
   ]);
   // 1. Información personal
-  await page.goto('/consultation/personal-info');
+  await page.goto('/consulta/informacion-personal');
   await page.getByLabel('Rut', { exact: true }).fill('12345678');
   await page.getByLabel('DV-Rut').fill('K');
   await page.getByLabel('Primer nombre').fill('Ana');
@@ -33,7 +33,7 @@ test('completes the full consultation flow end-to-end: personal info -> anamnesi
   await personalInfoSelects.nth(0).selectOption('FEMENINO');
   await personalInfoSelects.nth(1).selectOption('true');
   await page.getByRole('button', { name: 'Siguiente' }).click();
-  await expect(page).toHaveURL(/\/consultation\/anamnesis$/);
+  await expect(page).toHaveURL(/\/consulta\/anamnesis$/);
 
   // 2. Chat de anamnesis
   const textarea = page.getByPlaceholder(/Escribe tu respuesta/);
@@ -44,7 +44,7 @@ test('completes the full consultation flow end-to-end: personal info -> anamnesi
   await textarea.press('Enter');
   await expect(page.getByRole('button', { name: 'Siguiente' })).toBeVisible();
   await page.getByRole('button', { name: 'Siguiente' }).click();
-  await expect(page).toHaveURL(/\/consultation\/physical-assessment$/);
+  await expect(page).toHaveURL(/\/consulta\/evaluacion-fisica$/);
 
   // 3. Evaluación física
   await page.getByLabel('Peso').fill('65');
@@ -52,15 +52,15 @@ test('completes the full consultation flow end-to-end: personal info -> anamnesi
   // el radio está visualmente oculto (sr-only); se selecciona haciendo clic en su label asociado
   await page.locator('label[for^="somatotipo-"]').first().click();
   await page.getByRole('button', { name: 'Finalizar consulta' }).click();
-  await expect(page).toHaveURL(/\/consultation\/generate-order$/);
+  await expect(page).toHaveURL(/\/consulta\/generar-orden$/);
 
   // 4. Generar orden
   await page.getByRole('button', { name: 'Realizar pago' }).click();
-  await expect(page).toHaveURL(new RegExp(`/payment/${ORDER_ID}$`));
+  await expect(page).toHaveURL(new RegExp(`/pago/${ORDER_ID}$`));
 
   // 5. Pago simulado
   await page.getByRole('button', { name: 'Pagar' }).click();
-  await expect(page).toHaveURL(new RegExp(`/orders/${ORDER_ID}$`));
+  await expect(page).toHaveURL(new RegExp(`/ordenes/${ORDER_ID}$`));
 
   // 6. Estado de la orden -> plan listo (el polling real es cada 4s, se espera tiempo real)
   await expect(page.getByText('¡Tu plan nutricional está listo!')).toBeVisible({ timeout: 10_000 });

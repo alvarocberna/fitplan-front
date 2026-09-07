@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Consultation - personal info', () => {
   test('submits valid data, persists it and advances to anamnesis', async ({ page }) => {
-    await page.goto('/consultation/personal-info');
+    await page.goto('/consulta/informacion-personal');
 
     await page.getByLabel('Rut', { exact: true }).fill('12345678');
     await page.getByLabel('DV-Rut').fill('K');
@@ -16,7 +16,7 @@ test.describe('Consultation - personal info', () => {
 
     await page.getByRole('button', { name: 'Siguiente' }).click();
 
-    await expect(page).toHaveURL(/\/consultation\/anamnesis$/);
+    await expect(page).toHaveURL(/\/consulta\/anamnesis$/);
     const stored = await page.evaluate(() => window.localStorage.getItem('consulta_context'));
     expect(JSON.parse(stored ?? '{}').personalInfo).toMatchObject({
       firstName: 'Ana',
@@ -28,16 +28,16 @@ test.describe('Consultation - personal info', () => {
   });
 
   test('blocks submit and shows validation errors when submitted empty', async ({ page }) => {
-    await page.goto('/consultation/personal-info');
+    await page.goto('/consulta/informacion-personal');
 
     await page.getByRole('button', { name: 'Siguiente' }).click();
 
-    await expect(page).toHaveURL(/\/consultation\/personal-info$/);
+    await expect(page).toHaveURL(/\/consulta\/informacion-personal$/);
     await expect(page.getByText('Campo requerido').first()).toBeVisible();
   });
 
   test('only offers Masculino/Femenino as gender options (no "Otro")', async ({ page }) => {
-    await page.goto('/consultation/personal-info');
+    await page.goto('/consulta/informacion-personal');
 
     const genderSelect = page.getByRole('combobox').nth(0);
     const optionLabels = await genderSelect.locator('option').allTextContents();

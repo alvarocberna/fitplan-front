@@ -107,7 +107,7 @@ export function TestimonialsPublic({testimonialsData}: Props) {
                 )}
                 <div className='body-element w-full flex justify-between'>
                     <button
-                        onClick={() => router.push('/testimonials')}
+                        onClick={() => router.push('/testimonios')}
                         className="btn secondary-btn text-sm"
                     >
                         Ver todos

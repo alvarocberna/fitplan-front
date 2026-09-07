@@ -41,7 +41,7 @@ export default function PlanDetail() {
             ${plan.price}
           </p>
           <Link
-            href="/cart"
+            href="/carrito"
             className="px-6 py-2 rounded-full text-white font-semibold hover:opacity-90 transition-opacity"
             style={{ backgroundColor: 'var(--color-primary)' }}
           >

@@ -37,7 +37,7 @@ export async function mockSimulatePayment(page: Page, options: { fail?: boolean 
 }
 
 // Intercepta ordenes/obtener-estado/:id con una secuencia de estados (la última se repite),
-// simulando la progresión que el polling de /orders/[id] vería del backend real.
+// simulando la progresión que el polling de /ordenes/[id] vería del backend real.
 export async function mockOrderStatusSequence(page: Page, sequence: Array<Record<string, unknown>>) {
   let call = 0;
   await page.route('**/ordenes/obtener-estado/*', async (route) => {

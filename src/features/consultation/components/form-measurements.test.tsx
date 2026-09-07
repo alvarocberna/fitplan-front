@@ -78,7 +78,7 @@ describe('FormMeasurements', () => {
     await user.click(screen.getAllByRole('radio')[2]);
     await user.click(screen.getByRole('button', { name: 'Finalizar consulta' }));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/consultation/generate-order'));
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/consulta/generar-orden'));
     const stored = JSON.parse(localStorage.getItem('consulta_context')!);
     expect(stored.measurements.weight).toBe(70);
     expect(stored.measurements.height).toBe(170);

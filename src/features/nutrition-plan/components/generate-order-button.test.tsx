@@ -68,7 +68,7 @@ describe('GenerateOrderButton', () => {
     await user.click(screen.getByRole('button'));
 
     expect(createOrder).toHaveBeenCalledWith({ personalInfo: PERSONAL_INFO, anamnesis: ANAMNESIS, measurements: MEASUREMENTS });
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/payment/order-123'));
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/pago/order-123'));
   });
 
   it('shows the error message from a failed createOrder call and re-enables the button', async () => {

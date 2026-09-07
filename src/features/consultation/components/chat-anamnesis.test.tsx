@@ -110,7 +110,7 @@ describe('ChatAnamnesis', () => {
     const nextButton = await screen.findByRole('button', { name: 'Siguiente' });
     await user.click(nextButton);
 
-    expect(pushMock).toHaveBeenCalledWith('/consultation/physical-assessment');
+    expect(pushMock).toHaveBeenCalledWith('/consulta/evaluacion-fisica');
     const stored = JSON.parse(localStorage.getItem('consulta_context')!);
     expect(stored.anamnesis).toEqual(finalAnamnesis);
   });

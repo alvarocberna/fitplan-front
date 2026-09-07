@@ -7,7 +7,7 @@ const VALID_PERSONAL_INFO = { firstName: 'Ana', gender: 'FEMENINO' };
 test.describe('Consultation - physical assessment', () => {
   test('submits measurements, persists them and advances to generate-order', async ({ page }) => {
     await seedConsultationContext(page, { personalInfo: VALID_PERSONAL_INFO, anamnesis: VALID_ANAMNESIS });
-    await page.goto('/consultation/physical-assessment');
+    await page.goto('/consulta/evaluacion-fisica');
 
     await page.getByLabel('Peso').fill('65');
     await page.getByLabel('Talla').fill('165');
@@ -15,7 +15,7 @@ test.describe('Consultation - physical assessment', () => {
     await page.locator('label[for^="somatotipo-"]').first().click();
     await page.getByRole('button', { name: 'Finalizar consulta' }).click();
 
-    await expect(page).toHaveURL(/\/consultation\/generate-order$/);
+    await expect(page).toHaveURL(/\/consulta\/generar-orden$/);
     const stored = await page.evaluate(() => window.localStorage.getItem('consulta_context'));
     const measurements = JSON.parse(stored ?? '{}').measurements;
     expect(measurements.weight).toBe(65);
@@ -25,7 +25,7 @@ test.describe('Consultation - physical assessment', () => {
 
   test('blocks submit with a toast when anamnesis from a previous step is missing', async ({ page }) => {
     await seedConsultationContext(page, { personalInfo: VALID_PERSONAL_INFO, anamnesis: null });
-    await page.goto('/consultation/physical-assessment');
+    await page.goto('/consulta/evaluacion-fisica');
 
     await page.getByLabel('Peso').fill('65');
     await page.getByLabel('Talla').fill('165');
@@ -34,6 +34,6 @@ test.describe('Consultation - physical assessment', () => {
     await page.getByRole('button', { name: 'Finalizar consulta' }).click();
 
     await expect(page.getByText('Faltan datos de pasos anteriores')).toBeVisible();
-    await expect(page).toHaveURL(/\/consultation\/physical-assessment$/);
+    await expect(page).toHaveURL(/\/consulta\/evaluacion-fisica$/);
   });
 });

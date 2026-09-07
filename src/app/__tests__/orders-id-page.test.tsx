@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import OrderPage from '@/app/orders/[id]/page';
+import OrderPage from '@/app/ordenes/[id]/page';
 import { ConsultationProvider } from '@/shared';
 import { ConsultationService } from '@/features';
 import type { OrderStatusDto } from '@/features';

@@ -17,7 +17,7 @@ test.describe('Consultation - anamnesis chat', () => {
       },
     ]);
 
-    await page.goto('/consultation/anamnesis');
+    await page.goto('/consulta/anamnesis');
     const textarea = page.getByPlaceholder(/Escribe tu respuesta/);
 
     await textarea.fill('Quiero bajar de peso');
@@ -30,7 +30,7 @@ test.describe('Consultation - anamnesis chat', () => {
 
     await page.getByRole('button', { name: 'Siguiente' }).click();
 
-    await expect(page).toHaveURL(/\/consultation\/physical-assessment$/);
+    await expect(page).toHaveURL(/\/consulta\/evaluacion-fisica$/);
     const stored = await page.evaluate(() => window.localStorage.getItem('consulta_context'));
     expect(JSON.parse(stored ?? '{}').anamnesis.goals.primaryGoal).toBe('bajar de peso');
   });
@@ -41,13 +41,13 @@ test.describe('Consultation - anamnesis chat', () => {
       route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ message: 'Error interno' }) })
     );
 
-    await page.goto('/consultation/anamnesis');
+    await page.goto('/consulta/anamnesis');
     const textarea = page.getByPlaceholder(/Escribe tu respuesta/);
     await textarea.fill('Hola');
     await textarea.press('Enter');
 
     await expect(page.getByText('Error al enviar el mensaje')).toBeVisible();
     await expect(textarea).toBeEnabled();
-    await expect(page).toHaveURL(/\/consultation\/anamnesis$/);
+    await expect(page).toHaveURL(/\/consulta\/anamnesis$/);
   });
 });

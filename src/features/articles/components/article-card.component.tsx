@@ -25,7 +25,7 @@ export function ArticleCardPublic({ article }: ArticleCardProps){
         {
             STYLE === 'style2' ? (
                 <div className='w-full sm:w-1/2 lg:w-1/3 px-2 mb-4'>
-                    <Link href={`/articles/${article.slug}`} className='card hover-btn w-full h-full flex flex-col justify-between overflow-hidden'>
+                    <Link href={`/articulos/${article.slug}`} className='card hover-btn w-full h-full flex flex-col justify-between overflow-hidden'>
                         <div>
                             <div className='w-full h-48 relative'>
                                 <Image
@@ -62,7 +62,7 @@ export function ArticleCardPublic({ article }: ArticleCardProps){
             :
             (
                 <div className='w-full sm:w-1/2 lg:w-1/3 px-2 mb-4'>
-                    <Link href={`/articles/${article.slug}`} className='card hover-btn w-full h-full flex flex-col justify-between overflow-hidden'>
+                    <Link href={`/articulos/${article.slug}`} className='card hover-btn w-full h-full flex flex-col justify-between overflow-hidden'>
                         <div>
                             <div
                                 className="h-2 w-full"

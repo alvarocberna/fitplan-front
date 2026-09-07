@@ -55,7 +55,7 @@ export default function StartConsultation() {
           </div>
 
           <Link
-            href="/consultation/personal-info"
+            href="/consulta/informacion-personal"
             className="block w-[60%] mx-auto px-8 py-2 rounded-lg text-white font-semibold text-center"
             style={{ backgroundColor: 'var(--color-primary)' }}
           >

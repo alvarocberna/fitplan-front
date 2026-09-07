@@ -85,7 +85,7 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   "Siguiente" al completarse la anamnesis.
 - **`GenerateOrderButton`** y **`DownloadPlanPdf`**: guardas de datos incompletos, payload exacto enviado al backend, y los
   estados de carga/nombre de archivo del PDF (con `@react-pdf/renderer` parcialmente mockeado).
-- **`/orders/[id]`**: el ciclo completo de polling con fake timers — cada 4s, el aviso de demora a los 45s, la detención del
+- **`/ordenes/[id]`**: el ciclo completo de polling con fake timers — cada 4s, el aviso de demora a los 45s, la detención del
   polling al completarse o fallar, resiliencia ante un error de red puntual, y la limpieza del intervalo al desmontar.
 
 ## Qué cubren los tests e2e
@@ -107,7 +107,7 @@ individuales no verían (traspaso de `localStorage`, remonte de `ConsultationPro
 
 ## Hallazgos durante el proceso
 
-- **Bug corregido** — `/orders/[id]` usaba un `useRef` (`stoppedRef`) para detener el polling, compartido entre invocaciones
+- **Bug corregido** — `/ordenes/[id]` usaba un `useRef` (`stoppedRef`) para detener el polling, compartido entre invocaciones
   del efecto. Bajo Strict Mode de desarrollo (`next dev`), React monta → limpia → remonta el efecto una vez al iniciar; el
   cleanup del primer montaje dejaba `stoppedRef.current = true` para siempre, y el polling del montaje real nunca volvía a
   ejecutarse — el usuario se quedaba viendo el spinner indefinidamente. Se reemplazó por una variable local (`cancelled`)
@@ -125,7 +125,7 @@ individuales no verían (traspaso de `localStorage`, remonte de `ConsultationPro
 ## Notas / limitaciones conocidas
 
 - Los e2e corren contra `next dev` (Turbopack), no contra un build de producción: un build real intenta pre-renderizar
-  `/articles` en build-time contra `NEXT_PUBLIC_BACKEND_CMS_URL`, que en `.env.test` es un host dummy — el mock de red de
+  `/articulos` en build-time contra `NEXT_PUBLIC_BACKEND_CMS_URL`, que en `.env.test` es un host dummy — el mock de red de
   Playwright solo intercepta fetches del navegador, no los que Next hace en el servidor durante el build.
 - No hay CI configurado (no existe `.github/workflows` en el repo) — correr `npm test` / `npm run test:e2e` en un pipeline
   queda pendiente como tarea aparte.

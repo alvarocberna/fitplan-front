@@ -98,7 +98,7 @@ export default function Cart() {
             </button>
 
             <Link
-              href="/plans"
+              href="/planes"
               className="text-center text-sm text-zinc-600 hover:text-zinc-900 transition-colors underline"
             >
               Seguir viendo planes

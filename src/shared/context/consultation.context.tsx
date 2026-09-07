@@ -54,7 +54,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     // espejo del estado siempre actualizado (se reasigna en cada render, no en un efecto), para que los
     // setters de storage lean el valor más reciente aunque se invoquen desde un closure viejo (ej. un
     // callback capturado en un useEffect con dependencias fijas de otro componente, como el polling de
-    // /orders/[id]) y así no pisen en localStorage campos que ya fueron hidratados después de ese closure
+    // /ordenes/[id]) y así no pisen en localStorage campos que ya fueron hidratados después de ese closure
     const stateRef = useRef({ personalInfo, anamnesis, measurements, nutritionPlan })
     stateRef.current = { personalInfo, anamnesis, measurements, nutritionPlan }
 

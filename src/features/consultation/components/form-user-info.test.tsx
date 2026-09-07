@@ -39,7 +39,7 @@ describe('FormUserInfo', () => {
 
     await user.click(screen.getByRole('button', { name: 'Siguiente' }));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/consultation/anamnesis'));
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/consulta/anamnesis'));
     const stored = JSON.parse(localStorage.getItem('consulta_context')!);
     expect(stored.personalInfo).toMatchObject({
       firstName: 'Ana',
