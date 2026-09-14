@@ -8,7 +8,7 @@ function mockFetchOnce(response: Partial<Response> & { json?: () => Promise<unkn
 }
 
 beforeEach(() => {
-  vi.stubEnv('NEXT_PUBLIC_BACKEND_URL', 'https://api.consultation.test');
+  vi.stubEnv('BACKEND_URL', 'https://api.consultation.test');
 });
 
 describe('apiFetch', () => {

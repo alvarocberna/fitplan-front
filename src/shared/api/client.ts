@@ -1,13 +1,20 @@
+import 'server-only'
+
 export async function apiFetch<T>(
     endpoint: string,
     method?: string,
     data?: any,
+    accessToken?: string | null,
 ): Promise<T>{
 
-    const url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const url = process.env.BACKEND_URL
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`
+
     const res = await fetch(`${url}/${endpoint}`, {
         method: method,
-        headers: {'Content-Type': 'application/json'},
+        headers,
         body: data ? JSON.stringify(data) : undefined,
     })
 

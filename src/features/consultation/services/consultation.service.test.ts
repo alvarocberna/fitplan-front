@@ -1,52 +1,72 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ConsultationService } from './consultation.service';
-import { apiFetch } from '../../../shared/api/client';
+import {
+  createOrderAction,
+  simulatePaymentAction,
+  sendAnamnesisTurnAction,
+  getOrderStatusAction,
+} from './consultation.actions';
 import type { CompleteConsultationDto } from '../dtos/consultation.dto';
 import type { InputChatDto } from '../dtos/anamnesis-chat.dto';
 
-vi.mock('../../../shared/api/client', () => ({ apiFetch: vi.fn() }));
+vi.mock('./consultation.actions', () => ({
+  createOrderAction: vi.fn(),
+  simulatePaymentAction: vi.fn(),
+  sendAnamnesisTurnAction: vi.fn(),
+  getOrderStatusAction: vi.fn(),
+}));
 
-const mockedApiFetch = vi.mocked(apiFetch);
+const mockedCreateOrderAction = vi.mocked(createOrderAction);
+const mockedSimulatePaymentAction = vi.mocked(simulatePaymentAction);
+const mockedSendAnamnesisTurnAction = vi.mocked(sendAnamnesisTurnAction);
+const mockedGetOrderStatusAction = vi.mocked(getOrderStatusAction);
 
 beforeEach(() => {
-  mockedApiFetch.mockReset();
+  mockedCreateOrderAction.mockReset();
+  mockedSimulatePaymentAction.mockReset();
+  mockedSendAnamnesisTurnAction.mockReset();
+  mockedGetOrderStatusAction.mockReset();
 });
 
 describe('ConsultationService', () => {
   it('createOrder posts the complete consultation to ordenes/crear', async () => {
-    mockedApiFetch.mockResolvedValue({ orderId: 'order-1' });
+    mockedCreateOrderAction.mockResolvedValue({ ok: true, data: { orderId: 'order-1' } });
     const dto: CompleteConsultationDto = { personalInfo: null, anamnesis: null, measurements: null };
 
     const result = await ConsultationService.createOrder(dto);
 
-    expect(mockedApiFetch).toHaveBeenCalledWith('ordenes/crear', 'POST', dto);
+    expect(mockedCreateOrderAction).toHaveBeenCalledWith(dto);
     expect(result).toEqual({ orderId: 'order-1' });
   });
 
   it('simulatePayment posts to the webhook endpoint interpolated with the order id', async () => {
-    mockedApiFetch.mockResolvedValue({ status: 'pagado' });
+    mockedSimulatePaymentAction.mockResolvedValue({ ok: true, data: { status: 'pagado' } });
 
     await ConsultationService.simulatePayment('order-123');
 
-    expect(mockedApiFetch).toHaveBeenCalledWith('webhooks/ordenes/order-123/simular-pago', 'POST');
+    expect(mockedSimulatePaymentAction).toHaveBeenCalledWith('order-123');
   });
 
   it('sendAnamnesisTurn posts the chat turn payload to consulta/chat', async () => {
     const input: InputChatDto = { messages: [], anamnesis: { goals: null, clinical: null, dietary: null, lifestyle: null } };
-    mockedApiFetch.mockResolvedValue({
-      reply: 'hola', titleReply: 'Objetivos', anamnesis: input.anamnesis, isComplete: false,
+    mockedSendAnamnesisTurnAction.mockResolvedValue({
+      ok: true,
+      data: { reply: 'hola', titleReply: 'Objetivos', anamnesis: input.anamnesis, isComplete: false },
     });
 
     await ConsultationService.sendAnamnesisTurn(input);
 
-    expect(mockedApiFetch).toHaveBeenCalledWith('consulta/chat', 'POST', input);
+    expect(mockedSendAnamnesisTurnAction).toHaveBeenCalledWith(input);
   });
 
   it('getOrderStatus performs a GET against the status endpoint interpolated with the order id', async () => {
-    mockedApiFetch.mockResolvedValue({ paymentStatus: 'pagado', generationStatus: 'completado', planJson: null });
+    mockedGetOrderStatusAction.mockResolvedValue({
+      ok: true,
+      data: { paymentStatus: 'pagado', generationStatus: 'completado', planJson: null },
+    });
 
     await ConsultationService.getOrderStatus('order-456');
 
-    expect(mockedApiFetch).toHaveBeenCalledWith('ordenes/obtener-estado/order-456', 'GET');
+    expect(mockedGetOrderStatusAction).toHaveBeenCalledWith('order-456');
   });
 });

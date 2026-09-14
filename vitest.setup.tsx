@@ -35,3 +35,8 @@ vi.mock('next/image', () => ({
     return <img {...props} />;
   },
 }));
+
+// El paquete server-only lanza al importarse fuera del bundler de Next (que lo sustituye por un
+// no-op al compilar para el servidor). Vitest no hace esa sustitución, así que cualquier módulo
+// server-only (client.ts, session.ts, tokens.ts, ...) rompería sus tests sin este mock.
+vi.mock('server-only', () => ({}));

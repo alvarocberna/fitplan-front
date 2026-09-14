@@ -19,7 +19,7 @@ export default defineConfig({
     exclude: ['node_modules', '.next', 'e2e'],
     css: false,
     env: {
-      NEXT_PUBLIC_BACKEND_URL: 'https://api.consultation.test',
+      BACKEND_URL: 'https://api.consultation.test',
       NEXT_PUBLIC_BACKEND_CMS_URL: 'https://cms.test',
       NEXT_PUBLIC_PROYECTO_ID: 'test-project-id',
     },

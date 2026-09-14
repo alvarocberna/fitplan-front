@@ -6,14 +6,6 @@ import { faUser, faNotesMedical, faRulerVertical, faCreditCard, faClipboardCheck
 //shared
 import {Card, SubsectionHead, SubsectionTitle} from '@/shared'
 
-// const steps = [
-//   { title: 'Información personal:', text: 'Comienza completando tus datos personales básicos. Esta información permitirá personalizar tu evaluación nutricional.', icon: faUser },
-//   { title: 'Conversación con Nuvi:', text: 'Nuvi conversará contigo para conocer tus objetivos, hábitos alimentarios y de estilo de vida, además de información sobre los deportes que practicas. Responde con la mayor claridad y detalle posible para obtener un plan más preciso.', icon: faNotesMedical },
-//   { title: 'Datos físicos:', text: 'Ingresa tu información física, como peso y talla. Estos datos serán utilizados para elaborar tu plan con mayor precisión.', icon: faRulerVertical },
-//   { title: 'Pago seguro:', text: 'Una vez finalizada la evaluación, deberás realizar un pago de US $5 para obtener tu plan nutricional personalizado.', icon: faCreditCard },
-//   { title: '¡Tu plan está listo!', text: 'Tras confirmar el pago, podrás descargar tu plan nutricional de inmediato. Además, recibirás una copia en tu correo electrónico.', icon: faClipboardCheck },
-// ]
-
 const steps = [
   { title: 'Información personal:', text: 'Completa tus datos básicos.', icon: faUser },
   { title: 'Chat con Nuvi:', text: 'Conversa con Nuvi para que pueda conocer tus objetivos deportivos y requerimientos.', icon: faNotesMedical },
@@ -55,7 +47,7 @@ export default function StartConsultation() {
           </div>
 
           <Link
-            href="/consulta/informacion-personal"
+            href="/consulta/login"
             className="block w-[60%] mx-auto px-8 py-2 rounded-lg text-white font-semibold text-center"
             style={{ backgroundColor: 'var(--color-primary)' }}
           >

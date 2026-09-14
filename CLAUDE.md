@@ -16,7 +16,7 @@ There is no test suite configured (no test script, no test runner in `package.js
 ## Environment
 
 Requires a `.env` (see `.env.template`) with:
-- `NEXT_PUBLIC_BACKEND_URL` — order/consultation backend (NestJS + SQLite, separate repo)
+- `NEXT_PUBLIC_BACKEND_URL` — order/consultation backend (NestJS + PostgreSQL, separate repo)
 - `NEXT_PUBLIC_BACKEND_CMS_URL` — CMS backend (articles/testimonials, auth via cookies)
 - `NEXT_PUBLIC_PROYECTO_ID` — project id sent to the CMS backend
 
@@ -47,7 +47,7 @@ Key steps:
 - **Payment** (`/pago/[orderId]`): a simulated gateway (card fields are decorative/disabled). "Pagar" calls `ConsultationService.simulatePayment`, which triggers backend-side the same logic a real payment webhook would. This page is a stand-in for a future real-gateway checkout + webhook.
 - **Order status** (`/ordenes/[id]`): polls `ConsultationService.getOrderStatus` every 4s, reading `estado_pago` / `estado_generacion` / `plan_json`. Shows a delay notice past 45s while generating, renders the PDF download (`DownloadPlanPdf`, dynamically imported since `@react-pdf/renderer` only runs client-side) once `completado`, or a reassuring error state — the polling URL is meant to be revisited later.
 
-Backend data model (separate repo, NestJS + SQLite): a single `orden` entity holding the submitted consultation data, `estado_pago` (`pendiente|pagado`), `estado_generacion` (`no_iniciado|generando|completado|error`), and `plan_json`.
+Backend data model (separate repo, NestJS + PostgreSQL): a single `orden` entity holding the submitted consultation data, `estado_pago` (`pendiente|pagado`), `estado_generacion` (`no_iniciado|generando|completado|error`), and `plan_json`.
 
 ### CMS-backed content (articles, testimonials, home)
 
