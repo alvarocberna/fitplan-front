@@ -25,11 +25,11 @@ export function NavbarLanding() {
           Opiniones
         </Link>
         <Link
-          href="/consulta/inicio"
+          href="/login"
           className="px-6 py-2 rounded-lg text-white"
           style={{ backgroundColor: 'var(--color-primary)' }}
         >
-          Iniciar Consulta
+          Iniciar sesión
         </Link>
       </nav>
     </div>

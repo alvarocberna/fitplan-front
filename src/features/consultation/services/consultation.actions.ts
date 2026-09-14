@@ -1,20 +1,13 @@
 'use server'
 
 import { apiFetch } from '@/shared/api/client'
+import { runAction, type ActionResult } from '@/shared/api/action-result'
 import { getValidAccessToken } from '@/shared/auth/tokens'
 import { CompleteConsultationDto } from '../dtos/consultation.dto'
 import { InputChatDto, OutputChatDto } from '../dtos/anamnesis-chat.dto'
 import { OrderStatusDto } from '../dtos/order.dto'
 
-export type ActionResult<T> = { ok: true; data: T } | { ok: false; message: string }
-
-async function runAction<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
-  try {
-    return { ok: true, data: await fn() }
-  } catch (err) {
-    return { ok: false, message: err instanceof Error ? err.message : 'Error desconocido' }
-  }
-}
+export type { ActionResult }
 
 export async function createOrderAction(
   completeConsultation: CompleteConsultationDto,
@@ -37,5 +30,8 @@ export async function sendAnamnesisTurnAction(data: InputChatDto): Promise<Actio
 }
 
 export async function getOrderStatusAction(orderId: string): Promise<ActionResult<OrderStatusDto>> {
-  return runAction(() => apiFetch<OrderStatusDto>(`ordenes/obtener-estado/${orderId}`, 'GET'))
+  return runAction(async () => {
+    const accessToken = await getValidAccessToken()
+    return apiFetch<OrderStatusDto>(`ordenes/obtener-estado/${orderId}`, 'GET', undefined, accessToken)
+  })
 }

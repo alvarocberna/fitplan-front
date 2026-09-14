@@ -5,6 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser, faNotesMedical, faRulerVertical, faCreditCard, faClipboardCheck } from '@fortawesome/free-solid-svg-icons'
 //shared
 import {Card, SubsectionHead, SubsectionTitle} from '@/shared'
+import { getSession } from '@/shared/auth/session'
+import { syncProfileAction } from '@/shared/auth/profile.actions'
 
 const steps = [
   { title: 'Información personal:', text: 'Completa tus datos básicos.', icon: faUser },
@@ -14,7 +16,19 @@ const steps = [
   { title: '¡Tu plan está listo!', text: 'Descárgalo tu plan y recíbelo también por correo electrónico.', icon: faClipboardCheck },
 ]
 
-export default function StartConsultation() {
+export default async function StartConsultation() {
+  const { isAuthenticated } = await getSession()
+
+  let href = '/login'
+  if (isAuthenticated) {
+    const result = await syncProfileAction()
+    // Si falla la sincronización (token inválido, backend caído), se cae a informacion-personal
+    // por seguridad — nunca a anamnesis sin confirmar que el perfil está completo.
+    href = result.ok && result.data.profileComplete
+      ? '/home'
+      : '/consulta/informacion-personal'
+  }
+
   return (
     <div className="w-full min-h-screen py-24">
       <div className="max-w-2xl flex flex-col mx-auto" >
@@ -47,7 +61,7 @@ export default function StartConsultation() {
           </div>
 
           <Link
-            href="/consulta/login"
+            href={href}
             className="block w-[60%] mx-auto px-8 py-2 rounded-lg text-white font-semibold text-center"
             style={{ backgroundColor: 'var(--color-primary)' }}
           >

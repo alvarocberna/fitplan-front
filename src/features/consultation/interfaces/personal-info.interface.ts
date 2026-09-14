@@ -1,11 +1,11 @@
 
 export interface FormPersonalInfoInterface {
-  rut: number
-  dvRut: string
+  rut?: number | null
+  dvRut?: string | null
   firstName: string
-  middleName: string | null
+  middleName?: string | null
   paternalLastName: string
-  maternalLastName: string | null
+  maternalLastName?: string | null
   gender: string
   athlete: boolean
   email: string

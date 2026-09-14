@@ -1,15 +1,16 @@
 //features
 import { Hero, NuviDescription, ConsultationDescription, PersonalPlanDescription, StandardPlanDescription } from "@/features";
 //shared
-import { getSession } from "@/shared/auth/session";
+import { getSession, getStartConsultationHref } from "@/shared/auth/session";
 
 
 export default async function Home() {
   const { isAuthenticated, status, userInfo } = await getSession();
+  const startHref = await getStartConsultationHref();
 
   return (
     <div>
-        <Hero />
+        <Hero startHref={startHref} />
       <div className="w-full text-center py-2 text-sm">
         {isAuthenticated ? (
           <span>

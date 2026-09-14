@@ -118,3 +118,11 @@ export async function getSession(): Promise<{
 
   return { isAuthenticated: true, status: 'authenticated', userInfo: result.userInfo }
 }
+
+// Usado por los botones "Iniciar Consulta" del sitio (navbar, hero): sin sesión (o expirada) van
+// directo a login en vez de a /consulta/inicio. /consulta/inicio mantiene su propia verificación
+// (llega igual por navegación directa/bookmark), esto solo evita el salto extra por esos botones.
+export async function getStartConsultationHref(): Promise<string> {
+  const { isAuthenticated } = await getSession()
+  return isAuthenticated ? '/consulta/inicio' : '/login'
+}

@@ -6,13 +6,21 @@ const apiCMSUrl =
   process.env.NEXT_PUBLIC_BACKEND_CMS_URL || "http://localhost:3001";
 const s3Bucket = "https://web-core-storage.s3.us-east-1.amazonaws.com";
 
-// Rutas bajo /consulta/* que deben quedar accesibles sin sesión: la landing pre-login, el login
-// en sí (para no crear un loop de redirects) y /consulta (vacía, sin uso). Cualquier otra ruta
-// que empiece con "/consulta/" queda protegida por defecto, incluidas las que se agreguen a futuro.
-const PUBLIC_CONSULTA_PATHS = new Set(["/consulta", "/consulta/inicio", "/consulta/login"]);
+// Rutas bajo /consulta/* que deben quedar accesibles sin sesión: solo /consulta (vacía, sin uso).
+// /consulta/inicio ahora requiere sesión igual que el resto — sin ella, el proxy redirige a /login
+// antes de que la página se renderice. El login vive en /login (fuera de /consulta/*, así que no
+// necesita estar acá para no crear un loop de redirects). Cualquier otra ruta que empiece con
+// "/consulta/" queda protegida por defecto, incluidas las que se agreguen a futuro.
+const PUBLIC_CONSULTA_PATHS = new Set(["/consulta"]);
+
+// Otras rutas (fuera de /consulta/*) que también requieren sesión.
+const PROTECTED_PATHS = new Set(["/home"]);
 
 function requiresSession(pathname: string): boolean {
-  return pathname.startsWith("/consulta/") && !PUBLIC_CONSULTA_PATHS.has(pathname);
+  return (
+    (pathname.startsWith("/consulta/") && !PUBLIC_CONSULTA_PATHS.has(pathname)) ||
+    PROTECTED_PATHS.has(pathname)
+  );
 }
 
 // El CSP se genera por request (con nonce) en el proxy en vez de en
@@ -23,7 +31,7 @@ export async function proxy(request: NextRequest) {
     const isAuthenticated = sessionCookie ? await hasValidSession(sessionCookie) : false;
 
     if (!isAuthenticated) {
-      return NextResponse.redirect(new URL("/consulta/login", request.url));
+      return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 

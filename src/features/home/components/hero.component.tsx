@@ -14,7 +14,12 @@ const features = [
   { text: 'Estrategias deportivas', description: 'Mejora el rendimiento en entrenamientos y competencias.', icon: faDumbbell },
 ]
 
-export function Hero() {
+// startHref viene como prop (no se calcula acá con getStartConsultationHref()) porque este
+// componente se re-exporta desde el barrel @/features junto a Client Components (ej.
+// testimonial-form.component.tsx) — eso arrastra este archivo al bundle del navegador, donde no
+// puede importar nada de src/shared/auth/session.ts (server-only). Se calcula en el Server
+// Component que sí es inequívocamente servidor (src/app/page.tsx) y se pasa ya resuelto.
+export function Hero({ startHref }: { startHref: string }) {
   return (
     <div className="relative w-full h-screen flex flex-row items-center px-6">
       <Image
@@ -69,7 +74,7 @@ export function Hero() {
           </div>
           {/* button 1*/}
           <Link
-            href="/consulta/inicio"
+            href={startHref}
             className="relative text-sm block w-full md:w-[70%] px-6 py-2 rounded-lg text-white mb-1 shadow-lg text-center"
             style={{ backgroundColor: 'var(--color-primary)' }}
           >

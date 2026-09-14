@@ -2,151 +2,218 @@
 
 ## Resumen
 
-La app usa Amazon Cognito (Hosted UI, flujo Authorization Code con cliente confidencial) como proveedor de
-identidad, implementado con `openid-client@6` sobre Route Handlers de Next.js. La guía de configuración que
-entrega AWS trae el ejemplo en Express (`express-session`, `app.use()`, EJS); nada de eso existe en este
-proyecto, así que cada paso se tradujo a las convenciones reales del App Router en vez de copiarse literal.
+La app usa Amazon Cognito (Hosted UI, flujo Authorization Code con cliente confidencial) como
+proveedor de identidad — login nativo (usuario/contraseña) y **Google como Identity Provider
+federado**. Implementado con `openid-client@6` sobre Route Handlers de Next.js.
 
-Dos razones concretas por las que el código de AWS no se pudo copiar tal cual:
+A diferencia de la primera versión de esta funcionalidad, **el backend (`nutricionista-virtual-back`)
+ya no es ciego a esto**: valida el Access Token de Cognito y resuelve la identidad real
+(`User`/`AuthIdentity` en Postgres). El navegador nunca llama al backend directo — todo pasa por
+**Server Actions** de Next.js, que adjuntan el token. Detalle del lado del backend:
+`nutricionista-virtual-back/doc/auth.md`. Flujo end-to-end completo (ambos repos + DB):
+`doc/flow.md` de este mismo directorio.
 
-1. **No hay middleware chain.** Express encadena `app.use(session(...))` + `checkAuth` antes de cada ruta.
-   Next.js no tiene ese concepto para Route Handlers/Server Components — la sesión se implementa como una
-   cookie firmada, leída/escrita explícitamente donde se necesita, siguiendo el patrón oficial de
-   `node_modules/next/dist/docs/01-app/02-guides/authentication.md` (`jose` + `server-only`).
-2. **`openid-client@6` no es la API que usa el snippet de AWS.** La v6 eliminó las clases `Issuer`/`Client` y
-   el export `generators` (API de la v5) en favor de funciones sueltas: `discovery()`, `randomState()`,
-   `randomNonce()`, `buildAuthorizationUrl()`, `authorizationCodeGrant()`, `fetchUserInfo()`. Confirmado
-   leyendo `node_modules/openid-client/build/index.d.ts` — usar el snippet de AWS tal cual habría fallado en
-   runtime.
-
-## Piezas implementadas
+## Piezas implementadas — Cognito Hosted UI (login/logout)
 
 ### `src/shared/auth/cognito-config.ts`
 Singleton perezoso y cacheado de la `Configuration` de `openid-client`, construido con
-`discovery(new URL(COGNITO_ISSUER_URL), COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET)`. Equivale al
-`initializeClient()`/`let client` de Express, adaptado a que Next.js no tiene un hook de arranque de app — el
-módulo se carga bajo demanda y cachea la promesa en memoria del proceso. Si `discovery()` falla, el caché se
-resetea para no dejar el singleton envenenado ante un fallo transitorio.
-
-Marcado con `import 'server-only'` porque maneja `COGNITO_CLIENT_SECRET` — cualquier intento de importarlo
-desde un Client Component rompe el build en vez de filtrar el secreto al bundle del navegador. No está
-re-exportado en `src/shared/index.ts` (el barrel) por la misma razón: solo debe llegar a código server-only.
+`discovery(new URL(COGNITO_ISSUER_URL), COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET)`. Marcado con
+`import 'server-only'` porque maneja `COGNITO_CLIENT_SECRET`.
 
 ### `src/shared/auth/session.ts`
-Sesión propia de la app como cookie `session` firmada con HMAC (`jose`'s `SignJWT`/`jwtVerify`, `HS256`,
-clave derivada de `SESSION_SECRET`), `httpOnly`, `secure` en producción, `sameSite: 'lax'`, 7 días de
-expiración (aplicada por el propio `exp` del JWT, no por un campo manual).
+Sesión propia de la app como cookie `session` firmada con HMAC (`jose`'s `SignJWT`/`jwtVerify`,
+`HS256`, clave derivada de `SESSION_SECRET`), `httpOnly`, `secure` en producción,
+`sameSite: 'lax'`, 7 días de expiración.
 
-- `createSession(userInfo)` — setea la cookie. La usa el callback tras el login.
+El payload guarda **más que el perfil del usuario**: también los tokens de Cognito, necesarios
+para autenticar las llamadas al backend (ver sección "Server Actions" más abajo).
+
+```ts
+interface SessionData {
+  userInfo: Record<string, unknown>   // claims de Cognito (email, sub, ...)
+  accessToken: string                 // se manda al backend como Authorization: Bearer
+  refreshToken: string | null         // para renovar el access_token sin re-loguear
+  accessTokenExpiresAt: number        // epoch ms
+}
+```
+
+- `createSession(data: SessionData)` — setea la cookie. La usa el callback tras el login, y
+  `tokens.ts` cuando refresca el access_token.
 - `deleteSession()` — borra la cookie. La usa el logout.
-- `getSession()` — lee y valida la cookie; nunca lanza ni redirige, devuelve
-  `{ isAuthenticated: boolean, userInfo: Record<string, unknown> | null }`. Es el equivalente directo del
-  middleware `checkAuth` de AWS (que tampoco bloquea, solo informa) — pero como función que cualquier Server
-  Component puede llamar, no como middleware global.
+- `getSession()` — API pública para UI, nunca expone tokens. Devuelve
+  `{ isAuthenticated, status: 'authenticated' | 'expired' | 'anonymous', userInfo }`. `status`
+  distingue "nunca inició sesión" de "la sesión expiró" (usa `jose`'s `errors.JWTExpired`).
+- `getRawSession()` — uso interno (`tokens.ts`), devuelve el `SessionData` completo con tokens.
+- `hasValidSession(token)` — verificación optimista usada por `src/proxy.ts` para el gating de
+  rutas (ver más abajo); no distingue expirado de inválido, solo "¿alcanza para dejar pasar?".
 
-### `src/app/api/cognito/login/route.ts` (paso 9 de la guía)
+### `src/shared/auth/tokens.ts` — refresh silencioso del access_token
+`getValidAccessToken(): Promise<string | null>` — devuelve un access_token vigente para llamar al
+backend. Si el guardado en la cookie venció, lo refresca contra Cognito (`refreshTokenGrant`) antes
+de devolverlo, sin pedirle al usuario que vuelva a loguearse mientras el `refresh_token` siga
+vigente.
+
+**Detalle no obvio, encontrado en verificación manual**: persistir el token refrescado
+(`createSession(...)`) solo funciona si la llamada corre dentro de un Server Action o Route
+Handler — Next.js no permite escribir cookies durante el render de un Server Component. Como
+`getValidAccessToken()` se invoca tanto desde Server Actions reales (ej. al enviar un mensaje del
+chat) como desde el render de páginas (`consulta/inicio`, `informacion-personal`, que llaman a
+`syncProfileAction()` directo para decidir a dónde redirigir), el intento de persistir puede fallar
+en el segundo caso. Por eso el refresh contra Cognito y el intento de persistir la cookie están en
+`try/catch` **separados**: si falla solo la escritura de la cookie, se loguea un warning pero el
+token recién obtenido igual se devuelve y se usa para esa respuesta — se persistirá en la próxima
+llamada real desde un Server Action.
+
+### `src/app/api/cognito/login/route.ts`
 `GET` que genera `state`/`nonce` (`randomState()`/`randomNonce()`), construye la URL de autorización
-(`buildAuthorizationUrl(config, { redirect_uri, scope: 'email openid phone', state, nonce })`) y redirige.
-Guarda `state`/`nonce` en dos cookies `httpOnly` de vida corta (10 min: `cognito_state`, `cognito_nonce`) —
-equivalen a `req.session.state`/`req.session.nonce` en Express, pero como cookies independientes de la
-cookie `session` (no llevan `userInfo`, son de un solo uso, viven solo el viaje de ida y vuelta a Cognito).
+y redirige. Guarda `state`/`nonce` en dos cookies `httpOnly` de vida corta (10 min: `cognito_state`,
+`cognito_nonce`).
 
-No usa PKCE: se siguió el paso 9 literal de AWS (solo `state` + `nonce`), que es suficiente para un cliente
-confidencial (tiene `client_secret`, a diferencia de un cliente público donde PKCE es obligatorio). Ver
-`doc/auth-pending.md` si se quiere endurecer esto más adelante.
+Acepta dos query params opcionales, ambos con allowlist explícita (nunca se reflejan valores
+arbitrarios sin validar hacia la URL de autorización de Cognito):
+- **`?screen_hint=signup`** — salta directo a la pantalla de registro nativo de la Hosted UI en vez
+  de la de login. Usado por el botón "Registro".
+- **`?identity_provider=Google`** — salta directo al consentimiento de Google (evita la pantalla
+  nativa de la Hosted UI). Usado por el botón "Continuar con Google". Requiere que Google esté
+  habilitado como Identity Provider federado en el User Pool + App Client (configuración de AWS,
+  fuera de este repo).
 
-### `src/app/api/cognito/callback/route.ts` (paso 10)
-Es el `redirect_uri` real registrado en Cognito — **tiene que ser un Route Handler**, no una página: una
-página (Server Component) no puede setear cookies durante el render, y ahí es exactamente donde hay que
-crear la sesión. Esto difiere del snippet de AWS, donde el mismo path (`/consulta/inicio` en el pedido
-original del usuario) hace de `redirect_uri` y de vista renderizada a la vez — algo que solo funciona en
-Express porque `res.render()` ocurre en el mismo handler.
+No usa PKCE (solo `state` + `nonce`) — válido porque el intercambio de código ocurre server-side
+en `callback/route.ts`, no en el navegador (ver `doc/architecture/deployment-architecture.md §6`
+del repo raíz para la justificación completa de esta divergencia respecto a la recomendación
+estándar de "cliente público + PKCE").
 
-Flujo: lee `cognito_state`/`cognito_nonce` de las cookies, las borra, intercambia el `code` por tokens con
-`authorizationCodeGrant(config, currentUrl, { expectedState, expectedNonce })`, obtiene el `sub` del ID token
-(`tokens.claims()?.sub`) y pide el perfil con `fetchUserInfo(config, tokens.access_token, sub)`, y llama a
-`createSession(userInfo)`. Al terminar (éxito o error) redirige a **`/consulta/inicio`**, pedido explícito del
-usuario en vez del `/` que usa el ejemplo de AWS.
+### `src/app/api/cognito/callback/route.ts`
+El `redirect_uri` real registrado en Cognito. Lee `cognito_state`/`cognito_nonce`, las borra,
+intercambia el `code` por tokens (`authorizationCodeGrant`), obtiene el `sub` del ID token y pide el
+perfil con `fetchUserInfo`, y llama a `createSession({ userInfo, accessToken, refreshToken,
+accessTokenExpiresAt })` — guarda los tokens, no solo el perfil (necesario para las llamadas
+autenticadas al backend).
 
-Igual que el snippet de AWS: un error se loguea (`console.error`) pero igual redirige, sin mostrar nada al
-usuario — fiel al tutorial, aunque es una limitación de UX real (ver `doc/auth-pending.md`).
+**UX de errores**: si el intercambio falla (usuario cancela en Google/Hosted UI, `state` no
+coincide, etc.), redirige a `/login?error=callback_failed` con un mensaje visible, en vez
+de fingir éxito.
 
-### `src/app/api/cognito/logout/route.ts` (paso 11)
-`deleteSession()` + redirección al `/logout` del Hosted UI de Cognito. **No usa `buildEndSessionUrl()`** de
-`openid-client`: esa función requiere que el discovery document del issuer publique `end_session_endpoint`
-(estándar RP-Initiated Logout, con `post_logout_redirect_uri`/`id_token_hint`), y Cognito no lo publica — su
-logout es un endpoint propietario (`{dominio}/logout?client_id=...&logout_uri=...`). Por eso se arma la URL a
-mano con `URL`/`searchParams`, igual que hace el propio ejemplo de AWS, pero parametrizada con la variable
-`COGNITO_DOMAIN` en vez de hardcodeada, y con `logout_uri` calculada dinámicamente desde el origin de la
-request (no un `localhost:3000` fijo).
+Al terminar (éxito), hace un chequeo **best-effort** del estado del perfil antes de decidir el
+redirect: llama `POST /auth/perfil` (mismo endpoint que ya usaba `syncProfileAction()`) directo vía
+`apiFetch`, con el `email`/`accessToken` que ya tiene en memoria de este mismo request — sin releer
+la cookie de sesión recién escrita. Si `profileComplete === true`, redirige directo a **`/home`**,
+saltándose `/consulta/inicio`. Si da `false`, o si la llamada falla (red, backend caído), redirige a
+**`/consulta/inicio`** como antes — un fallo en este chequeo nunca bloquea el login ni manda a la
+pantalla de error, porque la sesión ya se creó independientemente de él (el `try/catch` de este
+chequeo es separado del que envuelve el intercambio de tokens). `/consulta/inicio/page.tsx` no
+cambió: sigue llamando a `syncProfileAction()` por su cuenta como defensa en profundidad para quien
+llegue ahí con perfil incompleto (o si el chequeo del callback falló) — en el caso "perfil
+incompleto" eso implica una llamada duplicada a `POST /auth/perfil` (una en el callback, otra en
+`/consulta/inicio`), aceptada como trade-off porque el endpoint es idempotente. Ver `doc/flow.md`
+para el diagrama completo.
 
-### `src/app/page.tsx` (pasos 8 y 12)
-Dejó de ser Client Component (no usaba hooks, solo componía secciones) para poder llamar a `getSession()`
-server-side. Muestra "Iniciar sesión" (→ `/api/cognito/login`) si no hay sesión, o
-"Hola, {email} · Cerrar sesión" (→ `/api/cognito/logout`) si la hay. No se incluyó el volcado
-`JSON.stringify(userInfo, null, 4)` del ejemplo EJS de AWS — es material de debug del tutorial, no algo para
-dejar visible en producción.
+### `src/app/api/cognito/logout/route.ts`
+`deleteSession()` + redirección al `/logout` propietario del Hosted UI de Cognito (arma la URL a
+mano con `COGNITO_DOMAIN`; Cognito no publica `end_session_endpoint` para usar
+`buildEndSessionUrl()` estándar).
 
-### `src/app/consulta/login/page.tsx`
-El botón "Inicio de sesión" ahora apunta a `/api/cognito/login` (mismo tab, sin `target="_blank"`) en vez de
-la URL hardcodeada del Hosted UI con un `redirect_uri` que apuntaba a un dominio CloudFront ajeno a esta app.
-El botón "Registro" se dejó intacto — sigue roto, ver `doc/auth-pending.md`.
+### `src/app/login/page.tsx`
+Tres opciones: **"Continuar con Google"** (`/api/cognito/login?identity_provider=Google`, con
+ícono), separador "o con tu correo", **"Registro"** (`/api/cognito/login?screen_hint=signup`) e
+**"Inicio de sesión"** (`/api/cognito/login`, nativo). Muestra el mensaje de error si
+`?error=callback_failed` está presente en la URL.
 
-### Paso 13 de la guía (`app.set('view engine', 'ejs')`) — no aplica
-Next.js usa JSX/React como motor de vistas en todo el proyecto. No hay nada equivalente que configurar; este
-paso del tutorial de AWS es inherente a Express y no tiene traducción.
+### Botones "Iniciar Consulta" de la home — `getStartConsultationHref()`
+Los dos botones "Iniciar Consulta" del sitio (navbar global y hero de la home) usan
+`getStartConsultationHref()` (`session.ts`) para no mandar a todo el mundo a `/consulta/inicio` por
+igual: sin sesión (o expirada) van directo a `/login`; con sesión, a `/consulta/inicio`
+(que a su vez decide entre `informacion-personal`/`home` según el perfil — ver `doc/flow.md`).
+
+**Gotcha de bundling a tener presente**: `Hero` (`hero.component.tsx`) y `NavbarLanding`
+(`navbar-landing.component.tsx`) se re-exportan desde el barrel `@/features/index.ts`, que también
+re-exporta un Client Component (`testimonial-form.component.tsx`). Eso arrastra el **barrel
+entero** al bundle del navegador — cualquier componente re-exportado ahí que importe algo
+`server-only` (como `getStartConsultationHref()`, que depende de `next/headers`) rompe el build,
+sin importar que en la práctica solo se renderice server-side. Por eso ninguno de los dos llama a
+`getStartConsultationHref()` internamente: el `href` se calcula en el Server Component padre real
+(`src/app/page.tsx` para `Hero`, `src/app/layout.tsx` para `NavbarLanding`, ninguno de los dos
+pasa por ese barrel) y se pasa como prop `startHref`. Cualquier componente nuevo que se agregue a
+ese barrel y necesite código `server-only` va a pisar el mismo problema.
+
+## El navegador nunca llama al backend directo — Server Actions
+
+`apiFetch` (`src/shared/api/client.ts`) es `server-only` y lee `BACKEND_URL` (privada, sin prefijo
+`NEXT_PUBLIC_`). Solo se invoca desde **Server Actions** (`'use server'`):
+
+- `src/features/consultation/services/consultation.actions.ts` — `createOrderAction`,
+  `simulatePaymentAction`, `sendAnamnesisTurnAction`, `getOrderStatusAction`. Las que llaman a
+  endpoints protegidos (`ordenes/crear`, `consulta/chat`, `ordenes/obtener-estado/:id`) obtienen el
+  token con `getValidAccessToken()` y lo adjuntan como `Authorization: Bearer`.
+- `src/shared/auth/profile.actions.ts` — `syncProfileAction` (`POST /auth/perfil`) y
+  `updateProfileAction` (`PATCH /auth/perfil`), usadas por el flujo de registro/perfil (ver
+  `doc/flow.md`).
+- `src/shared/api/action-result.ts` — `ActionResult<T>`/`runAction()` compartido por ambos
+  archivos de arriba. Las acciones **no lanzan** errores (siguen la guía oficial de Next para
+  Server Functions: *"avoid using try/catch blocks and throw errors. Instead, model expected
+  errors as return values"*), devuelven `{ok: true, data} | {ok: false, message}` — evita que Next
+  redacte el mensaje de error en producción. `ConsultationService`/las páginas que llaman a estas
+  acciones "desenvuelven" el resultado (`unwrap`), reconstruyendo un `throw new Error(message)`
+  del lado del cliente si `ok: false` — así el resto de la app sigue viendo el mismo
+  comportamiento de siempre (un `try/catch` con `error.message`).
+
+Esto significa que el `Guard` del backend (`CognitoAuthGuard`) nunca ve una request directa del
+navegador — todas llegan server-to-server desde el propio servidor de Next.js.
+
+## Gating de rutas — `src/proxy.ts`
+
+Verificación optimista (patrón "Optimistic checks with Proxy" de Next.js): antes del bloque que
+genera el CSP, si el `pathname` empieza con `/consulta/` y no está en una allowlist explícita
+(solo `/consulta`, vacía y sin uso — `/consulta/inicio` ya requiere sesión como el resto de
+`/consulta/*`), lee la cookie `session` con
+`request.cookies.get(...)` (no `cookies()` de `next/headers`, para no depender de un comportamiento
+no verificado dentro de proxy) y, si no es válida (`hasValidSession()`), redirige a
+`/login`. `/login` vive fuera del namespace `/consulta/*` (`src/app/login/page.tsx`), así que ya no
+necesita estar en esa allowlist. Cualquier ruta nueva bajo `/consulta/*` no listada explícitamente
+como pública queda protegida por defecto (fail-closed).
+
+No protege `/pago/[orderId]` ni `/ordenes/[id]` (fuera del prefijo `/consulta`).
 
 ## Variables de entorno (`.env.template`)
 
-Todas server-only, sin prefijo `NEXT_PUBLIC_` (nunca deben llegar al bundle del navegador):
+Todas server-only, sin prefijo `NEXT_PUBLIC_`:
 
 | Variable | Uso |
 |---|---|
 | `COGNITO_ISSUER_URL` | Issuer OIDC del user pool, para `discovery()`. |
-| `COGNITO_CLIENT_ID` | Client ID del App Client. |
+| `COGNITO_CLIENT_ID` | Client ID del App Client. Debe coincidir con `COGNITO_CLIENT_ID` del backend (mismo App Client). |
 | `COGNITO_CLIENT_SECRET` | Secret del App Client (cliente confidencial). |
 | `COGNITO_REDIRECT_URI` | Debe apuntar a `/api/cognito/callback` y estar registrada como "Allowed callback URL" en el App Client. |
-| `COGNITO_DOMAIN` | Dominio del Hosted UI (`https://<prefijo>.auth.<región>.amazoncognito.com`), usado para construir el logout. |
-| `SESSION_SECRET` | Clave para firmar la cookie `session`. Debe ser un valor fuerte generado aparte (ej. `openssl rand -base64 32`), no un placeholder tipo `'some secret'`. |
+| `COGNITO_DOMAIN` | Dominio del Hosted UI, usado para construir el logout. |
+| `SESSION_SECRET` | Clave para firmar la cookie `session`. |
+| `BACKEND_URL` | URL del backend de consulta/órdenes — privada, el navegador nunca la usa directo. |
 
 ## Cookies
 
 | Cookie | Contenido | Vida | Quién la setea/lee |
 |---|---|---|---|
-| `session` | JWT firmado con `{ userInfo }` | 7 días | `createSession`/`getSession`/`deleteSession` en `session.ts` |
+| `session` | JWT firmado con `{ userInfo, accessToken, refreshToken, accessTokenExpiresAt }` | 7 días | `createSession`/`getSession`/`getRawSession`/`deleteSession` en `session.ts` |
 | `cognito_state` | `state` de la request de autorización | 10 min | seteada en `/api/cognito/login`, leída y borrada en `/api/cognito/callback` |
 | `cognito_nonce` | `nonce` de la request de autorización | 10 min | ídem |
 
-## Contexto de backend/DB (no implementado en este repo, ver `doc/flow.md`)
+## Backend — implementado, ya no es una caja negra
 
-Lo de abajo describe `nutricionista-virtual-back` (repo aparte, NestJS + Prisma/PostgreSQL), leído
-directamente para esta actualización — no es especulación. Detalle completo, con diagrama objetivo,
-en `doc/flow.md`.
+Ver `nutricionista-virtual-back/doc/auth.md` para el detalle completo. Resumen:
 
-- El backend **ya tiene** un modelo de dominio pensado para esto: `prisma/schema.prisma` define
-  `User` y `AuthIdentity` (con `provider: 'COGNITO' | 'GOOGLE'` y
-  `@@unique([provider, providerUserId])`), con toda la capa `domain/`+`infrastructure/` construida
-  (`identity-auth/**`) y registrada en `app.module.ts`. **Pero nada en `presentation/` la usa** —
-  no hay endpoint, guard, ni validación de JWT contra el JWKS del User Pool. `AuthIdentityRepository`
-  no tiene un solo consumidor real hoy.
-- La única escritura real en la tabla `user` hoy es `OrdersService.createOrder`
-  (`userRepository.findOrCreateUserByEmail`), disparada al generar una orden de pago — usa el email
-  del formulario de "información personal", no tiene nada que ver con Cognito, y no crea ningún
-  `AuthIdentity`. Es una isla de identidad paralela a la de este frontend.
-- `.env.template` del backend trae `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET`/`BCRYPT_SALT_OR_ROUNDS`:
-  son restos de un módulo de auth local (usuario/contraseña propio) que fue removido, **sin
-  relación** con `User`/`AuthIdentity` ni con la validación de tokens de Cognito.
-- Google **no** está configurado como Identity Provider en Cognito todavía (ni en AWS ni en el
-  parámetro `identity_provider` de la URL de autorización que arma `login/route.ts`) — es 100% lo
-  que falta para el objetivo "clic en Registro → Google → registrado". Ver `doc/flow.md` sección 4
-  para los tres pasos (AWS, frontend, backend).
+- El backend valida el Access Token (`CognitoAuthGuard`, `aws-jwt-verify` contra el JWKS del User
+  Pool) en las rutas que lo requieren: `ordenes/crear`, `consulta/chat`,
+  `ordenes/obtener-estado/:id`.
+- La identidad (`AuthIdentity`+`User` "esqueleto") se crea apenas hay sesión válida
+  (`POST /auth/perfil`), separada de completar el perfil (`PATCH /auth/perfil`) — ver `doc/flow.md`
+  para el flujo completo, incluido por qué están separados.
+- Google como Identity Provider no requirió **ningún** cambio en el backend: Cognito abstrae la
+  federación, así que un login nativo y uno vía Google producen el mismo tipo de token.
 
 ## Verificación realizada
 
-`tsc --noEmit` y `npm run build` compilan limpio en cada paso (el build de producción falla más adelante en
-`/articulos` por falta de conexión al backend CMS en este entorno — no relacionado con Cognito). Con
-`npm run dev` y sin credenciales reales en `.env`: `/` renderiza igual que antes con el enlace "Iniciar
-sesión"; `/api/cognito/login` y `/api/cognito/logout` devuelven 500 (fallan al validar que faltan las
-variables de entorno, comportamiento esperado); `/api/cognito/callback` sin `code` redirige igual a
-`/consulta/inicio` limpiando las cookies `cognito_state`/`cognito_nonce`. No se pudo probar el flujo completo
-contra Cognito real por falta de credenciales en este entorno — ver `doc/auth-pending.md`.
+`tsc --noEmit`, `npm run build` y la suite de Vitest compilan/pasan limpio en cada paso. Probado
+manualmente end-to-end contra el User Pool real: login nativo, registro, gating de rutas, creación
+de orden autenticada, refresh silencioso del access_token, y el flujo completo de
+`consulta/inicio` → `informacion-personal` (o directo a `/home` si el perfil ya está completo).
+Login vía Google integrado en el código pero no ejercitado todavía contra el User Pool real — ver
+`doc/auth-pending.md`.
