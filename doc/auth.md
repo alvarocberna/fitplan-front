@@ -148,7 +148,15 @@ ese barrel y necesite código `server-only` va a pisar el mismo problema.
 - `src/shared/auth/profile.actions.ts` — `syncProfileAction` (`POST /auth/perfil`) y
   `updateProfileAction` (`PATCH /auth/perfil`), usadas por el flujo de registro/perfil (ver
   `doc/flow.md`).
-- `src/shared/api/action-result.ts` — `ActionResult<T>`/`runAction()` compartido por ambos
+- `src/features/profile/services/profile.actions.ts` — `getUserProfileAction` (`GET user/me`) y
+  `updateUserProfileAction` (`PATCH user/me`), usadas por `/perfil` (ver sección "Área de usuario
+  logueado" más abajo). **No confundir** con `src/shared/auth/profile.actions.ts`: ese archivo
+  sincroniza la identidad y completa el perfil obligatorio (RUT/género) que gatea el wizard de
+  `/consulta/*`; `user/me` es un endpoint distinto y más simple, para editar nombre/apellido/fecha
+  de nacimiento una vez que la cuenta ya existe.
+- `src/features/panel/services/panel.actions.ts` — `getPanelSummaryAction` (`GET panel/resumen`),
+  usada por `/panel`.
+- `src/shared/api/action-result.ts` — `ActionResult<T>`/`runAction()` compartido por todos los
   archivos de arriba. Las acciones **no lanzan** errores (siguen la guía oficial de Next para
   Server Functions: *"avoid using try/catch blocks and throw errors. Instead, model expected
   errors as return values"*), devuelven `{ok: true, data} | {ok: false, message}` — evita que Next
@@ -163,16 +171,56 @@ navegador — todas llegan server-to-server desde el propio servidor de Next.js.
 ## Gating de rutas — `src/proxy.ts`
 
 Verificación optimista (patrón "Optimistic checks with Proxy" de Next.js): antes del bloque que
-genera el CSP, si el `pathname` empieza con `/consulta/` y no está en una allowlist explícita
-(solo `/consulta`, vacía y sin uso — `/consulta/inicio` ya requiere sesión como el resto de
-`/consulta/*`), lee la cookie `session` con
-`request.cookies.get(...)` (no `cookies()` de `next/headers`, para no depender de un comportamiento
-no verificado dentro de proxy) y, si no es válida (`hasValidSession()`), redirige a
-`/login`. `/login` vive fuera del namespace `/consulta/*` (`src/app/login/page.tsx`), así que ya no
-necesita estar en esa allowlist. Cualquier ruta nueva bajo `/consulta/*` no listada explícitamente
-como pública queda protegida por defecto (fail-closed).
+genera el CSP, `requiresSession(pathname)` decide si la ruta necesita sesión combinando dos
+mecanismos:
 
-No protege `/pago/[orderId]` ni `/ordenes/[id]` (fuera del prefijo `/consulta`).
+- **Prefijo `/consulta/`**: protegido por defecto salvo que esté en `PUBLIC_CONSULTA_PATHS` (solo
+  `/consulta`, vacía y sin uso — `/consulta/inicio` ya requiere sesión como el resto de
+  `/consulta/*`). Cualquier ruta nueva bajo `/consulta/*` no listada ahí queda protegida por
+  defecto (fail-closed).
+- **`PROTECTED_PATHS`**: un set explícito de rutas *fuera* de `/consulta/*` que también requieren
+  sesión — `/home` (placeholder) y, ahora, `/panel` y `/perfil` (área de usuario logueado, ver
+  sección siguiente). A diferencia de `/consulta/*` acá no hay protección por prefijo: una ruta
+  nueva fuera de `/consulta/*` queda pública salvo que se agregue explícitamente a este set.
+
+Si la ruta lo requiere, lee la cookie `session` con `request.cookies.get(...)` (no `cookies()` de
+`next/headers`, para no depender de un comportamiento no verificado dentro de proxy) y, si no es
+válida (`hasValidSession()`), redirige a `/login`. `/login` vive fuera de ambos mecanismos, así que
+no necesita estar en ninguna allowlist.
+
+No protege `/pago/[orderId]` ni `/ordenes/[id]` (no están en `PROTECTED_PATHS` ni bajo
+`/consulta/*`).
+
+## Área de usuario logueado — `/panel` y `/perfil`
+
+Dos páginas nuevas bajo el route group `src/app/(sesion)/` (el paréntesis no agrega segmento a la
+URL), que comparten `src/app/(sesion)/layout.tsx`. Ese layout renderiza `NavbarSesion`
+(`src/shared/components/navbar-sesion.component.tsx`, Client Component): sidebar fija a la
+izquierda en pantallas md+, barra horizontal fija bajo el navbar público en mobile, con links a
+`/panel`, `/perfil` y `/api/cognito/logout`. Ambas rutas están en `PROTECTED_PATHS` (ver arriba) —
+sin sesión válida, `src/proxy.ts` redirige a `/login` antes de que el layout o la página se
+rendericen.
+
+- **`/panel`** (`src/app/(sesion)/panel/page.tsx`, Server Component): llama
+  `PanelService.getSummary()` (`src/features/panel/services/panel.service.ts`), que invoca el
+  Server Action `getPanelSummaryAction` (`panel.actions.ts`) — obtiene el access token con
+  `getValidAccessToken()` y llama `GET panel/resumen` vía `apiFetch`. Renderiza `PanelSummary`
+  (`panel-summary.component.tsx`) con `firstName`/`paternalLastName`/`age`/`goal` del usuario y,
+  si existe, `calorieIntake`/`proteinIntake`/`carbohydrateIntake`/`lipidIntake` del último plan
+  nutricional generado (`PanelSummaryDto.nutritionalPlan`), o placeholders si el usuario todavía no
+  tiene consulta/plan. Incluye una nota de que la vista previa del PDF del plan llegará más
+  adelante, pendiente el bucket S3 donde se van a almacenar esos archivos.
+- **`/perfil`** (`src/app/(sesion)/perfil/page.tsx`, Server Component): llama
+  `ProfileService.getProfile()` (`src/features/profile/services/profile.service.ts` →
+  `getUserProfileAction` → `GET user/me`) y renderiza `ProfileForm` (Client Component,
+  react-hook-form) para editar `firstName`/`paternalLastName`/`dateOfBirth`; el correo se muestra
+  pero queda deshabilitado (viene fijo de la sesión de Cognito, no es editable acá). Al guardar,
+  llama `updateUserProfileAction` → `PATCH user/me`.
+
+Ambos endpoints (`GET`/`PATCH user/me`, `GET panel/resumen`) son nuevos en el backend
+(`nutricionista-virtual-back`, módulos `presentation/user` y `presentation/panel`), protegidos por
+el mismo `CognitoAuthGuard` que el resto de rutas autenticadas — ver también la nota sobre no
+confundir `user/me` con `auth/perfil` en la sección anterior.
 
 ## Variables de entorno (`.env.template`)
 

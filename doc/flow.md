@@ -22,6 +22,7 @@
 | Botones "Iniciar Consulta" de la home ya evalúan sesión (antes iban siempre a `/consulta/inicio`) | **Implementado** | `src/shared/auth/session.ts` (`getStartConsultationHref`), usado en `navbar-landing.component.tsx`/`hero.component.tsx` |
 | BOLA en `ordenes/obtener-estado/:id` | **Gap conocido, no resuelto** | Ver sección 5 |
 | Atajo directo a `/home` desde el propio callback si el perfil ya está completo (evita pasar por `/consulta/inicio`) | **Implementado** | `nutricionista-virtual-front/src/app/api/cognito/callback/route.ts` — chequeo best-effort de `POST /auth/perfil`, nunca bloquea el login si falla |
+| Área de usuario logueado `/panel` y `/perfil`, gateada por sesión igual que `/home` | **Implementado** | `src/proxy.ts` (`PROTECTED_PATHS`) + `src/app/(sesion)/layout.tsx` (`NavbarSesion`) + `src/app/(sesion)/{panel,perfil}/page.tsx` |
 
 ## 1. Flujo completo, de punta a punta
 
@@ -171,6 +172,8 @@ encontrado y arreglado durante la verificación manual) en `doc/auth.md`, secci�
 | `POST /ordenes/crear` | Sí | Además valida perfil completo |
 | `POST /consulta/chat` | Sí | Solo gating, no usa la identidad |
 | `GET /ordenes/obtener-estado/:id` | Sí | **BOLA sin resolver**: no valida que la orden sea del usuario del token |
+| `GET /user/me`, `PATCH /user/me` | Sí | Edita datos básicos (`firstName`/`paternalLastName`/`dateOfBirth`) desde `/perfil`; endpoint distinto de `auth/perfil`, ver `doc/auth.md` |
+| `GET /panel/resumen` | Sí | Resumen para `/panel`: datos del usuario + último plan nutricional generado |
 | `POST /webhooks/pago`, `POST /webhooks/ordenes/:id/simular-pago` | No | Los llama la pasarela de pago (o el frontend sin sesión de por medio, en el caso simulado) — necesitan verificación de firma propia, no sesión de usuario |
 
 Detalle completo (Guard, `aws-jwt-verify`, `AuthIdentityService`) en

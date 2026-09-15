@@ -11,7 +11,7 @@ vi.mock('@/shared/auth/session', async (importOriginal) => {
 const hasValidSessionMock = vi.mocked(hasValidSession);
 
 function makeRequest(pathname: string, cookieValue?: string) {
-  const headers = cookieValue ? { cookie: `session=${cookieValue}` } : {};
+  const headers: Record<string, string> = cookieValue ? { cookie: `session=${cookieValue}` } : {};
   return new NextRequest(`http://localhost:3000${pathname}`, { headers });
 }
 
@@ -42,6 +42,60 @@ describe('proxy — session gating', () => {
       hasValidSessionMock.mockResolvedValue(true);
 
       const response = await proxy(makeRequest('/home', 'valid-token'));
+
+      expect(response.headers.get('location')).toBeNull();
+    });
+  });
+
+  describe('/panel (PROTECTED_PATHS, fuera de /consulta/*)', () => {
+    it('redirects to /login when there is no session cookie at all', async () => {
+      const response = await proxy(makeRequest('/panel'));
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get('location')).toBe('http://localhost:3000/login');
+      expect(hasValidSessionMock).not.toHaveBeenCalled();
+    });
+
+    it('redirects to /login when the session cookie is present but invalid/expired', async () => {
+      hasValidSessionMock.mockResolvedValue(false);
+
+      const response = await proxy(makeRequest('/panel', 'invalid-token'));
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get('location')).toBe('http://localhost:3000/login');
+    });
+
+    it('lets the request through when the session cookie is valid', async () => {
+      hasValidSessionMock.mockResolvedValue(true);
+
+      const response = await proxy(makeRequest('/panel', 'valid-token'));
+
+      expect(response.headers.get('location')).toBeNull();
+    });
+  });
+
+  describe('/perfil (PROTECTED_PATHS, fuera de /consulta/*)', () => {
+    it('redirects to /login when there is no session cookie at all', async () => {
+      const response = await proxy(makeRequest('/perfil'));
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get('location')).toBe('http://localhost:3000/login');
+      expect(hasValidSessionMock).not.toHaveBeenCalled();
+    });
+
+    it('redirects to /login when the session cookie is present but invalid/expired', async () => {
+      hasValidSessionMock.mockResolvedValue(false);
+
+      const response = await proxy(makeRequest('/perfil', 'invalid-token'));
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get('location')).toBe('http://localhost:3000/login');
+    });
+
+    it('lets the request through when the session cookie is valid', async () => {
+      hasValidSessionMock.mockResolvedValue(true);
+
+      const response = await proxy(makeRequest('/perfil', 'valid-token'));
 
       expect(response.headers.get('location')).toBeNull();
     });

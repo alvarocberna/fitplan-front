@@ -49,6 +49,12 @@ src/features/nutrition-plan/components/generate-order-button.test.tsx
 src/features/nutrition-plan/components/download-plan-pdf.test.tsx
 src/features/articles/services/articles.service.test.ts
 src/features/testimonials/services/testimonials.service.test.ts
+src/features/profile/services/profile.service.test.ts
+src/features/profile/components/profile-form.test.tsx
+src/features/panel/services/panel.service.test.ts
+src/features/panel/components/panel-summary.test.tsx
+src/shared/components/navbar-sesion.test.tsx
+src/proxy.test.ts
 src/app/__tests__/orders-id-page.test.tsx
 
 e2e/
@@ -87,6 +93,16 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   estados de carga/nombre de archivo del PDF (con `@react-pdf/renderer` parcialmente mockeado).
 - **`/ordenes/[id]`**: el ciclo completo de polling con fake timers — cada 4s, el aviso de demora a los 45s, la detención del
   polling al completarse o fallar, resiliencia ante un error de red puntual, y la limpieza del intervalo al desmontar.
+- **`src/proxy.ts` (`PROTECTED_PATHS`)**: además de `/home`, `/panel` y `/perfil` tienen su propio describe (mismo patrón:
+  redirect sin cookie, redirect con cookie inválida/expirada, passthrough con sesión válida).
+- **`ProfileService` / `PanelService`**: que cada método pega al endpoint esperado (`user/me`, `panel/resumen`) y que un
+  `ActionResult` con `ok: false` se traduce en una excepción con el mensaje del backend — mismo patrón que `ConsultationService`.
+- **`ProfileForm`**: prellenado de los campos editables desde el perfil (con el correo deshabilitado y de solo lectura),
+  envío que convierte la fecha a ISO y llama a `ProfileService.updateProfile`, toast de éxito/error, y las validaciones de
+  campo requerido.
+- **`PanelSummary`**: placeholders cuando faltan nombre/edad/objetivo, el mensaje de "sin plan" cuando `nutritionalPlan` es
+  `null`, y el grid de macros cuando sí hay un plan.
+- **`NavbarSesion`**: los links a `/panel`, `/perfil` y `/api/cognito/logout`, y qué link queda resaltado según `usePathname`.
 
 ## Qué cubren los tests e2e
 

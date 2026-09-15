@@ -14,7 +14,7 @@ const s3Bucket = "https://web-core-storage.s3.us-east-1.amazonaws.com";
 const PUBLIC_CONSULTA_PATHS = new Set(["/consulta"]);
 
 // Otras rutas (fuera de /consulta/*) que también requieren sesión.
-const PROTECTED_PATHS = new Set(["/home"]);
+const PROTECTED_PATHS = new Set(["/home", "/panel", "/perfil"]);
 
 function requiresSession(pathname: string): boolean {
   return (

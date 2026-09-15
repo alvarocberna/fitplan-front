@@ -24,6 +24,16 @@ export * from "./nutrition-plan/dtos/nutrition-plan.dto";
 //user
 export * from './consultation/interfaces/personal-info.interface';
 
+//PROFILE
+export * from './profile/components/profile-form.component';
+export * from './profile/services/profile.service';
+export * from './profile/dtos/user-profile.dto';
+
+//PANEL
+export * from './panel/components/panel-summary.component';
+export * from './panel/services/panel.service';
+export * from './panel/dtos/panel-summary.dto';
+
 //ARTICLES
 export * from './articles/components/article-section.component';
 export * from './articles/components/articles.component';

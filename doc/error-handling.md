@@ -79,6 +79,21 @@ propio de esa sección (navbar/stepper). Hoy un error en esas rutas cae directo 
 raíz, perdiendo ese contexto visual. No es necesario por seguridad — el boundary de raíz ya cierra el hallazgo
 de ZAP — pero podría agregarse más adelante como mejora de UX si alguna sección lo justifica.
 
+**Ya implementado para `(sesion)`**: `src/app/(sesion)/error.tsx` es el primer caso real de este patrón.
+`src/app/(sesion)/layout.tsx` (compartido por `/panel` y `/perfil`) renderiza `<NavbarSesion/>` (sidebar
+izquierdo) más `<main>{children}</main>`; ambas páginas son Server Components `async` que hacen `await
+PanelService.getSummary()` / `ProfileService.getProfile()` sin `try/catch`, así que cualquier falla de esas
+llamadas (ej. el backend caído, o los 404 que se vieron mientras `/user/me` y `/panel/resumen` corrían contra
+un proceso de dev server desactualizado — ver `nutricionista-virtual-back/doc/technical-debt.md`) se propaga
+como un `throw`. Sin un `error.tsx` propio en `(sesion)`, ese throw lo capturaba el `error.tsx` de raíz, que
+reemplaza *todo* `{children}` del layout raíz — incluyendo `(sesion)/layout.tsx` completo, sidebar y todo, no
+solo el contenido de la página que falló. Con `src/app/(sesion)/error.tsx` (mismo diseño que el `error.tsx`
+raíz: `'use client'`, solo loguea `error.digest` en consola, botón "Reintentar" vía `reset()`), el boundary
+más cercano pasa a ser este, que vive en la misma carpeta que `(sesion)/layout.tsx` — por la regla de Next.js
+de que un `error.tsx` no reemplaza el `layout.tsx` de su propio segmento, el sidebar y el `<main>` quedan
+visibles y solo se reemplaza el contenido de la página fallida. Mismo criterio a futuro para `consulta/*` u
+`ordenes/*` si se decide aplicarlo ahí.
+
 ## Verificación
 
 - `tsc --noEmit` sin errores tras agregar ambos archivos.
