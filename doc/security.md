@@ -20,6 +20,12 @@ En cada request, `src/proxy.ts`:
   prefetch de `next/link`.
 - Define ahí las URLs necesarias para `img-src` / `connect-src`: `apiCMSUrl` (`NEXT_PUBLIC_BACKEND_CMS_URL`),
   `apiNuviUrl` (`NEXT_PUBLIC_BACKEND_URL`) y el bucket S3 (`https://web-core-storage.s3.us-east-1.amazonaws.com`).
+- También define `frame-src 'self' ${plansS3Bucket}`, con `plansS3Bucket` apuntando al bucket privado
+  donde el backend almacena los PDFs de los planes nutricionales
+  (`https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com`). Sin esta directiva, el CSP
+  caía al `default-src 'self'` y bloqueaba el `<iframe>` de `PdfViewer`
+  (`src/shared/components/pdf-viewer.component.tsx`), usado en `/ordenes/[id]` y en `/panel` para
+  mostrar el PDF embebido desde su URL firmada.
 
 Next.js detecta automáticamente el nonce en el header CSP de la respuesta y lo aplica solo a los scripts que
 el propio framework inyecta (bundles, `__NEXT_DATA__`, scripts de streaming/RSC). El proyecto no tiene

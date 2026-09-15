@@ -119,9 +119,11 @@ contra un user pool real (sin credenciales en este entorno) y no está conectado
       `@CognitoUser()` porque `getStatus` no usa la identidad para nada). `getOrderStatusAction`
       (frontend) actualizado para adjuntar el `access_token`, si no el polling hubiera empezado a
       fallar con 401 incluso para el dueño de la orden.
-      **Dos consecuencias abiertas, no resueltas por este cambio:**
-      - **BOLA sigue sin resolverse**: cualquier usuario logueado puede ver el estado de una orden
-        ajena si conoce/adivina el UUID — el Guard solo exige "hay sesión", no "la orden es tuya".
+      **Dos consecuencias abiertas en su momento, la primera ya resuelta después:**
+      - **BOLA — resuelto en un cambio posterior del backend**: en ese momento cualquier usuario
+        logueado podía ver el estado de una orden ajena si conocía/adivinaba el UUID (el Guard solo
+        exigía "hay sesión", no "la orden es tuya"); el backend ahora valida que la orden pertenezca
+        al usuario del token. Ver `doc/flow.md`, sección 5.
       - **Se rompió el "revisitar por link" que `CLAUDE.md` documentaba como intencional**: alguien
         que vuelva a `/ordenes/[id]` sin una sesión activa (otro dispositivo, cookies borradas,
         sesión vencida) ya no puede ver el estado de su propia orden — antes sí podía, a propósito.

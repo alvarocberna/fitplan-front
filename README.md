@@ -65,11 +65,16 @@ un proveedor de pago (Mercado Pago, Flow, Stripe, etc.) al confirmar un cobro. T
 
 ### 6. Orden — `/ordenes/[id]`
 Hace polling a `GET ordenes/obtener-estado/{id}` (`ConsultaService.obtenerEstadoOrden`) cada 4s
-(`INTERVALO_POLLING_MS`), leyendo `EstadoOrdenDto { estado_pago, estado_generacion, plan_json }`:
+(`INTERVALO_POLLING_MS`), leyendo `EstadoOrdenDto { estado_pago, estado_generacion, plan_json, pdf_url }`:
 - `no_iniciado` / `generando` → spinner ("Estamos generando tu plan nutricional..."). Pasados 45s
   (`UMBRAL_DEMORA_MS`) se muestra un aviso de demora, aclarando que el pago ya quedó registrado.
-- `completado` (con `plan_json`) → detiene el polling, muestra el botón de descarga del PDF
-  (`DescargarPlanPdf`, cargado dinámicamente porque `@react-pdf/renderer` solo corre en el navegador).
+- `completado` (con `pdf_url`) → detiene el polling y muestra el PDF con `PdfViewer`
+  (`src/shared/components/pdf-viewer.component.tsx`): un `<iframe>` embebido apuntando a la URL firmada
+  de S3 (corta duración) más un enlace de descarga. El PDF ya no se genera en el navegador: antes esta
+  página renderizaba `DescargarPlanPdf` (`@react-pdf/renderer`, cargado dinámicamente porque solo corre
+  client-side) a partir de `plan_json`; ahora el backend lo genera, lo sube a S3 y devuelve `pdf_url`
+  directamente. `DescargarPlanPdf` sigue existiendo y en uso en `/consulta/plan-nutricional`, solo dejó
+  de usarse acá.
 - `error` → detiene el polling, mensaje tranquilizador ("Tu pago está a salvo") indicando que el equipo fue
   notificado.
 
@@ -103,6 +108,8 @@ Vive en otro repo. Su base de datos SQLite contiene una única entidad, **`orden
 - `estado_pago`: `'pendiente' | 'pagado'`,
 - `estado_generacion`: `'no_iniciado' | 'generando' | 'completado' | 'error'`,
 - `plan_json`: el `PlanNutricionalDto` resultante, una vez generado.
+- `pdf_url`: URL firmada (de corta duración) del PDF del plan, ya almacenado en un bucket S3 privado,
+  una vez generado.
 
 Endpoints consumidos por este frontend (`ConsultaService`, `src/features/consulta/services/consulta.service.ts`):
 
@@ -111,7 +118,8 @@ Endpoints consumidos por este frontend (`ConsultaService`, `src/features/consult
 | POST | `consulta/chat` | turno de chat de anamnesis |
 | POST | `ordenes/crear` | crea la orden (`estado_pago: 'pendiente'`) |
 | POST | `webhooks/ordenes/:ordenId/simular-pago` | simula la confirmación de pago (stand-in del webhook real) |
-| GET | `ordenes/obtener-estado/:ordenId` | polling de estado de pago/generación y `plan_json` |
+| GET | `ordenes/obtener-estado/:ordenId` | polling de estado de pago/generación, `plan_json` y `pdf_url` |
+| GET | `ordenes` | lista las órdenes con plan generado del usuario, del más nuevo al más antiguo (usada en `/panel`) |
 
 La URL base sale de `NEXT_PUBLIC_BACKEND_URL` (`src/shared/api/client.ts`), que centraliza el `fetch` y el
 manejo de errores HTTP para todo el servicio.

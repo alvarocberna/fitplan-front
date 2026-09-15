@@ -6,11 +6,6 @@ import { ConsultationService } from '@/features';
 import type { OrderStatusDto } from '@/features';
 
 vi.mock('next/navigation', () => ({ useParams: () => ({ id: 'order-1' }) }));
-vi.mock('next/dynamic', () => ({
-  default: () => function DownloadPlanPdfStub() {
-    return <div>Descargar PDF</div>;
-  },
-}));
 vi.mock('@/features', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features')>();
   return { ...actual, ConsultationService: { getOrderStatus: vi.fn() } };
@@ -27,7 +22,13 @@ function renderPage() {
 }
 
 function status(overrides: Partial<OrderStatusDto>): OrderStatusDto {
-  return { paymentStatus: 'pagado', generationStatus: 'generando', planJson: null, ...overrides };
+  return {
+    paymentStatus: 'pagado',
+    generationStatus: 'generando',
+    planJson: null,
+    pdfUrl: null,
+    ...overrides,
+  };
 }
 
 // envuelve el avance del reloj falso en act() para forzar a React a aplicar y renderizar
@@ -83,7 +84,8 @@ describe('OrderPage', () => {
 
   it('stops polling, shows the download button and persists the plan once generation completes', async () => {
     const planJson = { personalInfo: { name: 'Ana', lastName: 'Pérez' } } as OrderStatusDto['planJson'];
-    getOrderStatus.mockResolvedValue(status({ generationStatus: 'completado', planJson }));
+    const pdfUrl = 'https://signed-url.example/plan.pdf';
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'completado', planJson, pdfUrl }));
     renderPage();
     await tick(0);
 

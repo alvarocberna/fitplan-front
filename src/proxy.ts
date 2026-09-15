@@ -5,6 +5,11 @@ import { hasValidSession, SESSION_COOKIE } from "@/shared/auth/session";
 const apiCMSUrl =
   process.env.NEXT_PUBLIC_BACKEND_CMS_URL || "http://localhost:3001";
 const s3Bucket = "https://web-core-storage.s3.us-east-1.amazonaws.com";
+// Bucket privado donde el backend almacena los PDFs de los planes nutricionales (ver
+// StorageService en nutricionista-virtual-back) — los visores <iframe> de /ordenes/[id] y /panel
+// apuntan a URLs firmadas de este bucket.
+const plansS3Bucket =
+  "https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com";
 
 // Rutas bajo /consulta/* que deben quedar accesibles sin sesión: solo /consulta (vacía, sin uso).
 // /consulta/inicio ahora requiere sesión igual que el resto — sin ella, el proxy redirige a /login
@@ -45,6 +50,7 @@ export async function proxy(request: NextRequest) {
     img-src 'self' data: blob: ${apiCMSUrl} ${s3Bucket};
     font-src 'self';
     connect-src 'self' ${apiCMSUrl};
+    frame-src 'self' ${plansS3Bucket};
     object-src 'none';
     base-uri 'self';
     frame-ancestors 'none';

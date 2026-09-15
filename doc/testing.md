@@ -101,7 +101,8 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   envío que convierte la fecha a ISO y llama a `ProfileService.updateProfile`, toast de éxito/error, y las validaciones de
   campo requerido.
 - **`PanelSummary`**: placeholders cuando faltan nombre/edad/objetivo, el mensaje de "sin plan" cuando `nutritionalPlan` es
-  `null`, y el grid de macros cuando sí hay un plan.
+  `null`, el grid de macros cuando sí hay un plan, el mensaje de "sin planes" cuando la lista de `orders` viene vacía, y que
+  se renderice un `PdfViewer` por orden en el orden recibido (la card "Mis planes nutricionales").
 - **`NavbarSesion`**: los links a `/panel`, `/perfil` y `/api/cognito/logout`, y qué link queda resaltado según `usePathname`.
 
 ## Qué cubren los tests e2e

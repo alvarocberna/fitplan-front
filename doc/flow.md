@@ -20,7 +20,7 @@
 | Completar el perfil (RUT, nombre, género, fecha de nacimiento) | **Implementado**, separado del registro | `PATCH /auth/perfil` → `AuthIdentityService.updateProfile` |
 | Gating de rutas `/consulta/*` según sesión + perfil completo | **Implementado** | `src/proxy.ts` (sesión — protege todo `/consulta/*` salvo `/consulta`, vacía y sin uso; incluye `/consulta/inicio`) + `src/app/consulta/inicio/page.tsx` (perfil completo, además de su propia verificación de sesión como defensa en profundidad, ya casi nunca alcanzada porque el proxy corta antes) |
 | Botones "Iniciar Consulta" de la home ya evalúan sesión (antes iban siempre a `/consulta/inicio`) | **Implementado** | `src/shared/auth/session.ts` (`getStartConsultationHref`), usado en `navbar-landing.component.tsx`/`hero.component.tsx` |
-| BOLA en `ordenes/obtener-estado/:id` | **Gap conocido, no resuelto** | Ver sección 5 |
+| BOLA en `ordenes/obtener-estado/:id` | **Resuelto** (backend, repo separado) | Ver sección 5 |
 | Atajo directo a `/home` desde el propio callback si el perfil ya está completo (evita pasar por `/consulta/inicio`) | **Implementado** | `nutricionista-virtual-front/src/app/api/cognito/callback/route.ts` — chequeo best-effort de `POST /auth/perfil`, nunca bloquea el login si falla |
 | Área de usuario logueado `/panel` y `/perfil`, gateada por sesión igual que `/home` | **Implementado** | `src/proxy.ts` (`PROTECTED_PATHS`) + `src/app/(sesion)/layout.tsx` (`NavbarSesion`) + `src/app/(sesion)/{panel,perfil}/page.tsx` |
 
@@ -171,7 +171,8 @@ encontrado y arreglado durante la verificación manual) en `doc/auth.md`, secci�
 | `POST /auth/perfil`, `PATCH /auth/perfil` | Sí | Crea/completa la identidad |
 | `POST /ordenes/crear` | Sí | Además valida perfil completo |
 | `POST /consulta/chat` | Sí | Solo gating, no usa la identidad |
-| `GET /ordenes/obtener-estado/:id` | Sí | **BOLA sin resolver**: no valida que la orden sea del usuario del token |
+| `GET /ordenes/obtener-estado/:id` | Sí | **BOLA resuelto** (backend, repo separado): ahora valida que la orden sea del usuario del token. Devuelve además `pdfUrl` (URL firmada de S3 con el PDF del plan) una vez `completado` |
+| `GET /ordenes` | Sí | Lista las órdenes con plan generado del usuario del token, del más nuevo al más antiguo (usada en `/panel`, ver `doc/flow.md` del backend y `README.md` de este repo) |
 | `GET /user/me`, `PATCH /user/me` | Sí | Edita datos básicos (`firstName`/`paternalLastName`/`dateOfBirth`) desde `/perfil`; endpoint distinto de `auth/perfil`, ver `doc/auth.md` |
 | `GET /panel/resumen` | Sí | Resumen para `/panel`: datos del usuario + último plan nutricional generado |
 | `POST /webhooks/pago`, `POST /webhooks/ordenes/:id/simular-pago` | No | Los llama la pasarela de pago (o el frontend sin sesión de por medio, en el caso simulado) — necesitan verificación de firma propia, no sesión de usuario |
@@ -187,7 +188,6 @@ abierto:
 - Probar el login vía Google end-to-end contra el User Pool real (integrado en código, no
   ejercitado todavía).
 - Registrar callback/logout URLs y credenciales de Google para el dominio de producción.
-- Resolver BOLA en `ordenes/obtener-estado/:id`.
 - Cobertura de tests (Vitest/Jest) para todo el código de auth — ninguno de los archivos nuevos
   tiene tests hoy.
 - `CLAUDE.md` de ambos repos todavía no menciona este módulo de auth.

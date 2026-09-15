@@ -1,19 +1,12 @@
 'use client'
 //next
 import { useParams } from 'next/navigation'
-import dynamic from 'next/dynamic'
 //react
 import { useEffect, useRef, useState } from 'react'
 //shared
-import { Card, SubsectionHead, SubsectionTitle, useConsultation } from '@/shared'
+import { Card, PdfViewer, SubsectionHead, SubsectionTitle, useConsultation } from '@/shared'
 //features
-import { ConsultationService, OrderStatusDto, NutritionPlanDto } from '@/features'
-
-// @react-pdf/renderer solo puede correr en el navegador (igual que en /consulta/plan-nutricional)
-const DownloadPlanPdf = dynamic(
-    () => import('@/features/nutrition-plan/components/download-plan-pdf').then(m => m.DownloadPlanPdf),
-    { ssr: false, loading: () => <span className="text-sm text-gray-400">Cargando botón de descarga...</span> }
-)
+import { ConsultationService, OrderStatusDto } from '@/features'
 
 const POLLING_INTERVAL_MS = 4000
 // a partir de este tiempo sin terminar, se muestra un mensaje de "esto está tardando más de lo normal"
@@ -26,7 +19,7 @@ export default function OrderPage() {
     const { setNutritionPlan } = useConsultation()
 
     const [viewState, setViewState] = useState<ViewState>('loading')
-    const [plan, setPlan] = useState<NutritionPlanDto | null>(null)
+    const [pdfUrl, setPdfUrl] = useState<string | null>(null)
     const [isDelayed, setIsDelayed] = useState(false)
 
     //referencia para calcular cuánto tiempo lleva generando, sin re-crear el intervalo en cada render
@@ -45,10 +38,10 @@ export default function OrderPage() {
                 const data: OrderStatusDto = await ConsultationService.getOrderStatus(orderId)
                 if (cancelled) return
 
-                if (data.generationStatus === 'completado' && data.planJson) {
+                if (data.generationStatus === 'completado' && data.pdfUrl) {
                     cancelled = true
-                    setPlan(data.planJson)
-                    setNutritionPlan(data.planJson)
+                    setPdfUrl(data.pdfUrl)
+                    if (data.planJson) setNutritionPlan(data.planJson)
                     setViewState('completed')
                     return
                 }
@@ -97,11 +90,11 @@ export default function OrderPage() {
                         </div>
                     )}
 
-                    {viewState === 'completed' && plan && (
+                    {viewState === 'completed' && pdfUrl && (
                         <SubsectionHead>
                             <SubsectionTitle mb={2} title="¡Tu plan nutricional está listo!" />
-                            <div className="w-[40%] m-auto mb-4 py-8 flex justify-end">
-                                <DownloadPlanPdf plan={plan} />
+                            <div className="w-full py-8">
+                                <PdfViewer url={pdfUrl} />
                             </div>
                         </SubsectionHead>
                     )}

@@ -201,15 +201,19 @@ izquierda en pantallas md+, barra horizontal fija bajo el navbar público en mob
 sin sesión válida, `src/proxy.ts` redirige a `/login` antes de que el layout o la página se
 rendericen.
 
-- **`/panel`** (`src/app/(sesion)/panel/page.tsx`, Server Component): llama
-  `PanelService.getSummary()` (`src/features/panel/services/panel.service.ts`), que invoca el
+- **`/panel`** (`src/app/(sesion)/panel/page.tsx`, Server Component): llama en paralelo
+  `PanelService.getSummary()` (`src/features/panel/services/panel.service.ts`, que invoca el
   Server Action `getPanelSummaryAction` (`panel.actions.ts`) — obtiene el access token con
-  `getValidAccessToken()` y llama `GET panel/resumen` vía `apiFetch`. Renderiza `PanelSummary`
-  (`panel-summary.component.tsx`) con `firstName`/`paternalLastName`/`age`/`goal` del usuario y,
-  si existe, `calorieIntake`/`proteinIntake`/`carbohydrateIntake`/`lipidIntake` del último plan
-  nutricional generado (`PanelSummaryDto.nutritionalPlan`), o placeholders si el usuario todavía no
-  tiene consulta/plan. Incluye una nota de que la vista previa del PDF del plan llegará más
-  adelante, pendiente el bucket S3 donde se van a almacenar esos archivos.
+  `getValidAccessToken()` y llama `GET panel/resumen` vía `apiFetch`) y
+  `ConsultationService.getOrders()` (`getOrdersAction` → `GET ordenes`, con el mismo access token).
+  Renderiza `PanelSummary` (`panel-summary.component.tsx`) con dos cards: `firstName`/
+  `paternalLastName`/`age`/`goal` del usuario y, si existe, `calorieIntake`/`proteinIntake`/
+  `carbohydrateIntake`/`lipidIntake` del último plan nutricional generado
+  (`PanelSummaryDto.nutritionalPlan`), o placeholders si el usuario todavía no tiene consulta/plan;
+  y "Mis planes nutricionales", con la lista de `OrderSummaryDto[]` (una por orden con plan
+  generado, ya ordenadas del más nuevo al más antiguo por el backend), cada una con su fecha y un
+  `PdfViewer` apuntando a su `pdfUrl` (URL firmada de S3). Ya no depende de que exista el bucket S3
+  — está en uso desde que el backend implementó el almacenamiento de PDFs ahí.
 - **`/perfil`** (`src/app/(sesion)/perfil/page.tsx`, Server Component): llama
   `ProfileService.getProfile()` (`src/features/profile/services/profile.service.ts` →
   `getUserProfileAction` → `GET user/me`) y renderiza `ProfileForm` (Client Component,
@@ -250,7 +254,7 @@ Ver `nutricionista-virtual-back/doc/auth.md` para el detalle completo. Resumen:
 
 - El backend valida el Access Token (`CognitoAuthGuard`, `aws-jwt-verify` contra el JWKS del User
   Pool) en las rutas que lo requieren: `ordenes/crear`, `consulta/chat`,
-  `ordenes/obtener-estado/:id`.
+  `ordenes/obtener-estado/:id`, `ordenes` (listado usado en `/panel`).
 - La identidad (`AuthIdentity`+`User` "esqueleto") se crea apenas hay sesión válida
   (`POST /auth/perfil`), separada de completar el perfil (`PATCH /auth/perfil`) — ver `doc/flow.md`
   para el flujo completo, incluido por qué están separados.

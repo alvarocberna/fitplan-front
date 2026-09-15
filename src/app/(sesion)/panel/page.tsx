@@ -1,12 +1,15 @@
 //features
-import { PanelSummary, PanelService } from '@/features'
+import { PanelSummary, PanelService, ConsultationService } from '@/features'
 
 export default async function PanelPage() {
-    const summary = await PanelService.getSummary()
+    const [summary, orders] = await Promise.all([
+        PanelService.getSummary(),
+        ConsultationService.getOrders(),
+    ])
 
     return (
         <div className="max-w-3xl mx-auto px-4">
-            <PanelSummary summary={summary} />
+            <PanelSummary summary={summary} orders={orders} />
         </div>
     )
 }

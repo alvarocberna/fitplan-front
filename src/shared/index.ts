@@ -11,6 +11,7 @@ export * from './components/subsection-footer'
 export * from './components/input-outlined'
 export * from './components/input-standard'
 export * from './components/subsection-row'
+export * from './components/pdf-viewer.component'
 export * from './context/consultation.context';
 //DATA
 export * from './data/data';
