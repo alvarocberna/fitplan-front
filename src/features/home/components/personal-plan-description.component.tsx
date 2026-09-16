@@ -37,12 +37,22 @@ export function PersonalPlanDescription() {
           {/* right */}
           <div className="w-full md:w-[50%]">
             {features.map((feature, index) => (
-              <div key={index} className="flex items-start mb-6">
-                <div className="w-18 h-18 shrink-0 flex rounded-md me-5" style={{border: '1px solid var(--color-primary)'}}>
-                  <FontAwesomeIcon icon={feature.icon} className="m-auto" style={{width: '30px', height: '30px', color: 'var(--color-primary)'}} />
+              <div key={index} className="flex items-start mb-6 min-h-[130px]">
+                <div
+                  className="w-18 h-18 shrink-0 rounded-md me-5 p-[3px]"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 25%, white))',
+                  }}
+                >
+                  <div
+                    className="w-full h-full flex rounded-[5px]"
+                    style={{ backgroundColor: 'white' }}
+                  >
+                    <FontAwesomeIcon icon={feature.icon} className="m-auto" style={{width: '30px', height: '30px', color: 'var(--color-primary)'}} />
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-lg text-left text-zinc-800 mb-1">
+                  <p className="font-bold text-lg text-left mb-1" style={{color: 'var(--color-primary)'}}>
                     {feature.title}
                   </p>
                   <p className="font-medium text-sm text-zinc-800" style={{textAlign: 'justify'}}>
