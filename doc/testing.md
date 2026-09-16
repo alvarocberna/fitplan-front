@@ -93,7 +93,7 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   estados de carga/nombre de archivo del PDF (con `@react-pdf/renderer` parcialmente mockeado).
 - **`/ordenes/[id]`**: el ciclo completo de polling con fake timers — cada 4s, el aviso de demora a los 45s, la detención del
   polling al completarse o fallar, resiliencia ante un error de red puntual, y la limpieza del intervalo al desmontar.
-- **`src/proxy.ts` (`PROTECTED_PATHS`)**: además de `/home`, `/panel` y `/perfil` tienen su propio describe (mismo patrón:
+- **`src/proxy.ts` (`PROTECTED_PATHS`)**: `/panel` y `/perfil` tienen su propio describe (mismo patrón:
   redirect sin cookie, redirect con cookie inválida/expirada, passthrough con sesión válida).
 - **`ProfileService` / `PanelService`**: que cada método pega al endpoint esperado (`user/me`, `panel/resumen`) y que un
   `ActionResult` con `ok: false` se traduce en una excepción con el mensaje del backend — mismo patrón que `ConsultationService`.

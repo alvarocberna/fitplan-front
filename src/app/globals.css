@@ -5,8 +5,10 @@
 /* definimos variables en root para que estén disponibles de forma global */
 :root {
   --background: #f6f6fd;
-  --color-primary: #10b968;
-  --color-secondary: #fe9a00;
+  /* --color-primary: #0cb9df; */
+  --color-primary: #0baed2;
+  /* --color-primary: #10b968; */
+  --color-secondary: #036479;
 
   /* public */
   /* Fondo / superficies */

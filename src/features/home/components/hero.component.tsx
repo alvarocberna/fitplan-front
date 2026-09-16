@@ -5,7 +5,8 @@ import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserDoctor, faClipboardList, faCapsules, faDumbbell } from '@fortawesome/free-solid-svg-icons'
 //FEATURES
-import { NuviView } from "./nuvi-view.component";
+import { NuviViewGreen } from "./nuvi-view-green.component";
+import { NuviViewBlue } from "./nuvi-view-blue.component";
 
 const features = [
   { text: 'Nutricionista virtual', description: 'Entrenado por expertos en nutrición deportiva', icon: faUserDoctor },
@@ -40,22 +41,23 @@ export function Hero({ startHref }: { startHref: string }) {
       <div className="absolute inset-0 bg-white/20 -z-10" />
 
       <div className="relative w-1/2 h-full flex flex-col items-center justify-center text-center" >
-        <div className="w-full md:w-[80%] lg:w-[80%] xl:w-[80%] flex flex-col items-start"
+        <div className="w-full md:w-[80%] lg:w-[80%] xl:w-[80%] flex flex-col items-start mt-0 md:mt-8" 
         >
           {/* title */}
           <h2 className="w-full text-5xl text-left mb-10" style={{fontWeight: 600 }} >
-            <span className="text-zinc-800">Alcanza tu mejor </span> <br/>
-            <span style={{ color: 'var(--color-primary)' }}>versión, cada día</span>
+            <span className="text-zinc-800">Nutrición </span> <br/>
+            <span style={{ color: 'var(--color-primary)' }}>personalizada</span>
           </h2>
           {/* features */}
-          <div className="w-full md:w-[70%] flex flex-col gap-3 mb-6">
+          <div className="w-full md:w-[70%] flex flex-col gap-3 mb-6" >
             {features.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center gap-4 rounded-lg px-4 py-2 bg-white/70 ">
+                className="flex items-center gap-4 rounded-lg border-l-2 px-4 py-3 bg-white/80 backdrop-blur-sm"
+                style={{ borderLeftColor: 'var(--color-primary)' }}>
                 {/* icon */}
                 <div
-                  className="flex items-center justify-center w-8 h-8 rounded-full shrink-0"
+                  className="flex items-center justify-center w-9 h-9 rounded-full shrink-0"
                   style={{ backgroundColor: 'var(--color-primary)' }}
                 >
                   <FontAwesomeIcon icon={item.icon} style={{ color: 'white', width: '16px', height: '16px' }} />
@@ -75,7 +77,7 @@ export function Hero({ startHref }: { startHref: string }) {
           {/* button 1*/}
           <Link
             href={startHref}
-            className="relative text-sm block w-full md:w-[70%] px-6 py-2 rounded-lg text-white mb-1 shadow-lg text-center"
+            className="relative text-md block w-full md:w-[70%] px-6 py-2 rounded-lg text-white mb-1 shadow-lg text-center"
             style={{ backgroundColor: 'var(--color-primary)' }}
           >
             Iniciar Consulta
@@ -90,7 +92,7 @@ export function Hero({ startHref }: { startHref: string }) {
       </div>
 
       <div className="relative w-1/2 h-full flex items-center justify-center">
-        <NuviView />
+        <NuviViewBlue />
       </div>
     </div>
   )

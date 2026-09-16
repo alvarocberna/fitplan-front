@@ -63,16 +63,16 @@ describe('StartConsultation (/consulta/inicio)', () => {
     expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAttribute('href', '/consulta/informacion-personal');
   });
 
-  it('points "Iniciar" to /home when authenticated and the profile is already complete', async () => {
+  it('points "Iniciar" to /panel when authenticated and the profile is already complete', async () => {
     mockedGetSession.mockResolvedValue({ isAuthenticated: true, status: 'authenticated', userInfo: {} });
     mockedSyncProfileAction.mockResolvedValue({ ok: true, data: profile({ profileComplete: true }) });
 
     await renderPage();
 
-    expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAttribute('href', '/home');
+    expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAttribute('href', '/panel');
   });
 
-  it('falls back to /consulta/informacion-personal (never /home) when syncProfileAction fails', async () => {
+  it('falls back to /consulta/informacion-personal (never /panel) when syncProfileAction fails', async () => {
     mockedGetSession.mockResolvedValue({ isAuthenticated: true, status: 'authenticated', userInfo: {} });
     mockedSyncProfileAction.mockResolvedValue({ ok: false, message: 'Token inválido' });
 

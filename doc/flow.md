@@ -21,8 +21,8 @@
 | Gating de rutas `/consulta/*` según sesión + perfil completo | **Implementado** | `src/proxy.ts` (sesión — protege todo `/consulta/*` salvo `/consulta`, vacía y sin uso; incluye `/consulta/inicio`) + `src/app/consulta/inicio/page.tsx` (perfil completo, además de su propia verificación de sesión como defensa en profundidad, ya casi nunca alcanzada porque el proxy corta antes) |
 | Botones "Iniciar Consulta" de la home ya evalúan sesión (antes iban siempre a `/consulta/inicio`) | **Implementado** | `src/shared/auth/session.ts` (`getStartConsultationHref`), usado en `navbar-landing.component.tsx`/`hero.component.tsx` |
 | BOLA en `ordenes/obtener-estado/:id` | **Resuelto** (backend, repo separado) | Ver sección 5 |
-| Atajo directo a `/home` desde el propio callback si el perfil ya está completo (evita pasar por `/consulta/inicio`) | **Implementado** | `nutricionista-virtual-front/src/app/api/cognito/callback/route.ts` — chequeo best-effort de `POST /auth/perfil`, nunca bloquea el login si falla |
-| Área de usuario logueado `/panel` y `/perfil`, gateada por sesión igual que `/home` | **Implementado** | `src/proxy.ts` (`PROTECTED_PATHS`) + `src/app/(sesion)/layout.tsx` (`NavbarSesion`) + `src/app/(sesion)/{panel,perfil}/page.tsx` |
+| Atajo directo a `/panel` desde el propio callback si el perfil ya está completo (evita pasar por `/consulta/inicio`) | **Implementado** | `nutricionista-virtual-front/src/app/api/cognito/callback/route.ts` — chequeo best-effort de `POST /auth/perfil`, nunca bloquea el login si falla |
+| Área de usuario logueado `/panel` y `/perfil`, gateada por sesión (`PROTECTED_PATHS`) | **Implementado** | `src/proxy.ts` (`PROTECTED_PATHS`) + `src/app/(sesion)/layout.tsx` (`NavbarSesion`) + `src/app/(sesion)/{panel,perfil}/page.tsx` |
 
 ## 1. Flujo completo, de punta a punta
 
@@ -69,12 +69,12 @@ sequenceDiagram
         Note over FE: se loguea el error; se trata como perfil no confirmado, nunca como error de login
     end
     alt profileComplete === true
-        FE-->>U: 307 a /home (salta /consulta/inicio)
+        FE-->>U: 307 a /panel (salta /consulta/inicio)
     else profileComplete === false, o el chequeo falló
         FE-->>U: 307 a /consulta/inicio, ya autenticado
     end
 
-    U->>FE: /consulta/inicio (Server Component) — solo si no hubo atajo directo a /home
+    U->>FE: /consulta/inicio (Server Component) — solo si no hubo atajo directo a /panel
     FE->>FE: getSession() → hay sesión
     FE->>BE: POST /auth/perfil {email} — Authorization: Bearer <access_token> (llamada duplicada respecto a la del callback; aceptado porque el endpoint es idempotente)
     BE->>BE: CognitoAuthGuard valida el token (JWKS)

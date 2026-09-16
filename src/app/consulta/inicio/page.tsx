@@ -25,7 +25,7 @@ export default async function StartConsultation() {
     // Si falla la sincronización (token inválido, backend caído), se cae a informacion-personal
     // por seguridad — nunca a anamnesis sin confirmar que el perfil está completo.
     href = result.ok && result.data.profileComplete
-      ? '/home'
+      ? '/panel'
       : '/consulta/informacion-personal'
   }
 

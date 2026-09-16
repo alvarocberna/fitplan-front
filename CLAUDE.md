@@ -71,12 +71,12 @@ gets redirected to `/login` anyway. With a session, `/consulta/inicio`'s own "In
 to one of three places depending on session + profile-completion state: `/login` (session became
 invalid in between — the proxy already re-checks this on every request, so this branch inside the
 page is defense-in-depth, not the primary gate), `/consulta/informacion-personal` (incomplete
-profile — RUT/name/gender/DOB aren't in Cognito, the user fills them once), or straight to `/home`
-(profile already complete — `/home` is a bare placeholder page, gated by `src/proxy.ts` just like
-`/consulta/*`: no session redirects to `/login`).
+profile — RUT/name/gender/DOB aren't in Cognito, the user fills them once), or straight to `/panel`
+(profile already complete — `/panel` lives under `src/app/(sesion)/panel`, gated by `src/proxy.ts`
+just like `/consulta/*`: no session redirects to `/login`).
 
 Routes: `/consulta/inicio` → `/consulta/informacion-personal` (skipped if the profile is already
-complete, in which case `/consulta/inicio` sends the user to `/home` instead) → `/consulta/anamnesis`
+complete, in which case `/consulta/inicio` sends the user to `/panel` instead) → `/consulta/anamnesis`
 → `/consulta/evaluacion-fisica` → `/consulta/generar-orden` → `/pago/[orderId]` → `/ordenes/[id]`.
 
 State lives in `ConsultationProvider` / `useConsultation` (`src/shared/context/consultation.context.tsx`), persisted to `localStorage` under `consulta_context` on every mutation (so it survives a refresh, except in-progress, unconfirmed anamnesis chat). It holds four independent pieces — `personalInfo`, `anamnesis`, `measurements`, `nutritionPlan` — each with its own setter and reset. `getCompleteConsultation()` assembles the full DTO from the first three, returning `null` if any is missing. Note: `nutritionPlan` in this context is effectively unused by the live flow — the actual plan is read via polling in `/ordenes/[id]` (`plan_json` from `OrderStatusDto`), not from context.

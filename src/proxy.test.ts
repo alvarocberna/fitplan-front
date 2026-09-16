@@ -20,33 +20,6 @@ beforeEach(() => {
 });
 
 describe('proxy — session gating', () => {
-  describe('/home (PROTECTED_PATHS, fuera de /consulta/*)', () => {
-    it('redirects to /login when there is no session cookie at all', async () => {
-      const response = await proxy(makeRequest('/home'));
-
-      expect(response.status).toBe(307);
-      expect(response.headers.get('location')).toBe('http://localhost:3000/login');
-      expect(hasValidSessionMock).not.toHaveBeenCalled();
-    });
-
-    it('redirects to /login when the session cookie is present but invalid/expired', async () => {
-      hasValidSessionMock.mockResolvedValue(false);
-
-      const response = await proxy(makeRequest('/home', 'invalid-token'));
-
-      expect(response.status).toBe(307);
-      expect(response.headers.get('location')).toBe('http://localhost:3000/login');
-    });
-
-    it('lets the request through when the session cookie is valid', async () => {
-      hasValidSessionMock.mockResolvedValue(true);
-
-      const response = await proxy(makeRequest('/home', 'valid-token'));
-
-      expect(response.headers.get('location')).toBeNull();
-    });
-  });
-
   describe('/panel (PROTECTED_PATHS, fuera de /consulta/*)', () => {
     it('redirects to /login when there is no session cookie at all', async () => {
       const response = await proxy(makeRequest('/panel'));

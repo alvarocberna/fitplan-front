@@ -97,7 +97,7 @@ de fingir éxito.
 Al terminar (éxito), hace un chequeo **best-effort** del estado del perfil antes de decidir el
 redirect: llama `POST /auth/perfil` (mismo endpoint que ya usaba `syncProfileAction()`) directo vía
 `apiFetch`, con el `email`/`accessToken` que ya tiene en memoria de este mismo request — sin releer
-la cookie de sesión recién escrita. Si `profileComplete === true`, redirige directo a **`/home`**,
+la cookie de sesión recién escrita. Si `profileComplete === true`, redirige directo a **`/panel`**,
 saltándose `/consulta/inicio`. Si da `false`, o si la llamada falla (red, backend caído), redirige a
 **`/consulta/inicio`** como antes — un fallo en este chequeo nunca bloquea el login ni manda a la
 pantalla de error, porque la sesión ya se creó independientemente de él (el `try/catch` de este
@@ -123,7 +123,7 @@ Tres opciones: **"Continuar con Google"** (`/api/cognito/login?identity_provider
 Los dos botones "Iniciar Consulta" del sitio (navbar global y hero de la home) usan
 `getStartConsultationHref()` (`session.ts`) para no mandar a todo el mundo a `/consulta/inicio` por
 igual: sin sesión (o expirada) van directo a `/login`; con sesión, a `/consulta/inicio`
-(que a su vez decide entre `informacion-personal`/`home` según el perfil — ver `doc/flow.md`).
+(que a su vez decide entre `informacion-personal`/`panel` según el perfil — ver `doc/flow.md`).
 
 **Gotcha de bundling a tener presente**: `Hero` (`hero.component.tsx`) y `NavbarLanding`
 (`navbar-landing.component.tsx`) se re-exportan desde el barrel `@/features/index.ts`, que también
@@ -179,9 +179,9 @@ mecanismos:
   `/consulta/*`). Cualquier ruta nueva bajo `/consulta/*` no listada ahí queda protegida por
   defecto (fail-closed).
 - **`PROTECTED_PATHS`**: un set explícito de rutas *fuera* de `/consulta/*` que también requieren
-  sesión — `/home` (placeholder) y, ahora, `/panel` y `/perfil` (área de usuario logueado, ver
-  sección siguiente). A diferencia de `/consulta/*` acá no hay protección por prefijo: una ruta
-  nueva fuera de `/consulta/*` queda pública salvo que se agregue explícitamente a este set.
+  sesión — `/panel` y `/perfil` (área de usuario logueado, ver sección siguiente). A diferencia de
+  `/consulta/*` acá no hay protección por prefijo: una ruta nueva fuera de `/consulta/*` queda
+  pública salvo que se agregue explícitamente a este set.
 
 Si la ruta lo requiere, lee la cookie `session` con `request.cookies.get(...)` (no `cookies()` de
 `next/headers`, para no depender de un comportamiento no verificado dentro de proxy) y, si no es
@@ -266,6 +266,6 @@ Ver `nutricionista-virtual-back/doc/auth.md` para el detalle completo. Resumen:
 `tsc --noEmit`, `npm run build` y la suite de Vitest compilan/pasan limpio en cada paso. Probado
 manualmente end-to-end contra el User Pool real: login nativo, registro, gating de rutas, creación
 de orden autenticada, refresh silencioso del access_token, y el flujo completo de
-`consulta/inicio` → `informacion-personal` (o directo a `/home` si el perfil ya está completo).
+`consulta/inicio` → `informacion-personal` (o directo a `/panel` si el perfil ya está completo).
 Login vía Google integrado en el código pero no ejercitado todavía contra el User Pool real — ver
 `doc/auth-pending.md`.

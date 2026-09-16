@@ -39,6 +39,14 @@ export async function GET(request: Request) {
 
   const authUrl = buildAuthorizationUrl(config, authParams)
 
+  // La Hosted UI de este user pool ignora screen_hint=signup en /oauth2/authorize y
+  // siempre resuelve a /login — para llegar al formulario de registro hay que apuntar
+  // directo a /signup en el dominio de Cognito.
+  if (authParams.screen_hint === 'signup') {
+    authUrl.pathname = '/signup'
+    authUrl.searchParams.delete('screen_hint')
+  }
+
   const response = NextResponse.redirect(authUrl)
 
   const cookieOptions = {

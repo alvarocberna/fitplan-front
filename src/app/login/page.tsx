@@ -21,10 +21,7 @@ export default async function ConsultaLogin({
       <div className="max-w-2xl flex flex-col mx-auto" >
       <Card widthInner='90%'>
         <SubsectionHead>
-          <SubsectionTitle mb={2} title="Registrate para continuar"/>
-          <p className="text-zinc-900 text-md">
-            solo tomará 30 segundos
-          </p>
+          <SubsectionTitle mb={2} title="Inicia sesión para continuar"/>
         </SubsectionHead>
 
         {errorMessage && (
@@ -38,7 +35,9 @@ export default async function ConsultaLogin({
             href="/api/cognito/login?identity_provider=Google"
             className="flex items-center justify-center gap-2 w-[60%] mx-auto px-8 py-2 rounded-lg text-center font-semibold border border-zinc-300"
           >
-            <FontAwesomeIcon icon={faGoogle} />
+            <div className="w-4 h-4 flex items-center justify-center shrink-0">
+              <FontAwesomeIcon icon={faGoogle} className="w-full h-full" />
+            </div>
             Continuar con Google
           </a>
 

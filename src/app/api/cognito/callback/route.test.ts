@@ -79,7 +79,7 @@ describe('GET /api/cognito/callback', () => {
     expect(mockedApiFetch).not.toHaveBeenCalled();
   });
 
-  it('redirects to /home when the profile check confirms the profile is already complete', async () => {
+  it('redirects to /panel when the profile check confirms the profile is already complete', async () => {
     mockedAuthorizationCodeGrant.mockResolvedValue(makeTokens() as never);
     mockedFetchUserInfo.mockResolvedValue({ sub: 'sub-123', email: 'user@test.com' } as never);
     mockedApiFetch.mockResolvedValue({ profileComplete: true } as never);
@@ -87,7 +87,7 @@ describe('GET /api/cognito/callback', () => {
     const response = await GET(makeRequest());
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/home');
+    expect(response.headers.get('location')).toBe('http://localhost:3000/panel');
     expect(mockedCreateSession).toHaveBeenCalledTimes(1);
   });
 

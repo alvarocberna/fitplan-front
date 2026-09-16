@@ -93,7 +93,7 @@ contra un user pool real (sin credenciales en este entorno) y no está conectado
       perfil esté completo antes de crear la orden). **Migración de Prisma real** (primera de todo
       este trabajo): `User.firstName`/`paternalLastName`/`gender`/`dateOfBirth` pasan de NOT NULL a
       nullable (`rut`/`rutCheckDigit`/`middleName`/`maternalLastName`/`email` ya eran nullable).
-      Frontend: `consulta/inicio` redirige a login/informacion-personal/home según sesión +
+      Frontend: `consulta/inicio` redirige a login/informacion-personal/panel según sesión +
       estado del perfil; `informacion-personal` quitó los inputs de rut/dv-rut/segundo
       nombre/apellido materno, el email quedó de solo lectura (pre-llenado desde la sesión), y el
       submit persiste al backend antes de navegar. `consulta/anamnesis` hidrata el contexto de

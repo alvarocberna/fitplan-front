@@ -19,7 +19,7 @@ const plansS3Bucket =
 const PUBLIC_CONSULTA_PATHS = new Set(["/consulta"]);
 
 // Otras rutas (fuera de /consulta/*) que también requieren sesión.
-const PROTECTED_PATHS = new Set(["/home", "/panel", "/perfil"]);
+const PROTECTED_PATHS = new Set(["/panel", "/perfil"]);
 
 function requiresSession(pathname: string): boolean {
   return (
