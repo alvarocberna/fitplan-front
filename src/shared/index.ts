@@ -11,7 +11,7 @@ export * from './components/subsection-footer'
 export * from './components/input-outlined'
 export * from './components/input-standard'
 export * from './components/subsection-row'
-export * from './components/pdf-viewer.component'
+export * from './components/plan-preview-card.component'
 export * from './context/consultation.context';
 //DATA
 export * from './data/data';
@@ -21,3 +21,4 @@ export * from './api/client-cms';
 export * from './components/page-container.component';
 export * from './components/section-container.component';
 export * from './components/navbar-sesion.component';
+export * from './components/sesion-shell.component';

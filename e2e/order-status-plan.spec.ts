@@ -18,7 +18,7 @@ test.describe('Order status & plan', () => {
     await expect(page.getByText(/Estamos generando tu plan nutricional/)).toBeVisible();
 
     await expect(page.getByText('¡Tu plan nutricional está listo!')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(/Descargar PDF|Preparando PDF/)).toBeVisible();
+    await expect(page.getByRole('link', { name: /Descargar/ })).toBeVisible();
   });
 
   test('shows a delay notice once generation has been running past 45 seconds', async ({ page }) => {
@@ -36,6 +36,6 @@ test.describe('Order status & plan', () => {
     await page.goto('/ordenes/order-e2e-123');
 
     await expect(page.getByText('Tu pago está a salvo')).toBeVisible();
-    await expect(page.getByText(/Descargar PDF/)).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Descargar/ })).toHaveCount(0);
   });
 });

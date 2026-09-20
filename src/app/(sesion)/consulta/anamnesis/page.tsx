@@ -41,7 +41,7 @@ export default function AnamnesisPage() {
     }, [isHydrated, personalInfo, setPersonalInfo])
 
     return (
-        <div className='w-full min-h-screen py-24'>
+        <div className='w-full py-4'>
             <div className="max-w-2xl flex flex-col mx-auto" >
             <Card>
                 <div className='py-8'>

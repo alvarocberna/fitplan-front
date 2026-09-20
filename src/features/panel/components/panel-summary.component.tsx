@@ -1,5 +1,5 @@
 //shared
-import { Card, PdfViewer, SubsectionHead, SubsectionTitle, SubsectionBody } from '@/shared'
+import { Card, PlanPreviewCard, SubsectionHead, SubsectionTitle, SubsectionBody } from '@/shared'
 //features - panel
 import { PanelSummaryDto } from '../dtos/panel-summary.dto'
 import { OrderSummaryDto } from '../../consultation/dtos/order.dto'
@@ -73,20 +73,15 @@ export function PanelSummary({ summary, orders }: PanelSummaryProps) {
                 </SubsectionHead>
                 <SubsectionBody>
                     {orders.length > 0 ? (
-                        <div className="w-full flex flex-col gap-8">
-                            {orders.map((order) => {
-                                const fecha = new Date(order.creationDate).toLocaleDateString('es-ES', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                })
-                                return (
-                                    <div key={order.orderId} className="w-full flex flex-col gap-2">
-                                        <p className="text-sm text-zinc-500 text-center">Generado el {fecha}</p>
-                                        <PdfViewer url={order.pdfUrl} title={`Plan nutricional ${fecha}`} />
-                                    </div>
-                                )
-                            })}
+                        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-8 justify-items-center">
+                            {orders.map((order) => (
+                                <PlanPreviewCard
+                                    key={order.orderId}
+                                    pdfUrl={order.pdfUrl}
+                                    thumbnailUrl={order.thumbnailUrl}
+                                    creationDate={order.creationDate}
+                                />
+                            ))}
                         </div>
                     ) : (
                         <p className="text-zinc-500 text-center">

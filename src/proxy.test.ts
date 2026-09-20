@@ -122,3 +122,33 @@ describe('proxy — session gating', () => {
     });
   });
 });
+
+describe('proxy — Content-Security-Policy', () => {
+  const PLANS_BUCKET = 'https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com';
+
+  function directive(csp: string, name: string): string {
+    return csp.split(';').map((d) => d.trim()).find((d) => d.startsWith(`${name} `)) ?? '';
+  }
+
+  it('permite cargar como <img> las miniaturas del bucket de planes (/panel y /ordenes/[id])', async () => {
+    const response = await proxy(makeRequest('/'));
+    const csp = response.headers.get('Content-Security-Policy') ?? '';
+
+    expect(directive(csp, 'img-src')).toContain(PLANS_BUCKET);
+  });
+
+  it('ya no permite incrustar el bucket de planes en un iframe (el PDF no se embebe, solo se descarga)', async () => {
+    const response = await proxy(makeRequest('/'));
+    const csp = response.headers.get('Content-Security-Policy') ?? '';
+
+    expect(directive(csp, 'frame-src')).not.toContain(PLANS_BUCKET);
+    expect(directive(csp, 'frame-src')).toContain("'self'");
+  });
+
+  it('no abre connect-src al bucket de planes (la miniatura y la descarga no usan fetch)', async () => {
+    const response = await proxy(makeRequest('/'));
+    const csp = response.headers.get('Content-Security-Policy') ?? '';
+
+    expect(directive(csp, 'connect-src')).not.toContain(PLANS_BUCKET);
+  });
+});

@@ -12,7 +12,7 @@ export default async function NewPatient(){
 
     return(
         // <div className="w-full min-h-screen flex flex-col items-center justify-center text-center py-24">
-        <div className='w-full min-h-screen py-24'>
+        <div className='w-full py-4'>
             <div className="max-w-2xl flex flex-col mx-auto" >
                 <Card widthInner='80%'>
                     <SubsectionHead>

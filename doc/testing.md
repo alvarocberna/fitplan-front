@@ -54,6 +54,9 @@ src/features/profile/components/profile-form.test.tsx
 src/features/panel/services/panel.service.test.ts
 src/features/panel/components/panel-summary.test.tsx
 src/shared/components/navbar-sesion.test.tsx
+src/shared/components/sesion-shell.test.tsx
+src/shared/components/navbar-landing-gate.test.tsx
+src/shared/auth/sesion-routes.test.ts
 src/proxy.test.ts
 src/app/__tests__/orders-id-page.test.tsx
 
@@ -92,7 +95,9 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 - **`GenerateOrderButton`** y **`DownloadPlanPdf`**: guardas de datos incompletos, payload exacto enviado al backend, y los
   estados de carga/nombre de archivo del PDF (con `@react-pdf/renderer` parcialmente mockeado).
 - **`/ordenes/[id]`**: el ciclo completo de polling con fake timers — cada 4s, el aviso de demora a los 45s, la detención del
-  polling al completarse o fallar, resiliencia ante un error de red puntual, y la limpieza del intervalo al desmontar.
+  polling al completarse o fallar, resiliencia ante un error de red puntual, y la limpieza del intervalo al desmontar. Al
+  completarse verifica la miniatura (`img` con la `thumbnailUrl`), el enlace "Descargar" hacia `pdfUrl`, que no haya
+  `<iframe>`, y el placeholder cuando el plan no tiene miniatura.
 - **`src/proxy.ts` (`PROTECTED_PATHS`)**: `/panel` y `/perfil` tienen su propio describe (mismo patrón:
   redirect sin cookie, redirect con cookie inválida/expirada, passthrough con sesión válida).
 - **`ProfileService` / `PanelService`**: que cada método pega al endpoint esperado (`user/me`, `panel/resumen`) y que un
@@ -102,8 +107,21 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   campo requerido.
 - **`PanelSummary`**: placeholders cuando faltan nombre/edad/objetivo, el mensaje de "sin plan" cuando `nutritionalPlan` es
   `null`, el grid de macros cuando sí hay un plan, el mensaje de "sin planes" cuando la lista de `orders` viene vacía, y que
-  se renderice un `PdfViewer` por orden en el orden recibido (la card "Mis planes nutricionales").
-- **`NavbarSesion`**: los links a `/panel`, `/perfil` y `/api/cognito/logout`, y qué link queda resaltado según `usePathname`.
+  se renderice un `PlanPreviewCard` por orden en el orden recibido (la card "Mis planes nutricionales"): miniatura,
+  enlace "Descargar" al `pdfUrl` y ningún `<iframe>`.
+- **`PlanPreviewCard`** (`src/shared/components/`, compartida por `/panel` y `/ordenes/[id]`): fecha (opcional), miniatura (`<img>` lazy con `alt`), enlace "Descargar" con el `href` del PDF, y el
+  placeholder "Vista previa no disponible" cuando `thumbnailUrl` es `null` o falta (backend aún sin actualizar).
+- **`proxy` (CSP)**: `img-src` incluye el bucket de planes; `frame-src` y `connect-src` no.
+- **`NavbarSesion`**: los links a `/panel`, `/perfil` y `/api/cognito/logout`, qué link queda resaltado según `usePathname`, y el
+  toggle del sidebar: el botón solo existe si se pasa `onToggle`, su `aria-label`/`aria-expanded` según `collapsed`, y que los
+  links llevan `md:hidden` (y el `<nav>` `md:w-14` en vez de `md:w-56`) al colapsar.
+- **`SesionShell`** (layout `(sesion)`): estado por defecto según la ruta (acoplado en `/consulta/*` y `/ordenes/*`, desacoplado en
+  `/panel` y `/perfil`, verificado vía el `md:pl-*` del `<main>`), el toggle, que la elección manual se mantiene al navegar dentro
+  de la misma sección (re-render sin remontar, con `usePathname` mockeado), y que al cambiar de sección vale el default de la nueva.
+- **`sesion-routes.ts`**: `isSesionRoute` (solo `/panel` y `/perfil`, igualdad exacta, la usa el proxy), `isFocusRoute` (prefijos
+  `/consulta` y `/ordenes` sin falsos positivos tipo `/consultas`) y `usesSesionLayout` (la unión de ambas).
+- **`NavbarLandingGate`**: no renderiza nada en `/consulta/*`, `/ordenes/*`, `/panel`, `/perfil` ni `/dev*`; renderiza
+  `NavbarLanding` (mockeado) en el resto de rutas.
 
 ## Qué cubren los tests e2e
 

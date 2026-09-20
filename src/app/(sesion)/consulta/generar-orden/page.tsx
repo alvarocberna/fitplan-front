@@ -13,7 +13,7 @@ export default function GenerateOrderPage() {
     const { personalInfo } = useConsultation()
 
     return (
-        <div className="w-full min-h-screen flex flex-col items-center text-center px-6 pt-40 pb-20">
+        <div className="w-full flex flex-col items-center text-center px-6 py-4">
             {/* inner container */}
             <div className="w-[90%] md:w-[80%] mx-auto flex flex-col items-center">
                 {/* title */}

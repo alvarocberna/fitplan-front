@@ -1,15 +1,9 @@
-import { NavbarSesion } from '@/shared'
+import { SesionShell } from '@/shared'
 
-// Layout compartido por las rutas de usuario con sesión iniciada (/panel, /perfil, ...). Es un
-// route group ("(sesion)") por lo que no agrega ningún segmento a la URL. La sesión ya se valida
-// en src/proxy.ts (PROTECTED_PATHS) antes de que estas páginas se rendericen.
+// Layout compartido por las rutas de usuario con sesión iniciada (/panel, /perfil, /consulta/*,
+// /ordenes/*). Es un route group ("(sesion)") por lo que no agrega ningún segmento a la URL. La
+// sesión se valida en src/proxy.ts antes de que estas páginas se rendericen. El sidebar y el
+// padding del contenido viven en SesionShell (arranca acoplado en /consulta/* y /ordenes/*).
 export default function SesionLayout({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-screen" style={{ backgroundColor: 'var(--color-sesion-background)' }}>
-            <NavbarSesion />
-            <main className="pt-20 md:pt-8 pb-16 md:pl-56 min-h-screen">
-                {children}
-            </main>
-        </div>
-    )
+    return <SesionShell>{children}</SesionShell>
 }

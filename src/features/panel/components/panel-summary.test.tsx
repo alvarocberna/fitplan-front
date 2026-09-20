@@ -67,18 +67,36 @@ describe('PanelSummary', () => {
     expect(screen.getByText('Todavía no tienes ningún plan nutricional generado.')).toBeInTheDocument();
   });
 
-  it('renders a PDF viewer per order, newest first as given by the caller', () => {
+  it('renders a plan preview per order, newest first as given by the caller', () => {
     const orders: OrderSummaryDto[] = [
-      { orderId: 'order-2', creationDate: '2026-02-01T00:00:00.000Z', pdfUrl: 'https://signed.example/order-2.pdf' },
-      { orderId: 'order-1', creationDate: '2026-01-01T00:00:00.000Z', pdfUrl: 'https://signed.example/order-1.pdf' },
+      {
+        orderId: 'order-2',
+        creationDate: '2026-02-01T00:00:00.000Z',
+        pdfUrl: 'https://signed.example/order-2.pdf',
+        thumbnailUrl: 'https://signed.example/order-2.webp',
+      },
+      {
+        orderId: 'order-1',
+        creationDate: '2026-01-01T00:00:00.000Z',
+        pdfUrl: 'https://signed.example/order-1.pdf',
+        thumbnailUrl: 'https://signed.example/order-1.webp',
+      },
     ];
 
     render(<PanelSummary summary={baseSummary} orders={orders} />);
 
-    const iframes = screen.getAllByTitle(/Plan nutricional/);
-    expect(iframes).toHaveLength(2);
-    expect(iframes[0]).toHaveAttribute('src', 'https://signed.example/order-2.pdf');
-    expect(iframes[1]).toHaveAttribute('src', 'https://signed.example/order-1.pdf');
+    const thumbnails = screen.getAllByAltText(/Vista previa del plan nutricional/);
+    expect(thumbnails).toHaveLength(2);
+    expect(thumbnails[0]).toHaveAttribute('src', 'https://signed.example/order-2.webp');
+    expect(thumbnails[1]).toHaveAttribute('src', 'https://signed.example/order-1.webp');
+
+    const downloads = screen.getAllByRole('link', { name: /Descargar/ });
+    expect(downloads).toHaveLength(2);
+    expect(downloads[0]).toHaveAttribute('href', 'https://signed.example/order-2.pdf');
+    expect(downloads[1]).toHaveAttribute('href', 'https://signed.example/order-1.pdf');
+
+    // ya no se incrusta el PDF en un <iframe>
+    expect(document.querySelector('iframe')).toBeNull();
     expect(screen.queryByText('Todavía no tienes ningún plan nutricional generado.')).not.toBeInTheDocument();
   });
 });

@@ -20,6 +20,18 @@ El backend es un proyecto aparte (NestJS + SQLite) y no vive en este repo. Su ba
 
 El estado de la consulta se administra mediante `ConsultaProvider` (React Context) y persiste en `localStorage` para no perderse entre pasos.
 
+**Layout de estas páginas.** Las páginas de `/consulta/*` y `/ordenes/[id]` viven en el route group
+`src/app/(sesion)/` (el paréntesis no agrega segmento a la URL; las URLs no cambian), junto con `/panel` y
+`/perfil`. Comparten `src/app/(sesion)/layout.tsx`, que renderiza `SesionShell`
+(`src/shared/components/sesion-shell.component.tsx`): un sidebar `NavbarSesion` a la izquierda más el
+contenido con el padding correspondiente. Estas rutas ya no muestran el navbar público (`NavbarLanding`). En
+`/consulta/*` y `/ordenes/*` el sidebar arranca **acoplado** en pantallas md+ (angosto, con solo un ícono
+para desacoplarlo; en móvil la barra superior siempre va completa) para dejar espacio al flujo, mientras que
+en `/panel` y `/perfil` arranca desacoplado. La elección manual se mantiene entre páginas de una misma
+sección y se reinicia al pasar de una a la otra. `/pago/[ordenId]` queda **fuera** de este grupo y conserva
+el navbar público. Detalle del gating de sesión (que no cambió: el proxy protege `/consulta/*` salvo
+`/consulta`, pero no `/ordenes/*` ni `/pago/*`) en `doc/auth.md`.
+
 ### 1. Información personal — `/consulta/informacion-personal`
 Componente `FormUserInfo`. Formulario (react-hook-form) con los datos personales (`InformacionPersonalDto`:
 rut, nombre, apellidos, género, correo, fecha de nacimiento). Al enviar, guarda el objeto en el context
@@ -68,9 +80,11 @@ Hace polling a `GET ordenes/obtener-estado/{id}` (`ConsultaService.obtenerEstado
 (`INTERVALO_POLLING_MS`), leyendo `EstadoOrdenDto { estado_pago, estado_generacion, plan_json, pdf_url }`:
 - `no_iniciado` / `generando` → spinner ("Estamos generando tu plan nutricional..."). Pasados 45s
   (`UMBRAL_DEMORA_MS`) se muestra un aviso de demora, aclarando que el pago ya quedó registrado.
-- `completado` (con `pdf_url`) → detiene el polling y muestra el PDF con `PdfViewer`
-  (`src/shared/components/pdf-viewer.component.tsx`): un `<iframe>` embebido apuntando a la URL firmada
-  de S3 (corta duración) más un enlace de descarga. El PDF ya no se genera en el navegador: antes esta
+- `completado` (con `pdf_url`) → detiene el polling y muestra `PlanPreviewCard`
+  (`src/shared/components/plan-preview-card.component.tsx`, la misma tarjeta que usa `/panel`): la miniatura
+  de la página 1 del plan (`thumbnailUrl`, URL firmada de S3 de corta duración; placeholder si es `null`) y un
+  botón "Descargar" hacia `pdfUrl` (URL firmada con `Content-Disposition: attachment`, que baja el PDF
+  completo). El PDF ya no se incrusta en un `<iframe>`. El PDF tampoco se genera en el navegador: antes esta
   página renderizaba `DescargarPlanPdf` (`@react-pdf/renderer`, cargado dinámicamente porque solo corre
   client-side) a partir de `plan_json`; ahora el backend lo genera, lo sube a S3 y devuelve `pdf_url`
   directamente. `DescargarPlanPdf` sigue existiendo y en uso en `/consulta/plan-nutricional`, solo dejó

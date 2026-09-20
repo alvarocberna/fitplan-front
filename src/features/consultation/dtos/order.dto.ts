@@ -7,13 +7,23 @@ export interface OrderStatusDto {
     paymentStatus: PaymentStatus
     generationStatus: GenerationStatus
     planJson: NutritionPlanDto | null
-    // URL firmada (corta duración) del PDF ya almacenado en S3; null hasta que el plan termine de generarse.
+    // URL firmada (corta duración) para DESCARGAR el PDF ya almacenado en S3 (el backend la firma con
+    // Content-Disposition: attachment, por lo que no sirve para un <iframe>); null hasta que el plan
+    // termine de generarse.
     pdfUrl: string | null
+    // URL firmada (corta duración) de la miniatura WebP de la página 1 del plan; null si aún no hay
+    // plan o si el plan no tiene miniatura (falló su rasterización, que es best-effort en el backend).
+    thumbnailUrl: string | null
 }
 
 // Ítem del listado de órdenes con plan generado del usuario autenticado (GET /ordenes).
 export interface OrderSummaryDto {
     orderId: string
     creationDate: string
+    // URL firmada (corta duración) para DESCARGAR el PDF: el backend la firma con
+    // Content-Disposition: attachment, por lo que no sirve para incrustarla en un <iframe>.
     pdfUrl: string
+    // URL firmada (corta duración) de la miniatura WebP de la página 1 del plan; null si el plan no
+    // tiene miniatura (generado antes de esta función, o falló su rasterización).
+    thumbnailUrl: string | null
 }

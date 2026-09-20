@@ -19,7 +19,7 @@ export default function NutritionPlanPage(){
     const { nutritionPlan } = useConsultation();
 
     return(
-        <div className='w-full min-h-screen py-24'>
+        <div className='w-full py-4'>
             {nutritionPlan && (
                 <div className="max-w-2xl flex flex-col mx-auto" >
                     <Card>

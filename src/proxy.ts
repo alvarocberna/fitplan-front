@@ -6,9 +6,10 @@ import { isSesionRoute } from "@/shared/auth/sesion-routes";
 const apiCMSUrl =
   process.env.NEXT_PUBLIC_BACKEND_CMS_URL || "http://localhost:3001";
 const s3Bucket = "https://web-core-storage.s3.us-east-1.amazonaws.com";
-// Bucket privado donde el backend almacena los PDFs de los planes nutricionales (ver
-// StorageService en nutricionista-virtual-back) — los visores <iframe> de /ordenes/[id] y /panel
-// apuntan a URLs firmadas de este bucket.
+// Bucket privado donde el backend almacena los PDFs de los planes nutricionales y sus miniaturas
+// (ver StorageService en nutricionista-virtual-back). Se accede solo con URLs firmadas: las
+// miniaturas <img> de /panel y /ordenes/[id] (img-src). Las descargas del PDF son navegaciones de
+// un <a>, no las restringe el CSP, y el PDF ya no se incrusta en un <iframe> (no va en frame-src).
 const plansS3Bucket =
   "https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com";
 
@@ -45,10 +46,10 @@ export async function proxy(request: NextRequest) {
     default-src 'self';
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""};
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data: blob: ${apiCMSUrl} ${s3Bucket};
+    img-src 'self' data: blob: ${apiCMSUrl} ${s3Bucket} ${plansS3Bucket};
     font-src 'self';
     connect-src 'self' ${apiCMSUrl};
-    frame-src 'self' blob: ${plansS3Bucket};
+    frame-src 'self' blob:;
     object-src 'none';
     base-uri 'self';
     frame-ancestors 'none';

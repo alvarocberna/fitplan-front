@@ -20,12 +20,15 @@ En cada request, `src/proxy.ts`:
   prefetch de `next/link`.
 - Define ahí las URLs necesarias para `img-src` / `connect-src`: `apiCMSUrl` (`NEXT_PUBLIC_BACKEND_CMS_URL`),
   `apiNuviUrl` (`NEXT_PUBLIC_BACKEND_URL`) y el bucket S3 (`https://web-core-storage.s3.us-east-1.amazonaws.com`).
-- También define `frame-src 'self' ${plansS3Bucket}`, con `plansS3Bucket` apuntando al bucket privado
-  donde el backend almacena los PDFs de los planes nutricionales
-  (`https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com`). Sin esta directiva, el CSP
-  caía al `default-src 'self'` y bloqueaba el `<iframe>` de `PdfViewer`
-  (`src/shared/components/pdf-viewer.component.tsx`), usado en `/ordenes/[id]` y en `/panel` para
-  mostrar el PDF embebido desde su URL firmada.
+- `plansS3Bucket` apunta al bucket privado donde el backend almacena los PDFs de los planes nutricionales y sus
+  miniaturas (`https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com`) y va en `img-src`:
+  `/panel` y `/ordenes/[id]` muestran la miniatura de cada plan (`PlanPreviewCard`) con un `<img>` a una URL
+  firmada de ese bucket. No hace falta `connect-src` (ni CORS del bucket): la miniatura y la descarga del PDF
+  son una carga de `<img>` y una navegación de `<a>`, no un `fetch`.
+- `frame-src` es solo `'self' blob:` (este último lo usa `/dev/preview-pdf`). El bucket de planes estuvo en
+  `frame-src` mientras `/ordenes/[id]` y `/panel` incrustaban el PDF con un `<iframe>` (`PdfViewer`); se quitó
+  al reemplazar el visor por la miniatura + botón de descarga. Si algún día vuelve a incrustarse el PDF,
+  habría que volver a añadirlo ahí. Cubierto por `src/proxy.test.ts` ("Content-Security-Policy").
 
 Next.js detecta automáticamente el nonce en el header CSP de la respuesta y lo aplica solo a los scripts que
 el propio framework inyecta (bundles, `__NEXT_DATA__`, scripts de streaming/RSC). El proyecto no tiene

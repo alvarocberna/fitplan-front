@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation'
 //react
 import { useEffect, useRef, useState } from 'react'
 //shared
-import { Card, PdfViewer, SubsectionHead, SubsectionTitle, useConsultation } from '@/shared'
+import { Card, PlanPreviewCard, SubsectionHead, SubsectionTitle, useConsultation } from '@/shared'
 //features
 import { ConsultationService, OrderStatusDto } from '@/features'
 
@@ -19,7 +19,8 @@ export default function OrderPage() {
     const { setNutritionPlan } = useConsultation()
 
     const [viewState, setViewState] = useState<ViewState>('loading')
-    const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+    // URLs firmadas del plan ya generado (descarga del PDF y miniatura de la página 1)
+    const [plan, setPlan] = useState<{ pdfUrl: string; thumbnailUrl: string | null } | null>(null)
     const [isDelayed, setIsDelayed] = useState(false)
 
     //referencia para calcular cuánto tiempo lleva generando, sin re-crear el intervalo en cada render
@@ -40,7 +41,7 @@ export default function OrderPage() {
 
                 if (data.generationStatus === 'completado' && data.pdfUrl) {
                     cancelled = true
-                    setPdfUrl(data.pdfUrl)
+                    setPlan({ pdfUrl: data.pdfUrl, thumbnailUrl: data.thumbnailUrl ?? null })
                     if (data.planJson) setNutritionPlan(data.planJson)
                     setViewState('completed')
                     return
@@ -71,7 +72,7 @@ export default function OrderPage() {
     }, [orderId])
 
     return (
-        <div className='w-full min-h-screen py-24'>
+        <div className='w-full py-4'>
             <div className="max-w-2xl flex flex-col mx-auto">
                 <Card>
                     {(viewState === 'loading' || viewState === 'generating') && (
@@ -90,11 +91,11 @@ export default function OrderPage() {
                         </div>
                     )}
 
-                    {viewState === 'completed' && pdfUrl && (
+                    {viewState === 'completed' && plan && (
                         <SubsectionHead>
                             <SubsectionTitle mb={2} title="¡Tu plan nutricional está listo!" />
                             <div className="w-full py-8">
-                                <PdfViewer url={pdfUrl} />
+                                <PlanPreviewCard pdfUrl={plan.pdfUrl} thumbnailUrl={plan.thumbnailUrl} />
                             </div>
                         </SubsectionHead>
                     )}

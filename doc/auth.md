@@ -178,7 +178,8 @@ mecanismos:
   `/consulta`, vacía y sin uso — `/consulta/inicio` ya requiere sesión como el resto de
   `/consulta/*`). Cualquier ruta nueva bajo `/consulta/*` no listada ahí queda protegida por
   defecto (fail-closed).
-- **`PROTECTED_PATHS`**: un set explícito de rutas *fuera* de `/consulta/*` que también requieren
+- **`PROTECTED_PATHS`** (hoy `SESION_PATHS` / `isSesionRoute()` en `src/shared/auth/sesion-routes.ts`):
+  un set explícito de rutas *fuera* de `/consulta/*` que también requieren
   sesión — `/panel` y `/perfil` (área de usuario logueado, ver sección siguiente). A diferencia de
   `/consulta/*` acá no hay protección por prefijo: una ruta nueva fuera de `/consulta/*` queda
   pública salvo que se agregue explícitamente a este set.
@@ -189,17 +190,42 @@ válida (`hasValidSession()`), redirige a `/login`. `/login` vive fuera de ambos
 no necesita estar en ninguna allowlist.
 
 No protege `/pago/[orderId]` ni `/ordenes/[id]` (no están en `PROTECTED_PATHS` ni bajo
-`/consulta/*`).
+`/consulta/*`). Esto **no cambió** cuando `/ordenes/[id]` pasó a vivir bajo el route group `(sesion)`
+(ver sección siguiente): el layout compartido solo cambia cómo se ve la página, no agrega ninguna
+verificación de sesión — el proxy se rige por la URL, no por en qué carpeta esté el archivo.
 
-## Área de usuario logueado — `/panel` y `/perfil`
+## Área de usuario logueado — layout `(sesion)`
 
-Dos páginas nuevas bajo el route group `src/app/(sesion)/` (el paréntesis no agrega segmento a la
-URL), que comparten `src/app/(sesion)/layout.tsx`. Ese layout renderiza `NavbarSesion`
-(`src/shared/components/navbar-sesion.component.tsx`, Client Component): sidebar fija a la
-izquierda en pantallas md+, barra horizontal fija bajo el navbar público en mobile, con links a
-`/panel`, `/perfil` y `/api/cognito/logout`. Ambas rutas están en `PROTECTED_PATHS` (ver arriba) —
-sin sesión válida, `src/proxy.ts` redirige a `/login` antes de que el layout o la página se
-rendericen.
+Todas las rutas del route group `src/app/(sesion)/` (el paréntesis no agrega segmento a la URL)
+comparten `src/app/(sesion)/layout.tsx`: `/panel`, `/perfil`, `/consulta/*` y `/ordenes/[id]`.
+`/pago/[orderId]` **no** está en el grupo: sigue en `src/app/pago/` con el navbar público.
+
+El layout renderiza `SesionShell` (`src/shared/components/sesion-shell.component.tsx`, Client
+Component), que arma el sidebar `NavbarSesion` (`src/shared/components/navbar-sesion.component.tsx`)
+más un `<main>` cuyo padding izquierdo (md+) sigue el ancho actual del sidebar. `NavbarSesion`
+tiene links a `/panel`, `/perfil` y `/api/cognito/logout`; en pantallas md+ es una sidebar fija a
+la izquierda, en mobile una barra horizontal fija en el borde superior (estas rutas ya no muestran
+`NavbarLanding`: `NavbarLandingGate` se oculta con `usesSesionLayout(pathname)`, ver
+`src/shared/auth/sesion-routes.ts`).
+
+- **Sidebar acoplable (solo md+)**: desacoplado es `w-56` con los links; acoplado es `w-14` con
+  un único ícono para volver a desacoplarlo (en mobile la barra superior siempre se muestra
+  completa). El estado inicial depende de la sección: en `/consulta/*` y `/ordenes/*`
+  (`isFocusRoute()`, "rutas de flujo") arranca **acoplado** para dejar espacio al contenido del
+  flujo; en `/panel` y `/perfil` arranca **desacoplado**. La elección manual del usuario
+  (`SesionShell`, `useState`) persiste entre páginas de una misma sección mientras el layout no se
+  remonte, y se descarta al cambiar entre la sección panel/perfil y la de flujo (vuelve al valor
+  por defecto de la nueva sección).
+- **Padding de las páginas**: como el `<main>` del layout ya aporta el padding, los wrappers de
+  las páginas de `/consulta/*` y `/ordenes/[id]` usan `py-4` en vez del antiguo `min-h-screen py-24`
+  / `pt-40` (que compensaban el navbar público).
+- **Gating**: `/panel` y `/perfil` están en `PROTECTED_PATHS` (ver arriba) y `/consulta/*` (salvo
+  `/consulta`) se protege por prefijo — sin sesión válida, `src/proxy.ts` redirige a `/login`
+  antes de que el layout o la página se rendericen. `isSesionRoute()` sigue siendo solo `/panel` y
+  `/perfil` y es lo que consulta el proxy; `isFocusRoute()` y `usesSesionLayout()` (que agrupa
+  ambas) solo deciden presentación (navbar/sidebar), no seguridad.
+
+Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc/flow.md`):
 
 - **`/panel`** (`src/app/(sesion)/panel/page.tsx`, Server Component): llama en paralelo
   `PanelService.getSummary()` (`src/features/panel/services/panel.service.ts`, que invoca el
@@ -211,9 +237,12 @@ rendericen.
   `carbohydrateIntake`/`lipidIntake` del último plan nutricional generado
   (`PanelSummaryDto.nutritionalPlan`), o placeholders si el usuario todavía no tiene consulta/plan;
   y "Mis planes nutricionales", con la lista de `OrderSummaryDto[]` (una por orden con plan
-  generado, ya ordenadas del más nuevo al más antiguo por el backend), cada una con su fecha y un
-  `PdfViewer` apuntando a su `pdfUrl` (URL firmada de S3). Ya no depende de que exista el bucket S3
-  — está en uso desde que el backend implementó el almacenamiento de PDFs ahí.
+  generado, ya ordenadas del más nuevo al más antiguo por el backend), en una grilla de `PlanPreviewCard`
+  (`src/shared/components/plan-preview-card.component.tsx`): cada una con su fecha, la miniatura de la
+  página 1 del plan (`thumbnailUrl`, URL firmada de S3; placeholder si es `null`) y un botón "Descargar" hacia su
+  `pdfUrl` (URL firmada con `Content-Disposition: attachment`, por lo que descarga el PDF completo en vez de
+  abrirlo). Ya no incrusta el PDF en un `<iframe>` (ni acá ni en `/ordenes/[id]`, que usa la misma tarjeta;
+  `PdfViewer` se eliminó).
 - **`/perfil`** (`src/app/(sesion)/perfil/page.tsx`, Server Component): llama
   `ProfileService.getProfile()` (`src/features/profile/services/profile.service.ts` →
   `getUserProfileAction` → `GET user/me`) y renderiza `ProfileForm` (Client Component,

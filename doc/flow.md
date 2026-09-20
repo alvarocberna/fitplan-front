@@ -18,11 +18,12 @@
 | Guard que valida el Access Token en el backend | **Implementado** | `nutricionista-virtual-back/src/presentation/auth/cognito-auth.guard.ts` |
 | Creación de identidad (`AuthIdentity`+`User` esqueleto) al primer login | **Implementado** | `POST /auth/perfil` → `AuthIdentityService.syncUser` |
 | Completar el perfil (RUT, nombre, género, fecha de nacimiento) | **Implementado**, separado del registro | `PATCH /auth/perfil` → `AuthIdentityService.updateProfile` |
-| Gating de rutas `/consulta/*` según sesión + perfil completo | **Implementado** | `src/proxy.ts` (sesión — protege todo `/consulta/*` salvo `/consulta`, vacía y sin uso; incluye `/consulta/inicio`) + `src/app/consulta/inicio/page.tsx` (perfil completo, además de su propia verificación de sesión como defensa en profundidad, ya casi nunca alcanzada porque el proxy corta antes) |
+| Gating de rutas `/consulta/*` según sesión + perfil completo | **Implementado** | `src/proxy.ts` (sesión — protege todo `/consulta/*` salvo `/consulta`, vacía y sin uso; incluye `/consulta/inicio`) + `src/app/(sesion)/consulta/inicio/page.tsx` (perfil completo, además de su propia verificación de sesión como defensa en profundidad, ya casi nunca alcanzada porque el proxy corta antes) |
 | Botones "Iniciar Consulta" de la home ya evalúan sesión (antes iban siempre a `/consulta/inicio`) | **Implementado** | `src/shared/auth/session.ts` (`getStartConsultationHref`), usado en `navbar-landing.component.tsx`/`hero.component.tsx` |
 | BOLA en `ordenes/obtener-estado/:id` | **Resuelto** (backend, repo separado) | Ver sección 5 |
 | Atajo directo a `/panel` desde el propio callback si el perfil ya está completo (evita pasar por `/consulta/inicio`) | **Implementado** | `nutricionista-virtual-front/src/app/api/cognito/callback/route.ts` — chequeo best-effort de `POST /auth/perfil`, nunca bloquea el login si falla |
 | Área de usuario logueado `/panel` y `/perfil`, gateada por sesión (`PROTECTED_PATHS`) | **Implementado** | `src/proxy.ts` (`PROTECTED_PATHS`) + `src/app/(sesion)/layout.tsx` (`NavbarSesion`) + `src/app/(sesion)/{panel,perfil}/page.tsx` |
+| Layout `(sesion)` compartido por `/panel`, `/perfil`, `/consulta/*` y `/ordenes/[id]`: sidebar `NavbarSesion` acoplable (arranca acoplado en `/consulta/*` y `/ordenes/*`, desacoplado en `/panel` y `/perfil`) en vez del navbar público. Solo presentación — el proxy sigue sin proteger `/ordenes/*` ni `/pago/[orderId]` (este último, además, queda fuera del grupo y conserva el navbar público) | **Implementado** | `src/app/(sesion)/layout.tsx` → `SesionShell` (`src/shared/components/sesion-shell.component.tsx`) + `src/shared/auth/sesion-routes.ts` (`isFocusRoute`, `usesSesionLayout`). Detalle en `doc/auth.md` |
 
 ## 1. Flujo completo, de punta a punta
 

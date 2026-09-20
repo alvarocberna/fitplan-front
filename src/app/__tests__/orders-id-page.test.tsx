@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import OrderPage from '@/app/ordenes/[id]/page';
+import OrderPage from '@/app/(sesion)/ordenes/[id]/page';
 import { ConsultationProvider } from '@/shared';
 import { ConsultationService } from '@/features';
 import type { OrderStatusDto } from '@/features';
@@ -27,6 +27,7 @@ function status(overrides: Partial<OrderStatusDto>): OrderStatusDto {
     generationStatus: 'generando',
     planJson: null,
     pdfUrl: null,
+    thumbnailUrl: null,
     ...overrides,
   };
 }
@@ -82,15 +83,21 @@ describe('OrderPage', () => {
     expect(screen.getByText(/tardando más de lo normal/)).toBeInTheDocument();
   });
 
-  it('stops polling, shows the download button and persists the plan once generation completes', async () => {
+  it('stops polling, shows the thumbnail and the download button, and persists the plan once generation completes', async () => {
     const planJson = { personalInfo: { name: 'Ana', lastName: 'Pérez' } } as OrderStatusDto['planJson'];
     const pdfUrl = 'https://signed-url.example/plan.pdf';
-    getOrderStatus.mockResolvedValue(status({ generationStatus: 'completado', planJson, pdfUrl }));
+    const thumbnailUrl = 'https://signed-url.example/plan.webp';
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'completado', planJson, pdfUrl, thumbnailUrl }));
     renderPage();
     await tick(0);
 
     expect(screen.getByText('¡Tu plan nutricional está listo!')).toBeInTheDocument();
     expect(getOrderStatus).toHaveBeenCalledTimes(1);
+
+    // miniatura de la página 1 + botón que descarga el PDF completo; ya no se incrusta el PDF
+    expect(screen.getByAltText('Vista previa de tu plan nutricional')).toHaveAttribute('src', thumbnailUrl);
+    expect(screen.getByRole('link', { name: /Descargar/ })).toHaveAttribute('href', pdfUrl);
+    expect(document.querySelector('iframe')).toBeNull();
 
     await tick(8000);
     expect(getOrderStatus).toHaveBeenCalledTimes(1);
@@ -99,13 +106,25 @@ describe('OrderPage', () => {
     expect(stored.nutritionPlan).toEqual(planJson);
   });
 
+  it('shows a placeholder, keeping the download button, when the completed plan has no thumbnail', async () => {
+    const pdfUrl = 'https://signed-url.example/plan.pdf';
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'completado', pdfUrl, thumbnailUrl: null }));
+    renderPage();
+    await tick(0);
+
+    expect(screen.getByText('¡Tu plan nutricional está listo!')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.getByText('Vista previa no disponible')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Descargar/ })).toHaveAttribute('href', pdfUrl);
+  });
+
   it('shows a reassuring error state and stops polling when generationStatus is "error"', async () => {
     getOrderStatus.mockResolvedValue(status({ generationStatus: 'error' }));
     renderPage();
     await tick(0);
 
     expect(screen.getByText('Tu pago está a salvo')).toBeInTheDocument();
-    expect(screen.queryByText('Descargar PDF')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Descargar/ })).not.toBeInTheDocument();
 
     await tick(8000);
     expect(getOrderStatus).toHaveBeenCalledTimes(1);
