@@ -7,13 +7,16 @@ import Image from "next/image";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleChevronRight, faCircleChevronLeft, faXmark } from '@fortawesome/free-solid-svg-icons'
 //PUBLIC
-import ImgInf1 from '../../../../public/images/img_informe1.jpg'
-import ImgInf2 from '../../../../public/images/img_informe2.jpg'
-import ImgInf3 from '../../../../public/images/img_informe3.jpg'
-import ImgInf4 from '../../../../public/images/img_informe4.jpg'
+import PlanEjemplo1 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-001.jpg'
+import PlanEjemplo2 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-002.jpg'
+import PlanEjemplo3 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-003.jpg'
+import PlanEjemplo4 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-004.jpg'
+import PlanEjemplo5 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-005.jpg'
+import PlanEjemplo6 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-006.jpg'
+import PlanEjemplo7 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-007.jpg'
 
 
-const IMAGES = [ImgInf1, ImgInf2, ImgInf3, ImgInf4]
+const IMAGES = [PlanEjemplo1, PlanEjemplo2, PlanEjemplo3, PlanEjemplo4, PlanEjemplo5, PlanEjemplo6, PlanEjemplo7]
 // const DEFAULT_TILT = { x: 8, y: 18, z: 2 }
 const DEFAULT_TILT = { x: 4, y: -16, z: 2 }
 const CARD_W = 280
@@ -101,10 +104,9 @@ export function Guideline() {
   const goNext = () => setImgIndex(i => (i + 1) % IMAGES.length)
   const goPrev = () => setImgIndex(i => (i - 1 + IMAGES.length) % IMAGES.length)
 
-  // Sombra: mezcla de primary #673DE6 (103,61,230) y secondary #02B090 (2,176,144)
   const shadow = [
-    `${-tilt.y * 0.55}px ${-tilt.x * 0.55}px 30px rgba(16, 185, 104, 0.15)`,
-    `${tilt.y * 0.2}px ${tilt.x * 0.2}px 20px rgba(16, 185, 104, 0.15)`,
+    `${-tilt.y * 0.55}px ${-tilt.x * 0.55}px 30px color-mix(in srgb, var(--color-primary) 15%, transparent)`,
+    `${tilt.y * 0.2}px ${tilt.x * 0.2}px 20px color-mix(in srgb, var(--color-primary) 15%, transparent)`,
   ].join(', ')
 
   return (

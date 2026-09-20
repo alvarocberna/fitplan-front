@@ -9,7 +9,7 @@ import { NuviViewGreen } from "./nuvi-view-green.component";
 import { NuviViewBlue } from "./nuvi-view-blue.component";
 
 const features = [
-  { text: 'Nutricionista virtual', description: 'Entrenado por expertos en nutrición deportiva', icon: faUserDoctor },
+  { text: 'Agente de IA especializado en nutrición', description: 'Entrenado por expertos en nutrición deportiva', icon: faUserDoctor },
   { text: 'Planes personalizados', description: 'Adaptados a tus objetivos, tu deporte y tu estilo de vida.', icon: faClipboardList },
   { text: 'Suplementación', description: 'Recomendaciones seguras y ajustadas a tus necesidades.', icon: faCapsules },
   { text: 'Estrategias deportivas', description: 'Mejora el rendimiento en entrenamientos y competencias.', icon: faDumbbell },

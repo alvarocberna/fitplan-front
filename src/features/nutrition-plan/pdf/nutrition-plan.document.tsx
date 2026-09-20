@@ -256,30 +256,30 @@ function CoverDecoration() {
         <Svg style={styles.coverDecoration} viewBox={`0 0 ${width} ${height}`} fixed>
             <Defs>
                 <LinearGradient id="coverTriangleGradient" x1={960} y1={333} x2={108} y2={47.9999} gradientUnits="userSpaceOnUse">
-                    <Stop offset={0} stopColor="#188B54" stopOpacity={0.8} />
-                    <Stop offset={1} stopColor="#10B968" stopOpacity={0.3} />
+                    <Stop offset={0} stopColor="#086A8C" stopOpacity={0.8} />
+                    <Stop offset={1} stopColor="#0BAED2" stopOpacity={0.3} />
                 </LinearGradient>
                 <LinearGradient id="coverCornerGradient" x1={130} y1={500} x2={778} y2={480} gradientUnits="userSpaceOnUse">
                     <Stop offset={0} stopColor="#EFEFEF" stopOpacity={0.6} />
                     <Stop offset={1} stopColor="#D9D9D9" stopOpacity={0.5} />
                 </LinearGradient>
                 <LinearGradient id="coverSideGradient" x1={668} y1={140} x2={380} y2={868} gradientUnits="userSpaceOnUse">
-                    <Stop offset={0} stopColor="#DC2303" stopOpacity={0.5} />
-                    <Stop offset={1} stopColor="#FF8E55" stopOpacity={0.2} />
+                    <Stop offset={0} stopColor="#9FB0B8" stopOpacity={0.5} />
+                    <Stop offset={1} stopColor="#D6DEE2" stopOpacity={0.2} />
                 </LinearGradient>
                 <LinearGradient id="coverBottomGradient" x1={344} y1={-60.5745} x2={280} y2={443.426} gradientUnits="userSpaceOnUse">
-                    <Stop offset={0} stopColor="#6CDDA7" stopOpacity={0.7} />
-                    <Stop offset={0.407637} stopColor="#3CAE77" stopOpacity={0.814059} />
-                    <Stop offset={1} stopColor="#188B54" stopOpacity={0.9} />
+                    <Stop offset={0} stopColor="#6CD9F0" stopOpacity={0.7} />
+                    <Stop offset={0.407637} stopColor="#3CA9D6" stopOpacity={0.814059} />
+                    <Stop offset={1} stopColor="#086A8C" stopOpacity={0.9} />
                 </LinearGradient>
                 <LinearGradient id="coverBottom2Gradient" x1={40} y1={23.9998} x2={608} y2={692} gradientUnits="userSpaceOnUse">
-                    <Stop offset={0} stopColor="#DC2303" stopOpacity={0.6} />
-                    <Stop offset={0.548665} stopColor="#BE371F" stopOpacity={0.9} />
-                    <Stop offset={1} stopColor="#A24939" stopOpacity={0.6} />
+                    <Stop offset={0} stopColor="#A8B4BA" stopOpacity={0.6} />
+                    <Stop offset={0.548665} stopColor="#8A98A2" stopOpacity={0.9} />
+                    <Stop offset={1} stopColor="#6B7880" stopOpacity={0.6} />
                 </LinearGradient>
                 <LinearGradient id="coverArchGradient" x1={1088} y1={518.563} x2={336} y2={202.563} gradientUnits="userSpaceOnUse">
-                    <Stop offset={0} stopColor="#DC2303" stopOpacity={0} />
-                    <Stop offset={1} stopColor="#DC2303" stopOpacity={0.2} />
+                    <Stop offset={0} stopColor="#9AA8AF" stopOpacity={0} />
+                    <Stop offset={1} stopColor="#9AA8AF" stopOpacity={0.2} />
                 </LinearGradient>
                 <LinearGradient id="coverBottomRightGradient" x1={212} y1={556} x2={1384} y2={516} gradientUnits="userSpaceOnUse">
                     <Stop offset={0} stopColor="#EFEFEF" stopOpacity={0.5} />
@@ -294,20 +294,20 @@ function CoverDecoration() {
                 />
             </G>
             {/* veta de esquina superior derecha (figura personalizada, diseñada en Figma con viewBox 842x1228) */}
-            <G transform={`translate(${cornerOffsetX}, 0) scale(${cornerScale})`}>
+            {/* <G transform={`translate(${cornerOffsetX}, 0) scale(${cornerScale})`}>
                 <Path
                     d="M2.42083 180C-3.02604 109.917 2.42083 0 2.42083 0H842.421V1228C842.421 1228 578.995 1169.9 418.421 980C267.244 801.216 92.7561 562.979 50.4208 432C19.6094 336.674 10.1835 279.88 2.42083 180Z"
                     fill="url(#coverCornerGradient)"
                     fillOpacity={0.5}
                 />
-            </G>
+            </G> */}
             {/* veta lateral derecha (figura personalizada, diseñada en Figma con viewBox 760x888) */}
-            <G transform={`translate(${sideOffsetX}, ${sideOffsetY}) scale(${sideScale})`}>
+            {/* <G transform={`translate(${sideOffsetX}, ${sideOffsetY}) scale(${sideScale})`}>
                 <Path
                     d="M652 88C687.55 46.8159 760 0 760 0V676C760 676 556.876 749.599 424 788C260.563 835.233 0 888 0 888C0 888 195.363 804.013 296 716C367.679 653.312 405.126 612.495 456 532C516.285 436.614 564 264 564 264C564 264 601.788 146.171 652 88Z"
                     fill="url(#coverSideGradient)"
                 />
-            </G>
+            </G> */}
             {/* arco inferior (figura personalizada, diseñada en Figma con viewBox 1288x655; detrás de las dos vetas inferior izquierda) */}
             <G transform={`translate(${archOffsetX}, ${archOffsetY}) scale(${archScale})`}>
                 <Path

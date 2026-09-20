@@ -7,16 +7,16 @@ import { StyleSheet } from '@react-pdf/renderer'
 // sin tocar el resto de los estilos.
 // ============================================================
 export const palette = {
-    primary: '#10b968',       // color de marca (igual a --color-primary en globals.css)
+    primary: '#0baed2',       // color de marca (igual a --color-primary en globals.css)
     primarySoft: '#beffe0',   // fondo suave para bloques destacados (aporte nutricional, etc)
     text: '#1f2937',          // gris oscuro para texto principal
     textDark: '#0f172a',      // casi negro, para el título grande de la portada
     textSoft: '#6b7280',      // gris medio para textos secundarios / labels
     border: '#e5e7eb',        // gris claro para líneas divisorias
     alternateBackground: '#f9fafb', // fondo gris muy claro (filas alternadas, tarjetas)
-    background: '#fcf9f4',    // fondo general de cada página del documento
-    darkBackground: '#f0ede8', // variante un poco más oscura de fondo (badges sobre tarjetas claras)
-    cardBackground: '#fffbf6', // punto medio entre blanco y fondo (aporte nutricional)
+    background: '#f8f9fc',    // fondo general de cada página del documento
+    darkBackground: '#edf0fb', // variante un poco más oscura de fondo (badges sobre tarjetas claras)
+    cardBackground: '#fbfcfd', // punto medio entre blanco y fondo (aporte nutricional)
     white: '#ffffff',
     // -------- Acentos usados en la portada (macros + formas decorativas) --------
     accent: '#f4a261',        // naranja (carbohidratos)

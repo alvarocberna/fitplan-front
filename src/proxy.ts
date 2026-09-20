@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { hasValidSession, SESSION_COOKIE } from "@/shared/auth/session";
+import { isSesionRoute } from "@/shared/auth/sesion-routes";
 
 const apiCMSUrl =
   process.env.NEXT_PUBLIC_BACKEND_CMS_URL || "http://localhost:3001";
@@ -18,13 +19,10 @@ const plansS3Bucket =
 // "/consulta/" queda protegida por defecto, incluidas las que se agreguen a futuro.
 const PUBLIC_CONSULTA_PATHS = new Set(["/consulta"]);
 
-// Otras rutas (fuera de /consulta/*) que también requieren sesión.
-const PROTECTED_PATHS = new Set(["/panel", "/perfil"]);
-
 function requiresSession(pathname: string): boolean {
   return (
     (pathname.startsWith("/consulta/") && !PUBLIC_CONSULTA_PATHS.has(pathname)) ||
-    PROTECTED_PATHS.has(pathname)
+    isSesionRoute(pathname)
   );
 }
 
@@ -50,7 +48,7 @@ export async function proxy(request: NextRequest) {
     img-src 'self' data: blob: ${apiCMSUrl} ${s3Bucket};
     font-src 'self';
     connect-src 'self' ${apiCMSUrl};
-    frame-src 'self' ${plansS3Bucket};
+    frame-src 'self' blob: ${plansS3Bucket};
     object-src 'none';
     base-uri 'self';
     frame-ancestors 'none';

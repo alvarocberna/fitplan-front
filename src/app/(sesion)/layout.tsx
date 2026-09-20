@@ -5,9 +5,9 @@ import { NavbarSesion } from '@/shared'
 // en src/proxy.ts (PROTECTED_PATHS) antes de que estas páginas se rendericen.
 export default function SesionLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen" style={{ backgroundColor: 'var(--color-sesion-background)' }}>
             <NavbarSesion />
-            <main className="pt-32 pb-16 md:pl-56 min-h-screen">
+            <main className="pt-20 md:pt-8 pb-16 md:pl-56 min-h-screen">
                 {children}
             </main>
         </div>
