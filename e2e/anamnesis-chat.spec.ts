@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { mockChatTurn } from './helpers/mock-backend';
+import { test, expect } from './fixtures';
+import { mockChatFailure, mockChatTurn } from './helpers/mock-backend';
 import { seedConsultationContext } from './helpers/seed-context';
 
 const EMPTY_ANAMNESIS = { goals: null, clinical: null, dietary: null, lifestyle: null };
@@ -7,7 +7,7 @@ const EMPTY_ANAMNESIS = { goals: null, clinical: null, dietary: null, lifestyle:
 test.describe('Consultation - anamnesis chat', () => {
   test('sends messages, reaches completion and advances to physical assessment', async ({ page }) => {
     await seedConsultationContext(page, { personalInfo: { firstName: 'Ana' } });
-    await mockChatTurn(page, [
+    await mockChatTurn([
       { reply: 'Cuéntame más', titleReply: 'Objetivos', anamnesis: EMPTY_ANAMNESIS, isComplete: false },
       {
         reply: 'Listo, tengo suficiente información',
@@ -37,9 +37,7 @@ test.describe('Consultation - anamnesis chat', () => {
 
   test('shows an error toast without breaking the chat when the backend call fails', async ({ page }) => {
     await seedConsultationContext(page, { personalInfo: { firstName: 'Ana' } });
-    await page.route('**/consulta/chat', (route) =>
-      route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ message: 'Error interno' }) })
-    );
+    await mockChatFailure('Error interno');
 
     await page.goto('/consulta/anamnesis');
     const textarea = page.getByPlaceholder(/Escribe tu respuesta/);

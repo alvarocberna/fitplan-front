@@ -30,7 +30,7 @@ export default function SimulatedPaymentPage() {
     }
 
     return (
-        <div className="w-full min-h-screen flex items-center justify-center px-6">
+        <div className="w-full flex justify-center px-6 py-4">
             <div className="w-full max-w-md border border-zinc-300 rounded-2xl p-8 flex flex-col gap-6 text-left">
                 <div>
                     <h1 className="text-xl font-bold text-zinc-800">Pasarela de pago</h1>

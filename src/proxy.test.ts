@@ -113,6 +113,46 @@ describe('proxy — session gating', () => {
     });
   });
 
+  describe.each([
+    { prefix: '/pago', subroute: '/pago/abc' },
+    { prefix: '/ordenes', subroute: '/ordenes/abc' },
+  ])('$prefix/* (isSessionGatedPrefix: la raíz y todas las subrutas exigen sesión)', ({ prefix, subroute }) => {
+    it.each([subroute, prefix])('redirects %s to /login when there is no session cookie at all', async (pathname) => {
+      const response = await proxy(makeRequest(pathname));
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get('location')).toBe('http://localhost:3000/login');
+      expect(hasValidSessionMock).not.toHaveBeenCalled();
+    });
+
+    it.each([subroute, prefix])(
+      'redirects %s to /login when the session cookie is present but invalid/expired',
+      async (pathname) => {
+        hasValidSessionMock.mockResolvedValue(false);
+
+        const response = await proxy(makeRequest(pathname, 'invalid-token'));
+
+        expect(response.status).toBe(307);
+        expect(response.headers.get('location')).toBe('http://localhost:3000/login');
+      },
+    );
+
+    it.each([subroute, prefix])('lets %s through when the session cookie is valid', async (pathname) => {
+      hasValidSessionMock.mockResolvedValue(true);
+
+      const response = await proxy(makeRequest(pathname, 'valid-token'));
+
+      expect(response.headers.get('location')).toBeNull();
+    });
+
+    it(`does not gate look-alike paths (${prefix}x is not ${prefix}/*)`, async () => {
+      const response = await proxy(makeRequest(`${prefix}x`));
+
+      expect(response.headers.get('location')).toBeNull();
+      expect(hasValidSessionMock).not.toHaveBeenCalled();
+    });
+  });
+
   describe('rutas sin gating', () => {
     it('lets an unrelated public route (e.g. /) through without checking the session', async () => {
       const response = await proxy(makeRequest('/'));

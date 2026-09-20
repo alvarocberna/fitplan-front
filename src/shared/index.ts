@@ -21,4 +21,5 @@ export * from './api/client-cms';
 export * from './components/page-container.component';
 export * from './components/section-container.component';
 export * from './components/navbar-sesion.component';
+export * from './components/topbar-sesion.component';
 export * from './components/sesion-shell.component';

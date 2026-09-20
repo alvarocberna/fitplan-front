@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { mockChatTurn, mockCreateOrder, mockSimulatePayment, mockOrderStatusSequence } from './helpers/mock-backend';
 import { nutritionPlanMock } from '../src/features/nutrition-plan/dtos/nutrition-plan.mock';
 
@@ -6,7 +6,7 @@ const EMPTY_ANAMNESIS = { goals: null, clinical: null, dietary: null, lifestyle:
 const ORDER_ID = 'order-full-flow';
 
 test('completes the full consultation flow end-to-end: personal info -> anamnesis -> physical assessment -> order -> payment -> plan', async ({ page }) => {
-  await mockChatTurn(page, [
+  await mockChatTurn([
     { reply: 'Cuéntame más', titleReply: 'Objetivos', anamnesis: EMPTY_ANAMNESIS, isComplete: false },
     {
       reply: 'Listo, tengo suficiente información',
@@ -15,19 +15,22 @@ test('completes the full consultation flow end-to-end: personal info -> anamnesi
       isComplete: true,
     },
   ]);
-  await mockCreateOrder(page, { orderId: ORDER_ID });
-  await mockSimulatePayment(page);
-  await mockOrderStatusSequence(page, [
-    { paymentStatus: 'pagado', generationStatus: 'generando', planJson: null },
-    { paymentStatus: 'pagado', generationStatus: 'completado', planJson: nutritionPlanMock },
+  await mockCreateOrder({ orderId: ORDER_ID });
+  await mockSimulatePayment();
+  await mockOrderStatusSequence([
+    { paymentStatus: 'pagado', generationStatus: 'generando', planJson: null, pdfUrl: null, thumbnailUrl: null },
+    {
+      paymentStatus: 'pagado',
+      generationStatus: 'completado',
+      planJson: nutritionPlanMock,
+      pdfUrl: 'https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com/plan-e2e.pdf',
+      thumbnailUrl: null,
+    },
   ]);
   // 1. Información personal
   await page.goto('/consulta/informacion-personal');
-  await page.getByLabel('Rut', { exact: true }).fill('12345678');
-  await page.getByLabel('DV-Rut').fill('K');
   await page.getByLabel('Primer nombre').fill('Ana');
   await page.getByLabel('Apellido paterno').fill('Pérez');
-  await page.getByLabel('Correo').fill('ana@test.com');
   await page.getByLabel('Fecha nacimiento').fill('1990-05-20');
   const personalInfoSelects = page.getByRole('combobox');
   await personalInfoSelects.nth(0).selectOption('FEMENINO');

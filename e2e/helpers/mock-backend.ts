@@ -1,48 +1,69 @@
-import type { Page, Route } from '@playwright/test';
+// Configura el backend falso (e2e/fake-backend/server.mjs) desde los tests. Ya no se mockea con
+// `page.route`: el backend lo llaman los Server Actions desde Node, no el navegador.
 
-function jsonFulfill(route: Route, body: unknown, status = 200) {
-  return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+export const FAKE_BACKEND_URL = `http://localhost:${process.env.FAKE_BACKEND_PORT ?? 3101}`
+
+async function control(path: string, init?: RequestInit) {
+  const res = await fetch(`${FAKE_BACKEND_URL}${path}`, init);
+  if (!res.ok) throw new Error(`Backend falso: ${init?.method ?? 'GET'} ${path} respondió ${res.status}`);
+  return res;
 }
 
-// Intercepta consulta/chat. Cada llamada sucesiva devuelve la siguiente respuesta de la
-// secuencia (la última se repite si hay más llamadas que respuestas), simulando los turnos
-// del chat de anamnesis.
-export async function mockChatTurn(page: Page, responses: Array<Record<string, unknown>>) {
-  let call = 0;
-  await page.route('**/consulta/chat', async (route) => {
-    const body = responses[Math.min(call, responses.length - 1)];
-    call += 1;
-    await jsonFulfill(route, body);
+async function setMock(name: string, config: Record<string, unknown>) {
+  await control('/__control/mock', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, config }),
   });
 }
 
-export async function mockCreateOrder(page: Page, options: { orderId?: string; fail?: boolean } = {}) {
-  await page.route('**/ordenes/crear', async (route) => {
-    if (options.fail) {
-      await jsonFulfill(route, { message: 'Error al crear la orden' }, 500);
-      return;
-    }
-    await jsonFulfill(route, { orderId: options.orderId ?? 'order-e2e-123' });
+// Limpia mocks y el registro de llamadas. Lo invoca el fixture `page` antes de cada test
+// (ver e2e/fixtures.ts), así que los specs no lo necesitan.
+export async function resetFakeBackend() {
+  await control('/__control/reset', { method: 'POST' });
+}
+
+export interface BackendCall {
+  method: string;
+  path: string;
+  authorized: boolean;
+  body?: unknown;
+}
+
+export async function getBackendCalls(): Promise<BackendCall[]> {
+  return (await control('/__control/calls')).json();
+}
+
+// Perfil (auth/perfil). Sin llamar a esto el backend responde un perfil incompleto con el
+// email de la sesión de prueba. `profile` pisa campos de ese perfil (ej. { profileComplete: true }).
+export async function mockProfile(options: { profile?: Record<string, unknown>; fail?: boolean; message?: string } = {}) {
+  await setMock('profile', options);
+}
+
+// consulta/chat. Cada llamada sucesiva devuelve la siguiente respuesta de la secuencia (la última
+// se repite si hay más llamadas que respuestas), simulando los turnos del chat de anamnesis.
+export async function mockChatTurn(responses: Array<Record<string, unknown>>) {
+  await setMock('chat', { sequence: responses });
+}
+
+export async function mockChatFailure(message = 'Error interno') {
+  await setMock('chat', { fail: true, message });
+}
+
+export async function mockCreateOrder(options: { orderId?: string; fail?: boolean } = {}) {
+  await setMock('createOrder', {
+    orderId: options.orderId ?? 'order-e2e-123',
+    fail: options.fail,
+    message: 'Error al crear la orden',
   });
 }
 
-export async function mockSimulatePayment(page: Page, options: { fail?: boolean } = {}) {
-  await page.route('**/webhooks/ordenes/*/simular-pago', async (route) => {
-    if (options.fail) {
-      await jsonFulfill(route, { message: 'Error al procesar el pago' }, 500);
-      return;
-    }
-    await jsonFulfill(route, { status: 'pagado' });
-  });
+export async function mockSimulatePayment(options: { fail?: boolean } = {}) {
+  await setMock('payment', { fail: options.fail, message: 'Error al procesar el pago' });
 }
 
-// Intercepta ordenes/obtener-estado/:id con una secuencia de estados (la última se repite),
-// simulando la progresión que el polling de /ordenes/[id] vería del backend real.
-export async function mockOrderStatusSequence(page: Page, sequence: Array<Record<string, unknown>>) {
-  let call = 0;
-  await page.route('**/ordenes/obtener-estado/*', async (route) => {
-    const body = sequence[Math.min(call, sequence.length - 1)];
-    call += 1;
-    await jsonFulfill(route, body);
-  });
+// ordenes/obtener-estado/:id con una secuencia de estados (la última se repite), simulando la
+// progresión que el polling de /ordenes/[id] vería del backend real.
+export async function mockOrderStatusSequence(sequence: Array<Record<string, unknown>>) {
+  await setMock('orderStatus', { sequence });
 }

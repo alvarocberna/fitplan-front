@@ -22,8 +22,13 @@
 | Botones "Iniciar Consulta" de la home ya evalúan sesión (antes iban siempre a `/consulta/inicio`) | **Implementado** | `src/shared/auth/session.ts` (`getStartConsultationHref`), usado en `navbar-landing.component.tsx`/`hero.component.tsx` |
 | BOLA en `ordenes/obtener-estado/:id` | **Resuelto** (backend, repo separado) | Ver sección 5 |
 | Atajo directo a `/panel` desde el propio callback si el perfil ya está completo (evita pasar por `/consulta/inicio`) | **Implementado** | `nutricionista-virtual-front/src/app/api/cognito/callback/route.ts` — chequeo best-effort de `POST /auth/perfil`, nunca bloquea el login si falla |
-| Área de usuario logueado `/panel` y `/perfil`, gateada por sesión (`PROTECTED_PATHS`) | **Implementado** | `src/proxy.ts` (`PROTECTED_PATHS`) + `src/app/(sesion)/layout.tsx` (`NavbarSesion`) + `src/app/(sesion)/{panel,perfil}/page.tsx` |
-| Layout `(sesion)` compartido por `/panel`, `/perfil`, `/consulta/*` y `/ordenes/[id]`: sidebar `NavbarSesion` acoplable (arranca acoplado en `/consulta/*` y `/ordenes/*`, desacoplado en `/panel` y `/perfil`) en vez del navbar público. Solo presentación — el proxy sigue sin proteger `/ordenes/*` ni `/pago/[orderId]` (este último, además, queda fuera del grupo y conserva el navbar público) | **Implementado** | `src/app/(sesion)/layout.tsx` → `SesionShell` (`src/shared/components/sesion-shell.component.tsx`) + `src/shared/auth/sesion-routes.ts` (`isFocusRoute`, `usesSesionLayout`). Detalle en `doc/auth.md` |
+| Área de usuario logueado `/panel` y `/perfil`, gateada por sesión (`PROTECTED_PATHS`) | **Implementado** | `src/proxy.ts` (`PROTECTED_PATHS`) + `src/app/(sesion)/layout.tsx` (`SesionShell`: `TopbarSesion` + `NavbarSesion`) + `src/app/(sesion)/{panel,perfil}/page.tsx` |
+| Layout `(sesion)` compartido por `/panel`, `/perfil`, `/consulta/*`, `/pago/[orderId]` y `/ordenes/[id]`: barra superior `TopbarSesion` (logo "Nuvi" + botón "Nueva consulta") más sidebar `NavbarSesion` acoplable en md+ (arranca acoplado en `/consulta/*`, `/pago/*` y `/ordenes/*`, desacoplado en `/panel` y `/perfil`; en móvil las opciones del sidebar pasan a la barra superior) en vez del navbar público. El layout en sí es solo presentación; la sesión la exige `src/proxy.ts`, que además de `/consulta/*`, `/panel` y `/perfil` protege `/pago/*` y `/ordenes/*` (`isSessionGatedPrefix`) | **Implementado** | `src/app/(sesion)/layout.tsx` → `SesionShell` (`src/shared/components/sesion-shell.component.tsx`) + `src/shared/auth/sesion-routes.ts` (`isFocusRoute`, `isSessionGatedPrefix`, `usesSesionLayout`). Detalle en `doc/auth.md` |
+
+> **E2E**: las specs de Playwright (`e2e/`) instalan una cookie de sesión firmada (fixture
+> `e2e/fixtures.ts`) y usan un backend falso (`e2e/fake-backend/server.mjs`) en lugar del backend real,
+> porque los Server Actions llaman al backend desde Node. El login real de Cognito no se prueba en e2e.
+> Ver `doc/testing.md`.
 
 ## 1. Flujo completo, de punta a punta
 

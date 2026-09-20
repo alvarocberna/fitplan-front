@@ -1,20 +1,31 @@
 export const SESION_PATHS = new Set(["/panel", "/perfil"]);
 
-// Secciones "de flujo" dentro del layout de sesión: el sidebar arranca acoplado (solo el ícono
-// para desacoplarlo) para dejar el espacio al contenido del flujo. Ver sesion-shell.component.tsx.
-const FOCUS_PREFIXES = ["/consulta", "/ordenes"];
+// Secciones "de flujo" dentro del layout de sesión (consulta → pago → orden): el sidebar arranca
+// acoplado (solo el ícono para desacoplarlo) para dejar el espacio al contenido del flujo. Ver
+// sesion-shell.component.tsx.
+const FOCUS_PREFIXES = ["/consulta", "/pago", "/ordenes"];
+
+// Prefijos del flujo que exigen sesión en su totalidad (la raíz y todas las subrutas). /consulta
+// queda afuera a propósito: su raíz (/consulta, vacía y sin uso) es pública y se resuelve aparte
+// en src/proxy.ts (PUBLIC_CONSULTA_PATHS).
+const SESSION_GATED_PREFIXES = ["/pago", "/ordenes"];
 
 function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
-// Rutas que el proxy protege exigiendo sesión por igualdad exacta (/consulta/* y /ordenes/* se
-// resuelven aparte, ver src/proxy.ts).
+// Rutas que el proxy protege exigiendo sesión por igualdad exacta (/consulta/*, /pago/* y
+// /ordenes/* se resuelven aparte, ver src/proxy.ts).
 export function isSesionRoute(pathname: string): boolean {
   return SESION_PATHS.has(pathname);
 }
 
-// Rutas de flujo (/consulta/*, /ordenes/*) donde el sidebar de sesión arranca acoplado.
+// /pago/* y /ordenes/*: rutas del flujo que el proxy protege por prefijo.
+export function isSessionGatedPrefix(pathname: string): boolean {
+  return SESSION_GATED_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix));
+}
+
+// Rutas de flujo (/consulta/*, /pago/*, /ordenes/*) donde el sidebar de sesión arranca acoplado.
 export function isFocusRoute(pathname: string): boolean {
   return FOCUS_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix));
 }

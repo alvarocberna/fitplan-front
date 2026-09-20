@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { hasValidSession, SESSION_COOKIE } from "@/shared/auth/session";
-import { isSesionRoute } from "@/shared/auth/sesion-routes";
+import { isSesionRoute, isSessionGatedPrefix } from "@/shared/auth/sesion-routes";
 
 const apiCMSUrl =
   process.env.NEXT_PUBLIC_BACKEND_CMS_URL || "http://localhost:3001";
@@ -18,11 +18,14 @@ const plansS3Bucket =
 // antes de que la página se renderice. El login vive en /login (fuera de /consulta/*, así que no
 // necesita estar acá para no crear un loop de redirects). Cualquier otra ruta que empiece con
 // "/consulta/" queda protegida por defecto, incluidas las que se agreguen a futuro.
+// El resto del flujo (/pago/* y /ordenes/*) y el área de usuario (/panel, /perfil) exigen sesión
+// por completo: ver isSessionGatedPrefix / isSesionRoute en sesion-routes.ts.
 const PUBLIC_CONSULTA_PATHS = new Set(["/consulta"]);
 
 function requiresSession(pathname: string): boolean {
   return (
     (pathname.startsWith("/consulta/") && !PUBLIC_CONSULTA_PATHS.has(pathname)) ||
+    isSessionGatedPrefix(pathname) ||
     isSesionRoute(pathname)
   );
 }

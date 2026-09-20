@@ -14,6 +14,7 @@ describe('NavbarLandingGate', () => {
     '/consulta',
     '/consulta/inicio',
     '/consulta/anamnesis',
+    '/pago/abc-123',
     '/ordenes/abc-123',
     '/panel',
     '/perfil',
@@ -27,7 +28,7 @@ describe('NavbarLandingGate', () => {
     expect(screen.queryByTestId('navbar-landing')).not.toBeInTheDocument();
   });
 
-  it.each(['/', '/articulos', '/login', '/pago/abc-123'])('renders NavbarLanding on %s', (pathname) => {
+  it.each(['/', '/articulos', '/login'])('renders NavbarLanding on %s', (pathname) => {
     usePathnameMock.mockReturnValue(pathname);
     render(<NavbarLandingGate />);
 

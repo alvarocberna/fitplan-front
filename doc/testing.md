@@ -6,14 +6,18 @@
   Se eligió Vitest sobre Jest porque el proyecto vive 100% en ESM (`moduleResolution: "bundler"`) y depende de paquetes ESM-only
   (`@nivo/*`) que bajo Jest requieren configuración adicional de transformación; Vitest los resuelve nativamente al estar
   construido sobre Vite/esbuild, y además arranca e itera más rápido.
-- **E2E**: [Playwright](https://playwright.dev), mockeando la red con `page.route` (sin backend real ni servidor fake). Se
-  eligió sobre Cypress por su intercepción de red nativa (funciona igual de bien cross-origin, relevante porque
-  `NEXT_PUBLIC_BACKEND_URL` es una URL absoluta distinta del origen de la app) y porque integra mejor con esperas asíncronas
-  reales para flujos con polling.
+- **E2E**: [Playwright](https://playwright.dev) contra `next dev`, con un **backend falso** en Node
+  (`e2e/fake-backend/server.mjs`) en lugar del backend real, y una cookie de sesión firmada en lugar del login de Cognito. Se
+  eligió sobre Cypress porque integra mejor con esperas asíncronas reales para flujos con polling.
 
-No hay backend real disponible en este repo (vive aparte, ver `README.md`), así que **ambas capas mockean los servicios/la red
-en vez de integrar contra un backend**: los tests unitarios mockean `ConsultationService`/`apiFetch`/`apiFetchCMS`, y los e2e
-interceptan las requests HTTP del navegador con `page.route`.
+No hay backend real disponible en este repo (vive aparte, ver `README.md`), así que **ambas capas reemplazan al backend en vez
+de integrar contra él**: los tests unitarios mockean `ConsultationService`/`apiFetch`/`apiFetchCMS`, y los e2e apuntan
+`BACKEND_URL` a un servidor falso.
+
+**Por qué un backend falso y no `page.route`**: `BACKEND_URL` es privado y solo lo llaman los Server Actions
+(`consultation.actions.ts`, `profile.actions.ts`) desde el proceso de Node de `next dev`, nunca el navegador. El mock de red de
+Playwright solo intercepta requests del navegador, así que no vería esas llamadas. (`page.route` ya no se usa para el backend de
+consulta/órdenes; el CMS, `NEXT_PUBLIC_BACKEND_CMS_URL`, sí se llama desde el navegador pero ningún e2e lo ejercita hoy.)
 
 ## Cómo correr los tests
 
@@ -27,9 +31,26 @@ npm run test:e2e:ui     # e2e con la UI interactiva de Playwright
 npm run test:e2e:report # abre el último reporte HTML de Playwright
 ```
 
-Los e2e usan variables de entorno dummy definidas en `.env.test` (hosts no resolubles como
-`http://consultation-backend.e2e.local`) precisamente para que cualquier request que no esté mockeada explícitamente falle de
-forma ruidosa (`net::ERR_NAME_NOT_RESOLVED`) en vez de colarse en silencio a un host real.
+`npm run test:e2e` levanta solos dos servidores (ver `webServer` en `playwright.config.ts`): el backend falso en `:3101` y
+`next dev` en `:3100`, este último con `BACKEND_URL` apuntando al falso. Los e2e usan las variables de `.env.test`:
+`BACKEND_URL` (el backend falso), `SESSION_SECRET` (dummy, solo para tests: firma la cookie de sesión) y hosts dummy no
+resolubles para el CMS (`http://cms-backend.e2e.local`), de modo que cualquier request al CMS falle de forma ruidosa
+(`net::ERR_NAME_NOT_RESOLVED`) en vez de colarse a un host real.
+
+### Cómo funcionan los e2e
+
+- **Sesión**: `src/proxy.ts` redirige a `/login` en `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel` y `/perfil` sin sesión. Los
+  specs importan `test`/`expect` de `e2e/fixtures.ts` (no de `@playwright/test`): antes de cada test ese fixture instala la
+  cookie `session` (un JWT HS256 firmado con `SESSION_SECRET`, fabricado en `e2e/helpers/session.ts` igual que lo emite
+  `src/shared/auth/session.ts`). Para probar sin sesión: `test.use({ authenticated: false })`.
+- **Backend falso**: cada endpoint responde lo que el test configuró con los helpers de `e2e/helpers/mock-backend.ts`
+  (`mockChatTurn`, `mockCreateOrder`, `mockSimulatePayment`, `mockOrderStatusSequence`, `mockProfile`, ...); un endpoint sin
+  configurar responde `501`, así una llamada inesperada falla en vez de devolver datos inventados. Los endpoints que en el
+  backend real exigen sesión validan `Authorization: Bearer <token>` (el Access Token de la cookie) y responden `401` sin él,
+  por lo que los e2e también verifican que los Server Actions lo adjuntan. `getBackendCalls()` devuelve el registro de
+  llamadas para aserciones como "el backend no fue llamado".
+- **En serie** (`workers: 1`, `fullyParallel: false`): el estado del backend falso es global, no por test; dos tests en
+  paralelo se pisarían los mocks. El fixture lo resetea antes de cada test.
 
 ## Estructura
 
@@ -54,6 +75,8 @@ src/features/profile/components/profile-form.test.tsx
 src/features/panel/services/panel.service.test.ts
 src/features/panel/components/panel-summary.test.tsx
 src/shared/components/navbar-sesion.test.tsx
+src/shared/components/topbar-sesion.test.tsx
+src/shared/components/sesion-nav-link.test.tsx
 src/shared/components/sesion-shell.test.tsx
 src/shared/components/navbar-landing-gate.test.tsx
 src/shared/auth/sesion-routes.test.ts
@@ -61,15 +84,20 @@ src/proxy.test.ts
 src/app/__tests__/orders-id-page.test.tsx
 
 e2e/
+  fake-backend/
+    server.mjs            # backend falso (BACKEND_URL) que llaman los Server Actions
   helpers/
-    mock-backend.ts      # mocks de red por endpoint (consulta/chat, ordenes/crear, etc.)
+    mock-backend.ts       # configura el backend falso por endpoint (chat, crear orden, estado, perfil, ...)
+    session.ts            # fabrica la cookie `session` firmada con SESSION_SECRET
     seed-context.ts       # siembra localStorage antes de que la app arranque
+  fixtures.ts             # `test` con reset del backend falso + cookie de sesión (opt-out: authenticated: false)
   personal-info.spec.ts
   anamnesis-chat.spec.ts
   physical-assessment.spec.ts
   generate-order-payment.spec.ts
   order-status-plan.spec.ts
   consultation-full-flow.spec.ts
+  session-routes.spec.ts  # protección por proxy y layout de sesión (barra superior + sidebar acoplable)
 ```
 
 Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwright.config.ts` / `.env.test` (raíz) para e2e.
@@ -99,7 +127,10 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   completarse verifica la miniatura (`img` con la `thumbnailUrl`), el enlace "Descargar" hacia `pdfUrl`, que no haya
   `<iframe>`, y el placeholder cuando el plan no tiene miniatura.
 - **`src/proxy.ts` (`PROTECTED_PATHS`)**: `/panel` y `/perfil` tienen su propio describe (mismo patrón:
-  redirect sin cookie, redirect con cookie inválida/expirada, passthrough con sesión válida).
+  redirect sin cookie, redirect con cookie inválida/expirada, passthrough con sesión válida). `/pago/*` y `/ordenes/*`
+  (gateadas por `isSessionGatedPrefix`) repiten ese patrón para la raíz (`/pago`, `/ordenes`) y una subruta
+  (`/pago/abc`, `/ordenes/abc`), más la comprobación de que paths parecidos (`/pagox`, `/ordenesx`) no quedan gateados.
+  `/consulta/*` sigue protegida salvo `/consulta`, que es pública.
 - **`ProfileService` / `PanelService`**: que cada método pega al endpoint esperado (`user/me`, `panel/resumen`) y que un
   `ActionResult` con `ok: false` se traduce en una excepción con el mensaje del backend — mismo patrón que `ConsultationService`.
 - **`ProfileForm`**: prellenado de los campos editables desde el perfil (con el correo deshabilitado y de solo lectura),
@@ -112,15 +143,34 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 - **`PlanPreviewCard`** (`src/shared/components/`, compartida por `/panel` y `/ordenes/[id]`): fecha (opcional), miniatura (`<img>` lazy con `alt`), enlace "Descargar" con el `href` del PDF, y el
   placeholder "Vista previa no disponible" cuando `thumbnailUrl` es `null` o falta (backend aún sin actualizar).
 - **`proxy` (CSP)**: `img-src` incluye el bucket de planes; `frame-src` y `connect-src` no.
-- **`NavbarSesion`**: los links a `/panel`, `/perfil` y `/api/cognito/logout`, qué link queda resaltado según `usePathname`, y el
-  toggle del sidebar: el botón solo existe si se pasa `onToggle`, su `aria-label`/`aria-expanded` según `collapsed`, y que los
-  links llevan `md:hidden` (y el `<nav>` `md:w-14` en vez de `md:w-56`) al colapsar.
-- **`SesionShell`** (layout `(sesion)`): estado por defecto según la ruta (acoplado en `/consulta/*` y `/ordenes/*`, desacoplado en
+- **`NavbarSesion`** (sidebar, solo md+: `hidden md:flex fixed left-0 top-15`, debajo de la barra superior): los links a
+  `/perfil` ("Perfil"), `/panel` (label visible "Home") y `/api/cognito/logout`, en ese orden — "Nueva consulta" ya **no** es un
+  ítem del sidebar, vive en `TopbarSesion`. Qué link queda resaltado según `usePathname` (igualdad exacta con el `href`): el
+  activo cambia el `color` del texto a `var(--color-primary)` (no el fondo) y renderiza el indicador
+  `data-testid="nav-active-indicator"` (`absolute left-0 inset-y-0 w-[5px]`); los inactivos no lo tienen. Y el toggle del
+  sidebar: el botón solo existe si se pasa `onToggle`, su `aria-label`/`aria-expanded` según `collapsed`, su alineación
+  (`justify-end` desacoplado / `justify-center` acoplado), que los links llevan `hidden` al colapsar y el `<nav>` `w-14` en
+  vez de `w-56`.
+- **`TopbarSesion`** (barra superior `<header>` fija, `h-15`): logo "Nuvi" hacia `/`, botón "Nueva consulta" hacia
+  `/consulta/anamnesis` (siempre visible, fuera del menú móvil), y el `<nav aria-label="Menú de usuario">` (`flex md:hidden`)
+  con Perfil, Home y Cerrar sesión (mismos hrefs que el sidebar), con el link activo por pathname en color primary y **sin**
+  rectángulo lateral (variante `compact`).
+- **`SesionNavLink` / `SESION_NAV_ITEMS`** (`sesion-nav-link.component.tsx`, compartidos por sidebar y barra superior): la lista
+  de ítems (Perfil, Home), activo = color primary + indicador (solo en la variante no-compact), inactivo sin ninguno, y que
+  `className` se aplica al link.
+- **`SesionShell`** (layout `(sesion)`): estado por defecto según la ruta (acoplado en `/consulta/*`, `/pago/*` y `/ordenes/*`, desacoplado en
   `/panel` y `/perfil`, verificado vía el `md:pl-*` del `<main>`), el toggle, que la elección manual se mantiene al navegar dentro
   de la misma sección (re-render sin remontar, con `usePathname` mockeado), y que al cambiar de sección vale el default de la nueva.
-- **`sesion-routes.ts`**: `isSesionRoute` (solo `/panel` y `/perfil`, igualdad exacta, la usa el proxy), `isFocusRoute` (prefijos
-  `/consulta` y `/ordenes` sin falsos positivos tipo `/consultas`) y `usesSesionLayout` (la unión de ambas).
-- **`NavbarLandingGate`**: no renderiza nada en `/consulta/*`, `/ordenes/*`, `/panel`, `/perfil` ni `/dev*`; renderiza
+  También que renderiza `TopbarSesion` (banner con logo y "Nueva consulta") como hermano de `<main>`, y el padding superior del
+  `<main>` (`pt-19 md:pt-23`). Gotcha: jsdom no aplica CSS, así que los enlaces Home/Perfil/Cerrar sesión aparecen **dos veces**
+  en el DOM (sidebar + menú móvil `md:hidden` de la barra superior): los tests acotan por contenedor (`within(sidebar)`, donde
+  el sidebar es el `<nav>` que contiene el botón de acoplar; o `within(getByRole('navigation', { name: 'Menú de usuario' }))`)
+  en vez de `getByRole('link', { name: 'Home' })` a secas, que falla por "múltiples elementos".
+- **`sesion-routes.ts`**: `isSesionRoute` (solo `/panel` y `/perfil`, igualdad exacta, la usa el proxy; `/pago/*` y `/ordenes/*`
+  dan false), `isSessionGatedPrefix` (`/pago` y `/ordenes`, raíz y subrutas, sin falsos positivos tipo `/pagos`, `/pago-x`,
+  `/ordenesx`; `/consulta` no entra), `isFocusRoute` (prefijos `/consulta`, `/pago` y `/ordenes` sin falsos positivos tipo
+  `/consultas`) y `usesSesionLayout` (la unión de `isSesionRoute` e `isFocusRoute`).
+- **`NavbarLandingGate`**: no renderiza nada en `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel`, `/perfil` ni `/dev*`; renderiza
   `NavbarLanding` (mockeado) en el resto de rutas.
 
 ## Qué cubren los tests e2e
@@ -129,16 +179,26 @@ Los 6 pasos del flujo de consulta, cada uno con su happy path y sus casos de err
 etapas de punta a punta (`consultation-full-flow.spec.ts`) para detectar problemas de integración entre pasos que los specs
 individuales no verían (traspaso de `localStorage`, remonte de `ConsultationProvider` entre layouts):
 
-1. **Información personal**: envío válido y persistencia, bloqueo con campos vacíos, y que el `<select>` de género ya no
-   ofrece "Otro".
+1. **Información personal**: envío válido (el perfil se guarda en el backend con `PATCH auth/perfil` y el Access Token de la
+   sesión, y se persiste en `localStorage`), correo prellenado y de solo lectura, prellenado desde el perfil que el backend ya
+   tiene, bloqueo con campos vacíos, error del backend en un toast, y que el `<select>` de género no ofrece "Otro". El
+   formulario ya no pide Rut ni correo.
 2. **Chat de anamnesis**: turnos de chat mockeados hasta completarse, avance a evaluación física, y manejo de error del
    backend sin romper el chat.
 3. **Evaluación física**: envío válido, y la guarda cuando falta la anamnesis del paso anterior.
-4. **Generar orden**: creación de la orden y redirección a pago, error del backend, y que no se llame al backend si faltan
-   datos de pasos anteriores.
+4. **Generar orden**: creación de la orden (con el Access Token adjunto) y redirección a pago, error del backend, y que no se
+   llame al backend si faltan datos de pasos anteriores.
 5. **Pago simulado**: pago exitoso y redirección al estado de la orden, y error de la simulación de pago.
-6. **Estado de la orden**: polling hasta completarse (con el PDF real generándose vía `@react-pdf/renderer`, usando el mock
-   `nutritionPlanMock` ya existente en el repo), aviso de demora pasados 45s, y el estado de error reasegurante.
+6. **Estado de la orden**: polling hasta completarse (miniatura + enlace "Descargar" hacia la URL firmada del PDF, sin
+   `<iframe>`, con `nutritionPlanMock` como `planJson`), placeholder cuando el plan no tiene miniatura, aviso de demora
+   pasados 45s, y el estado de error reasegurante.
+7. **Protección de rutas y layout de sesión** (`session-routes.spec.ts`): sin sesión, `/consulta/*`, `/pago/*`, `/ordenes/*`,
+   `/panel` y `/perfil` redirigen a `/login` y `/consulta` (raíz) sigue pública; con sesión, `/consulta/*`, `/pago/*` y
+   `/ordenes/*` muestran la barra superior (logo "Nuvi" y "Nueva consulta", siempre visible), el sidebar de sesión acoplado, sin
+   el navbar de la landing, y el botón lo desacopla y lo vuelve a acoplar (sin afectar a la barra superior). En un viewport
+   móvil (390px) el sidebar desaparece y Perfil/Home/Cerrar sesión pasan al menú de la barra superior. Los selectores se acotan
+   al sidebar (`<nav>` que contiene el botón de acoplar), a la barra superior (`banner`) o al menú móvil
+   (`navigation` "Menú de usuario"), y usan `exact: true` para "Home".
 
 ## Hallazgos durante el proceso
 
@@ -160,7 +220,12 @@ individuales no verían (traspaso de `localStorage`, remonte de `ConsultationPro
 ## Notas / limitaciones conocidas
 
 - Los e2e corren contra `next dev` (Turbopack), no contra un build de producción: un build real intenta pre-renderizar
-  `/articulos` en build-time contra `NEXT_PUBLIC_BACKEND_CMS_URL`, que en `.env.test` es un host dummy — el mock de red de
-  Playwright solo intercepta fetches del navegador, no los que Next hace en el servidor durante el build.
+  `/articulos` en build-time contra `NEXT_PUBLIC_BACKEND_CMS_URL`, que en `.env.test` es un host dummy — ni el mock de red de
+  Playwright ni el backend falso cubren al CMS, y los fetches que Next hace en el servidor durante el build no pasan por
+  el navegador.
+- El login real contra Cognito (Hosted UI, Google) **no** se prueba en e2e: la cookie de sesión se fabrica directamente. Lo
+  que sí ejercita el e2e es todo lo que depende de tener una sesión válida (proxy, layout, Access Token hacia el backend).
+- Los e2e no cubren `/panel` ni `/perfil` con sesión (sus páginas piden datos a endpoints del backend que el falso aún no
+  implementa: `panel/resumen`, `ordenes`, `user/me`).
 - No hay CI configurado (no existe `.github/workflows` en el repo) — correr `npm test` / `npm run test:e2e` en un pipeline
   queda pendiente como tarea aparte.

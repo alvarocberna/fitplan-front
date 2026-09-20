@@ -20,17 +20,21 @@ El backend es un proyecto aparte (NestJS + SQLite) y no vive en este repo. Su ba
 
 El estado de la consulta se administra mediante `ConsultaProvider` (React Context) y persiste en `localStorage` para no perderse entre pasos.
 
-**Layout de estas páginas.** Las páginas de `/consulta/*` y `/ordenes/[id]` viven en el route group
+**Layout de estas páginas.** Las páginas de `/consulta/*`, `/pago/[ordenId]` y `/ordenes/[id]` viven en el route group
 `src/app/(sesion)/` (el paréntesis no agrega segmento a la URL; las URLs no cambian), junto con `/panel` y
 `/perfil`. Comparten `src/app/(sesion)/layout.tsx`, que renderiza `SesionShell`
-(`src/shared/components/sesion-shell.component.tsx`): un sidebar `NavbarSesion` a la izquierda más el
-contenido con el padding correspondiente. Estas rutas ya no muestran el navbar público (`NavbarLanding`). En
-`/consulta/*` y `/ordenes/*` el sidebar arranca **acoplado** en pantallas md+ (angosto, con solo un ícono
-para desacoplarlo; en móvil la barra superior siempre va completa) para dejar espacio al flujo, mientras que
+(`src/shared/components/sesion-shell.component.tsx`): una barra superior fija `TopbarSesion` (100% de ancho,
+60px de alto, con el logo "Nuvi" a la izquierda, que lleva a `/`, y el botón "Nueva consulta" a la derecha, que
+lleva a `/consulta/anamnesis`), un sidebar `NavbarSesion` a la izquierda (solo md+, debajo de la barra superior) y
+el contenido con el padding correspondiente. El sidebar tiene las opciones Perfil, Home (`/panel`) y Cerrar
+sesión; en móvil no se renderiza y esas tres opciones pasan a la barra superior. Estas rutas ya no muestran el
+navbar público (`NavbarLanding`). En
+`/consulta/*`, `/pago/*` y `/ordenes/*` el sidebar arranca **acoplado** en pantallas md+ (angosto, con solo un ícono
+para desacoplarlo) para dejar espacio al flujo, mientras que
 en `/panel` y `/perfil` arranca desacoplado. La elección manual se mantiene entre páginas de una misma
-sección y se reinicia al pasar de una a la otra. `/pago/[ordenId]` queda **fuera** de este grupo y conserva
-el navbar público. Detalle del gating de sesión (que no cambió: el proxy protege `/consulta/*` salvo
-`/consulta`, pero no `/ordenes/*` ni `/pago/*`) en `doc/auth.md`.
+sección y se reinicia al pasar de una a la otra. Todo el flujo exige sesión: el proxy protege `/consulta/*`
+(salvo la raíz vacía `/consulta`), `/pago/*` y `/ordenes/*` además de `/panel` y `/perfil`; sin sesión válida
+redirige a `/login`. Detalle del gating en `doc/auth.md`.
 
 ### 1. Información personal — `/consulta/informacion-personal`
 Componente `FormUserInfo`. Formulario (react-hook-form) con los datos personales (`InformacionPersonalDto`:

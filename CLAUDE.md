@@ -8,10 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev      # Next.js dev server (turbopack) on :3000
 npm run build    # production build
 npm run start    # serve production build on :3000
-npm run lint     # next lint
+npm run lint     # next lint (no ESLint config in the repo yet — it doesn't run)
+npm run test     # unit tests (Vitest + React Testing Library), once
+npm run test:e2e # e2e (Playwright): starts a fake backend on :3101 + `next dev` on :3100 by itself
 ```
 
-There is no test suite configured (no test script, no test runner in `package.json`).
+Test setup and what's covered: `doc/testing.md`. E2E reads its own env from `.env.test` (committed, dummy
+values): `BACKEND_URL` points at the fake backend, `SESSION_SECRET` signs the session cookie the tests fabricate.
 
 ## Environment
 
@@ -59,12 +62,37 @@ This app talks to **two unrelated backends**, each with its own fetch wrapper �
 
 The Content-Security-Policy is nonce-based and generated per-request in `src/proxy.ts` (Next.js 16's replacement for the `middleware.ts` file convention), since the nonce must change on every response. `next.config.ts` keeps only the static security headers (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Strict-Transport-Security` in prod) and the `images.remotePatterns` allowlist (local uploads + the S3 bucket the CMS serves images from) — extend that allowlist, and the `img-src`/`connect-src` directives in `src/proxy.ts`, rather than loosening CSP if a new image host or backend origin is needed. See `doc/security.md` for details.
 
+### Session area: `(sesion)` route group and route gating
+
+Every route that needs a logged-in user lives under the route group `src/app/(sesion)/` (no URL
+segment): `/panel`, `/perfil`, `/consulta/*`, `/pago/[orderId]` and `/ordenes/[id]`. They share
+`src/app/(sesion)/layout.tsx`, which renders `SesionShell` (`src/shared/components/sesion-shell.component.tsx`,
+a Client Component): `TopbarSesion` + the `NavbarSesion` sidebar + a `<main>` (`pt-19 md:pt-23`) whose
+left padding follows the sidebar width. `TopbarSesion` is a fixed 60px (`h-15`) full-width bar: the
+"Nuvi" text logo (→ `/`) on the left and the "Nueva consulta" button (→ `/consulta/anamnesis`) on the
+right. The sidebar (md+ only, below the top bar; options Perfil, Home = `/panel`, Cerrar sesión) starts
+**docked** (narrow, `w-14`, only an icon to undock it) in the flow routes `/consulta/*`, `/pago/*`,
+`/ordenes/*`, and **undocked** (`w-56`, with links) in `/panel` and `/perfil`; the manual choice is kept
+while navigating inside the same section and discarded when switching between sections. On small
+screens there is no sidebar: `TopbarSesion` also hosts those three options (`compact` variant). Both
+share `SESION_NAV_ITEMS` / `SesionNavLink` (`sesion-nav-link.component.tsx`). These routes do
+**not** show `NavbarLanding` — `NavbarLandingGate` (root layout) hides it via `usesSesionLayout()`.
+Because `<main>` already provides `min-h-screen` and padding, pages inside the group must not add their
+own `min-h-screen` / large top padding (they use `py-4`).
+
+Gating is by `src/proxy.ts`, which redirects to `/login` without a valid session cookie:
+`/consulta/*` (except the bare `/consulta`, empty and intentionally public), `/pago/*`, `/ordenes/*`
+(via `isSessionGatedPrefix`), and `/panel`, `/perfil` (via `isSesionRoute`). Route lists live in
+`src/shared/auth/sesion-routes.ts` — when adding a route to the session area, update that file **and**
+put the page under `(sesion)`; `isSesionRoute` (exact match, proxy) is deliberately separate from
+`isFocusRoute` / `usesSesionLayout` (presentation only).
+
 ### Paid consultation flow (the core product)
 
 Requires an authenticated Cognito session from `/consulta/inicio` onward (`src/proxy.ts` gates
-`/consulta/*` except `/consulta`, unused/empty; login lives at `/login`, outside `/consulta/*`, so
-it doesn't need special-casing there; the backend separately gates order creation and chat — see
-`doc/auth.md`). The "Iniciar Consulta" buttons on the home page (navbar, hero) already check session
+`/consulta/*` except `/consulta`, and also `/pago/*` and `/ordenes/*` — see the section above; login
+lives at `/login`, outside those prefixes, so it doesn't need special-casing there; the backend
+separately gates order creation and chat — see `doc/auth.md`). The "Iniciar Consulta" buttons on the home page (navbar, hero) already check session
 before routing (`getStartConsultationHref()`) — no session goes straight to `/login`, skipping
 `/consulta/inicio` entirely; without that, direct navigation/a bookmark hits the same proxy gate and
 gets redirected to `/login` anyway. With a session, `/consulta/inicio`'s own "Iniciar" button routes
@@ -73,7 +101,7 @@ invalid in between — the proxy already re-checks this on every request, so thi
 page is defense-in-depth, not the primary gate), `/consulta/informacion-personal` (incomplete
 profile — RUT/name/gender/DOB aren't in Cognito, the user fills them once), or straight to `/panel`
 (profile already complete — `/panel` lives under `src/app/(sesion)/panel`, gated by `src/proxy.ts`
-just like `/consulta/*`: no session redirects to `/login`).
+just like the rest of the flow: no session redirects to `/login`).
 
 Routes: `/consulta/inicio` → `/consulta/informacion-personal` (skipped if the profile is already
 complete, in which case `/consulta/inicio` sends the user to `/panel` instead) → `/consulta/anamnesis`
@@ -103,13 +131,16 @@ After making a **large or structurally significant** change — a new route/page
 
 ## Test maintenance
 
-The project has unit tests (Vitest + React Testing Library, see `vitest.config.ts`) and e2e tests (Playwright, see `playwright.config.ts`), documented in `doc/testing.md`. After changing code covered by an existing test — or adding a component/service/page in an already-covered area (consultation feature, `shared/api`, `shared/context`, `nutrition-plan`) — invoke the `test-maintainer` subagent (via the Agent tool) to update or extend the relevant tests. Not wired to a hook — you (Claude) decide when it applies and trigger it yourself.
+The project has unit tests (Vitest + React Testing Library, see `vitest.config.ts`) and e2e tests (Playwright, see `playwright.config.ts`), documented in `doc/testing.md`. After changing code covered by an existing test — or adding a component/service/page in an already-covered area (consultation feature, `shared/api`, `shared/context`, `nutrition-plan`, session routing/layout) — invoke the `test-maintainer` subagent (via the Agent tool) to update or extend the relevant tests. Not wired to a hook — you (Claude) decide when it applies and trigger it yourself.
+
+E2E gotchas (details in `doc/testing.md`): the backend is called from Server Actions (Node), so `page.route` can't mock it — specs configure the fake backend `e2e/fake-backend/server.mjs` through `e2e/helpers/mock-backend.ts`, and import `test`/`expect` from `e2e/fixtures.ts`, which resets that backend and installs a signed `session` cookie before each test (`test.use({ authenticated: false })` to opt out). Any new backend endpoint a page/action hits needs a handler in the fake backend (unmocked ones answer `501` on purpose). The suite runs serially because the fake backend's state is global.
 
 ## Known technical debt (from README)
 
 - ~~The order/consultation backend URL is exposed as a public env var...~~ — **resolved**: `BACKEND_URL` is private, every call goes through a Server Action carrying the Cognito Access Token. See `doc/auth.md`.
 - Anamnesis state is only persisted to context/localStorage once the chat completes; a mid-chat reload re-runs (and re-bills, token-wise) the whole conversation. Intended fix: persist incrementally per turn, plus add an explicit reset action for users who want to restart.
-- Auth-related gaps still open: `GET /ordenes/obtener-estado/:id` doesn't verify the order belongs to the token's user (BOLA); the "athlete" question in `informacion-personal` isn't persisted per-user, so returning users who skip that form never get asked again. See `doc/auth-pending.md`.
+- Auth-related gaps still open: the "athlete" question in `informacion-personal` isn't persisted per-user, so returning users who skip that form never get asked again. See `doc/auth-pending.md`. (The BOLA on `GET /ordenes/obtener-estado/:id` is recorded as **resolved** in the backend repo — see `doc/flow.md`; not re-verified from this repo.)
+- E2E doesn't cover the real Cognito login (the session cookie is fabricated) nor `/panel` / `/perfil` with a session (the fake backend has no `panel/resumen`, `user/me`, `ordenes` handlers yet).
 
 <!-- BEGIN:nextjs-agent-rules -->
 

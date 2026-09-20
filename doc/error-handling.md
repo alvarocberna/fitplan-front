@@ -27,7 +27,7 @@ Boundary de error genérico para toda la aplicación. En App Router, un `error.t
 propio segmento **y de todos los segmentos anidados por debajo**, hasta encontrar otro `error.tsx` más
 cercano en el árbol. Como no hay ningún `error.tsx` más específico en ninguna ruta, este único archivo cubre
 hoy todas las rutas existentes que no viven bajo `(sesion)` (`testimonios`, `articulos`, `planes`,
-`pago/*`, `carrito`, `dev/*`); `consulta/*`, `ordenes/*`, `panel` y `perfil` las cubre el
+`carrito`, `dev/*`); `consulta/*`, `pago/*`, `ordenes/*`, `panel` y `perfil` las cubre el
 `error.tsx` propio de `(sesion)` (ver "Ya implementado para `(sesion)`" más abajo).
 
 Comportamiento:
@@ -82,9 +82,9 @@ esas rutas caía directo al `error.tsx` genérico de raíz, perdiendo ese contex
 de ZAP — pero podría agregarse más adelante como mejora de UX si alguna sección lo justifica.
 
 **Ya implementado para `(sesion)`**: `src/app/(sesion)/error.tsx` es el primer caso real de este patrón.
-`src/app/(sesion)/layout.tsx` (compartido por `/panel`, `/perfil`, `/consulta/*` y `/ordenes/[id]`)
-renderiza `SesionShell` (sidebar `NavbarSesion` a la izquierda, acoplable, más `<main>{children}</main>`
-con el padding correspondiente); `/panel` y `/perfil` son Server Components `async` que hacen `await
+`src/app/(sesion)/layout.tsx` (compartido por `/panel`, `/perfil`, `/consulta/*`, `/pago/[orderId]` y `/ordenes/[id]`)
+renderiza `SesionShell` (barra superior `TopbarSesion`, sidebar `NavbarSesion` a la izquierda en md+, acoplable, más
+`<main>{children}</main>` con el padding correspondiente); `/panel` y `/perfil` son Server Components `async` que hacen `await
 PanelService.getSummary()` / `ProfileService.getProfile()` sin `try/catch`, así que cualquier falla de esas
 llamadas (ej. el backend caído, o los 404 que se vieron mientras `/user/me` y `/panel/resumen` corrían contra
 un proceso de dev server desactualizado — ver `nutricionista-virtual-back/doc/technical-debt.md`) se propaga
@@ -93,10 +93,10 @@ reemplaza *todo* `{children}` del layout raíz — incluyendo `(sesion)/layout.t
 solo el contenido de la página que falló. Con `src/app/(sesion)/error.tsx` (mismo diseño que el `error.tsx`
 raíz: `'use client'`, solo loguea `error.digest` en consola, botón "Reintentar" vía `reset()`), el boundary
 más cercano pasa a ser este, que vive en la misma carpeta que `(sesion)/layout.tsx` — por la regla de Next.js
-de que un `error.tsx` no reemplaza el `layout.tsx` de su propio segmento, el sidebar y el `<main>` quedan
-visibles y solo se reemplaza el contenido de la página fallida. Como `consulta/*` y `ordenes/*` ahora viven
-dentro de `(sesion)`, este mismo `error.tsx` también las cubre (un error en un paso del flujo o en
-`/ordenes/[id]` mantiene el sidebar visible); un `error.tsx` propio por sección sigue siendo opcional.
+de que un `error.tsx` no reemplaza el `layout.tsx` de su propio segmento, la barra superior, el sidebar y el `<main>` quedan
+visibles y solo se reemplaza el contenido de la página fallida. Como `consulta/*`, `pago/*` y `ordenes/*` ahora viven
+dentro de `(sesion)`, este mismo `error.tsx` también las cubre (un error en un paso del flujo, en
+`/pago/[orderId]` o en `/ordenes/[id]` mantiene visibles la barra superior y el sidebar); un `error.tsx` propio por sección sigue siendo opcional.
 
 ## Verificación
 

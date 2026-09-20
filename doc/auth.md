@@ -171,59 +171,87 @@ navegador — todas llegan server-to-server desde el propio servidor de Next.js.
 ## Gating de rutas — `src/proxy.ts`
 
 Verificación optimista (patrón "Optimistic checks with Proxy" de Next.js): antes del bloque que
-genera el CSP, `requiresSession(pathname)` decide si la ruta necesita sesión combinando dos
+genera el CSP, `requiresSession(pathname)` decide si la ruta necesita sesión combinando tres
 mecanismos:
 
 - **Prefijo `/consulta/`**: protegido por defecto salvo que esté en `PUBLIC_CONSULTA_PATHS` (solo
   `/consulta`, vacía y sin uso — `/consulta/inicio` ya requiere sesión como el resto de
   `/consulta/*`). Cualquier ruta nueva bajo `/consulta/*` no listada ahí queda protegida por
   defecto (fail-closed).
+- **Prefijos `/pago` y `/ordenes`** (`SESSION_GATED_PREFIXES` / `isSessionGatedPrefix()` en
+  `src/shared/auth/sesion-routes.ts`): protegen la raíz y todas las subrutas (`/pago`,
+  `/pago/[orderId]`, `/ordenes`, `/ordenes/[id]`, y cualquier ruta nueva bajo esos prefijos —
+  fail-closed). Completan el flujo de consulta → pago → orden, que ahora exige sesión de punta a
+  punta.
 - **`PROTECTED_PATHS`** (hoy `SESION_PATHS` / `isSesionRoute()` en `src/shared/auth/sesion-routes.ts`):
-  un set explícito de rutas *fuera* de `/consulta/*` que también requieren
+  un set explícito de rutas *fuera* de los prefijos anteriores que también requieren
   sesión — `/panel` y `/perfil` (área de usuario logueado, ver sección siguiente). A diferencia de
-  `/consulta/*` acá no hay protección por prefijo: una ruta nueva fuera de `/consulta/*` queda
-  pública salvo que se agregue explícitamente a este set.
+  los prefijos, acá la comparación es por igualdad exacta: una ruta nueva fuera de `/consulta/*`,
+  `/pago/*` y `/ordenes/*` queda pública salvo que se agregue explícitamente a este set.
 
 Si la ruta lo requiere, lee la cookie `session` con `request.cookies.get(...)` (no `cookies()` de
 `next/headers`, para no depender de un comportamiento no verificado dentro de proxy) y, si no es
 válida (`hasValidSession()`), redirige a `/login`. `/login` vive fuera de ambos mecanismos, así que
 no necesita estar en ninguna allowlist.
 
-No protege `/pago/[orderId]` ni `/ordenes/[id]` (no están en `PROTECTED_PATHS` ni bajo
-`/consulta/*`). Esto **no cambió** cuando `/ordenes/[id]` pasó a vivir bajo el route group `(sesion)`
-(ver sección siguiente): el layout compartido solo cambia cómo se ve la página, no agrega ninguna
-verificación de sesión — el proxy se rige por la URL, no por en qué carpeta esté el archivo.
+`/pago/*` y `/ordenes/*` **antes no estaban protegidas** (ni en `PROTECTED_PATHS` ni bajo
+`/consulta/*`) y ahora sí: sin sesión válida, el proxy responde con un redirect 307 a `/login`. Ojo
+con la relación con el route group `(sesion)` (ver sección siguiente): el layout compartido solo
+cambia cómo se ve la página, no agrega ninguna verificación de sesión — el proxy se rige por la URL,
+no por en qué carpeta esté el archivo, y por eso el gating de `/pago/*` y `/ordenes/*` es un
+mecanismo propio (`isSessionGatedPrefix`) y no un efecto de haberlas movido a `(sesion)`.
+
+**E2E**: las specs de Playwright (`e2e/`) fabrican la cookie `session` (JWT HS256 firmado con
+`SESSION_SECRET`, `e2e/helpers/session.ts`) para pasar por el proxy, y `e2e/session-routes.spec.ts`
+verifica el gating (sin sesión → `/login`) y el layout de estas rutas. El login real contra Cognito no
+se prueba en e2e. Ver `doc/testing.md`.
 
 ## Área de usuario logueado — layout `(sesion)`
 
 Todas las rutas del route group `src/app/(sesion)/` (el paréntesis no agrega segmento a la URL)
-comparten `src/app/(sesion)/layout.tsx`: `/panel`, `/perfil`, `/consulta/*` y `/ordenes/[id]`.
-`/pago/[orderId]` **no** está en el grupo: sigue en `src/app/pago/` con el navbar público.
+comparten `src/app/(sesion)/layout.tsx`: `/panel`, `/perfil`, `/consulta/*`, `/pago/[orderId]` y
+`/ordenes/[id]` (`/pago` vivía antes en `src/app/pago/` con el navbar público; se movió a
+`src/app/(sesion)/pago/` sin cambiar la URL).
 
 El layout renderiza `SesionShell` (`src/shared/components/sesion-shell.component.tsx`, Client
-Component), que arma el sidebar `NavbarSesion` (`src/shared/components/navbar-sesion.component.tsx`)
-más un `<main>` cuyo padding izquierdo (md+) sigue el ancho actual del sidebar. `NavbarSesion`
-tiene links a `/panel`, `/perfil` y `/api/cognito/logout`; en pantallas md+ es una sidebar fija a
-la izquierda, en mobile una barra horizontal fija en el borde superior (estas rutas ya no muestran
-`NavbarLanding`: `NavbarLandingGate` se oculta con `usesSesionLayout(pathname)`, ver
-`src/shared/auth/sesion-routes.ts`).
+Component), que arma la barra superior `TopbarSesion`
+(`src/shared/components/topbar-sesion.component.tsx`), el sidebar `NavbarSesion`
+(`src/shared/components/navbar-sesion.component.tsx`) y un `<main>` cuyo padding izquierdo (md+) sigue
+el ancho actual del sidebar y cuyo padding superior (`pt-19 md:pt-23`) deja libre la barra superior
+(estas rutas ya no muestran `NavbarLanding`: `NavbarLandingGate` se oculta con
+`usesSesionLayout(pathname)`, ver `src/shared/auth/sesion-routes.ts`).
 
+- **Barra superior (`TopbarSesion`)**: fija, 100% de ancho, `h-15` (60px). A la izquierda el logo de
+  texto "Nuvi" (link a `/`); a la derecha el botón "Nueva consulta" (link a `/consulta/anamnesis`). En
+  móvil (<md) también aloja las opciones de navegación (Perfil, Home y Cerrar sesión, en variante
+  `compact`: ícono sobre la etiqueta), porque el sidebar no se renderiza en esa resolución.
+- **Sidebar (`NavbarSesion`, solo md+)**: `hidden md:flex`, fijo a la izquierda debajo de la barra
+  superior (`top-15`, alto `calc(100vh - 3.75rem)`). Sus opciones son Perfil (`/perfil`), Home (etiqueta
+  visible de `/panel`; el href sigue siendo `/panel`) y Cerrar sesión (`/api/cognito/logout`), más el
+  botón de acoplar/desacoplar a la derecha; ya no incluye "Nueva consulta" (ahora vive en la barra
+  superior). La opción activa se marca con el texto en `var(--color-primary)` y un rectángulo de 5px
+  en el borde izquierdo, sin fondo. Las opciones y el link con ese estilo son compartidos entre
+  sidebar y barra superior (`SESION_NAV_ITEMS`, `SesionNavLink` en
+  `src/shared/components/sesion-nav-link.component.tsx`).
 - **Sidebar acoplable (solo md+)**: desacoplado es `w-56` con los links; acoplado es `w-14` con
-  un único ícono para volver a desacoplarlo (en mobile la barra superior siempre se muestra
-  completa). El estado inicial depende de la sección: en `/consulta/*` y `/ordenes/*`
+  un único ícono para volver a desacoplarlo (en mobile no hay sidebar, así que no aplica). El
+  estado inicial depende de la sección: en `/consulta/*`, `/pago/*` y `/ordenes/*`
   (`isFocusRoute()`, "rutas de flujo") arranca **acoplado** para dejar espacio al contenido del
   flujo; en `/panel` y `/perfil` arranca **desacoplado**. La elección manual del usuario
   (`SesionShell`, `useState`) persiste entre páginas de una misma sección mientras el layout no se
   remonte, y se descarta al cambiar entre la sección panel/perfil y la de flujo (vuelve al valor
   por defecto de la nueva sección).
 - **Padding de las páginas**: como el `<main>` del layout ya aporta el padding, los wrappers de
-  las páginas de `/consulta/*` y `/ordenes/[id]` usan `py-4` en vez del antiguo `min-h-screen py-24`
-  / `pt-40` (que compensaban el navbar público).
-- **Gating**: `/panel` y `/perfil` están en `PROTECTED_PATHS` (ver arriba) y `/consulta/*` (salvo
-  `/consulta`) se protege por prefijo — sin sesión válida, `src/proxy.ts` redirige a `/login`
-  antes de que el layout o la página se rendericen. `isSesionRoute()` sigue siendo solo `/panel` y
-  `/perfil` y es lo que consulta el proxy; `isFocusRoute()` y `usesSesionLayout()` (que agrupa
-  ambas) solo deciden presentación (navbar/sidebar), no seguridad.
+  las páginas de `/consulta/*`, `/pago/[orderId]` y `/ordenes/[id]` (que no deben sumar su propio
+  `min-h-screen` ni un padding superior grande) usan `py-4` (`/pago`, además,
+  `w-full flex justify-center px-6`) en vez del antiguo `min-h-screen py-24` / `pt-40` /
+  `min-h-screen items-center` (que compensaban el navbar público o centraban en pantalla completa).
+- **Gating**: `/panel` y `/perfil` están en `PROTECTED_PATHS` (ver arriba); `/consulta/*` (salvo
+  `/consulta`) y `/pago/*` + `/ordenes/*` se protegen por prefijo — sin sesión válida,
+  `src/proxy.ts` redirige a `/login` antes de que el layout o la página se rendericen.
+  `isSesionRoute()` (solo `/panel` y `/perfil`) e `isSessionGatedPrefix()` (`/pago`, `/ordenes`) son
+  lo que consulta el proxy; `isFocusRoute()` y `usesSesionLayout()` (que agrupa `isSesionRoute` +
+  `isFocusRoute`) solo deciden presentación (navbar/sidebar), no seguridad.
 
 Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc/flow.md`):
 

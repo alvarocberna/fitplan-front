@@ -8,7 +8,7 @@ export default async function PerfilPage() {
 
     return (
         <div className="max-w-2xl flex flex-col mx-auto px-4">
-            <Card widthInner="80%">
+            <Card widthInner="80%" variant="solid">
                 <SubsectionHead>
                     <SubsectionTitle title="Mi perfil" />
                 </SubsectionHead>

@@ -33,8 +33,9 @@ contra un user pool real (sin credenciales en este entorno) y no está conectado
       `/consulta` (vacía, sin uso — `/consulta/inicio` ya requiere sesión como el resto; `/login` vive
       fuera del namespace `/consulta/*`, así que tampoco necesita estar en esa allowlist). Sin
       cookie `session` válida, redirige a `/login` (sin `?next=` de
-      retorno — fuera de alcance). No gatea `/pago/[orderId]` ni `/ordenes/[id]` (fuera del prefijo
-      `/consulta`, no estaban en el pedido). Usa un nuevo `hasValidSession()` exportado de `session.ts`
+      retorno — fuera de alcance). En este primer cambio no gateaba `/pago/[orderId]` ni `/ordenes/[id]`
+      (fuera del prefijo `/consulta`); **actualizado después**: el proxy ahora también exige sesión en
+      `/pago/*` y `/ordenes/*` (helper `isSessionGatedPrefix`, ver `doc/auth.md`). Usa un nuevo `hasValidSession()` exportado de `session.ts`
       (reusa `decrypt()`, sin duplicar lógica de `jose`), y lee la cookie con `request.cookies.get(...)`
       en vez de `cookies()` de `next/headers` (evita depender de un comportamiento no verificado dentro
       de proxy).

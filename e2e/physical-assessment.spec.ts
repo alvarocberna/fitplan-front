@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { seedConsultationContext } from './helpers/seed-context';
 
 const VALID_ANAMNESIS = { goals: null, clinical: null, dietary: null, lifestyle: null };

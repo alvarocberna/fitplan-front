@@ -19,7 +19,7 @@ const INTAKE_FIELDS: { key: keyof NonNullable<PanelSummaryDto['nutritionalPlan']
 export function PanelSummary({ summary, orders }: PanelSummaryProps) {
     return (
         <div className="w-full flex flex-col gap-6">
-            <Card widthInner="80%">
+            <Card widthInner="80%" variant="solid">
                 <SubsectionHead>
                     <SubsectionTitle title="Mi información" />
                 </SubsectionHead>
@@ -43,7 +43,7 @@ export function PanelSummary({ summary, orders }: PanelSummaryProps) {
                 </SubsectionBody>
             </Card>
 
-            <Card widthInner="80%">
+            <Card widthInner="80%" variant="solid">
                 <SubsectionHead>
                     <SubsectionTitle title="Último plan nutricional" />
                 </SubsectionHead>
@@ -67,7 +67,7 @@ export function PanelSummary({ summary, orders }: PanelSummaryProps) {
                 </SubsectionBody>
             </Card>
 
-            <Card widthInner="80%">
+            <Card widthInner="80%" variant="solid">
                 <SubsectionHead>
                     <SubsectionTitle title="Mis planes nutricionales" />
                 </SubsectionHead>
