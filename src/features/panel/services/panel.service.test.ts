@@ -8,21 +8,29 @@ vi.mock('./panel.actions', () => ({
 
 const mockedGetPanelSummaryAction = vi.mocked(getPanelSummaryAction);
 
+const summary = {
+  firstName: 'Ana',
+  middleName: null,
+  paternalLastName: 'Pérez',
+  maternalLastName: null,
+  age: 34,
+  lastConsultationDate: null,
+  goal: 'Bajar de peso',
+  nutritionalPlan: null,
+};
+
 beforeEach(() => {
   mockedGetPanelSummaryAction.mockReset();
 });
 
 describe('PanelService', () => {
   it('getSummary returns the unwrapped summary on success', async () => {
-    mockedGetPanelSummaryAction.mockResolvedValue({
-      ok: true,
-      data: { firstName: 'Ana', paternalLastName: 'Pérez', age: 34, goal: 'Bajar de peso', nutritionalPlan: null },
-    });
+    mockedGetPanelSummaryAction.mockResolvedValue({ ok: true, data: summary });
 
     const result = await PanelService.getSummary();
 
     expect(mockedGetPanelSummaryAction).toHaveBeenCalledWith();
-    expect(result).toEqual({ firstName: 'Ana', paternalLastName: 'Pérez', age: 34, goal: 'Bajar de peso', nutritionalPlan: null });
+    expect(result).toEqual(summary);
   });
 
   it('getSummary throws with the backend message when the action fails', async () => {

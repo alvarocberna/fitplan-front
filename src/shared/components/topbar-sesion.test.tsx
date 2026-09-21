@@ -16,11 +16,11 @@ describe('TopbarSesion', () => {
     expect(screen.getByRole('banner')).toHaveClass('fixed', 'top-0', 'w-full', 'h-15');
   });
 
-  it('links the "Nuvi" logo to the site root', () => {
+  it('links the "Nuvi" logo to /panel', () => {
     usePathnameMock.mockReturnValue('/panel');
     render(<TopbarSesion />);
 
-    expect(screen.getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/panel');
   });
 
   it('renders the "Nueva consulta" button pointing to /consulta/anamnesis, outside the mobile menu', () => {

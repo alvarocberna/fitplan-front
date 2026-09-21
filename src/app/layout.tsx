@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 //SHARED
 import { Providers } from "@/shared/providers/toast.provider";
 import { NavbarLandingGate } from "@/shared/components/navbar-landing-gate.component";
+import { FooterGate } from "@/shared/components/footer-gate.component";
 //
 // import "./globals.css";
 
@@ -37,6 +38,7 @@ export default async function RootLayout({
         {/* <div className="fixed top-0 left-0 w-full h-32 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none" /> */}
         <NavbarLandingGate />
         {children}
+        <FooterGate />
       </body>
     </html>
   );

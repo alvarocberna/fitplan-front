@@ -44,12 +44,18 @@ test.describe('Session layout (con sesión)', () => {
       await page.goto(path);
 
       // barra superior: siempre visible, no depende de acoplar el sidebar
-      await expect(topbarOf(page).getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/');
+      await expect(topbarOf(page).getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/panel');
       await expect(topbarOf(page).getByRole('link', { name: 'Nueva consulta' })).toBeVisible();
 
       await expect(page.getByRole('button', { name: 'Desacoplar menú lateral' })).toBeVisible();
       await expect(sidebarOf(page).getByRole('link', { name: 'Home', exact: true })).toBeHidden();
-      await expect(page.locator('a[href="/#plan-personal"]')).toHaveCount(0);
+      // sin navbar de la landing: su CTA "Iniciar sesión" (→ /login) no está en el DOM. Ojo: el link
+      // a `/#plan-personal` ya no sirve para detectarlo, porque el Footer (que SesionShell monta) lo repite.
+      await expect(page.locator('a[href="/login"]')).toHaveCount(0);
+
+      // footer propio de SesionShell, y uno solo (FooterGate no duplica el del layout raíz)
+      await expect(page.getByRole('contentinfo')).toHaveCount(1);
+      await expect(page.getByRole('contentinfo').locator('a[href="/#plan-personal"]')).toHaveCount(1);
     });
   }
 

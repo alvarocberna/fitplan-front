@@ -1,63 +1,118 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { PanelSummary } from './panel-summary.component';
 import type { PanelSummaryDto } from '../dtos/panel-summary.dto';
 import type { OrderSummaryDto } from '../../consultation/dtos/order.dto';
 
 const baseSummary: PanelSummaryDto = {
   firstName: 'Ana',
+  middleName: 'María',
   paternalLastName: 'Pérez',
+  maternalLastName: 'Soto',
   age: 34,
+  lastConsultationDate: '2026-03-15T12:00:00.000Z',
   goal: 'Bajar de peso',
+  nutritionalPlan: {
+    dietRegimen: 'Régimen hipocalórico hiperproteico.',
+    calorieIntake: 2000,
+    proteinIntake: 150,
+    carbohydrateIntake: 200,
+    lipidIntake: 60,
+  },
+};
+
+const emptySummary: PanelSummaryDto = {
+  firstName: null,
+  middleName: null,
+  paternalLastName: null,
+  maternalLastName: null,
+  age: null,
+  lastConsultationDate: null,
+  goal: null,
   nutritionalPlan: null,
 };
 
 const baseOrders: OrderSummaryDto[] = [];
 
+// Valor (<dd>) de la fila cuyo <dt> es `label`.
+function rowValue(label: string): string | null {
+  const row = screen.getByText(label, { selector: 'dt' }).parentElement as HTMLElement;
+  return within(row).getByRole('definition').textContent;
+}
+
 describe('PanelSummary', () => {
-  it('renders the user info fields', () => {
+  it('renders one row per field in the "Mi información" card, in order', () => {
     render(<PanelSummary summary={baseSummary} orders={baseOrders} />);
 
-    expect(screen.getByText('Ana Pérez')).toBeInTheDocument();
-    expect(screen.getByText('34')).toBeInTheDocument();
-    expect(screen.getByText('Bajar de peso')).toBeInTheDocument();
+    const labels = screen.getAllByRole('term').map((dt) => dt.textContent);
+    expect(labels).toEqual([
+      'Nombre completo',
+      'Edad',
+      'Fecha última consulta',
+      'Objetivo',
+      'Régimen',
+      'Calorías',
+      'Proteínas',
+      'Carbohidratos',
+      'Lípidos',
+    ]);
   });
 
-  it('shows placeholders when name, age and goal are missing', () => {
+  it('renders the user info, consultation date, regimen and macros', () => {
+    render(<PanelSummary summary={baseSummary} orders={baseOrders} />);
+
+    expect(rowValue('Nombre completo')).toBe('Ana María Pérez Soto');
+    expect(rowValue('Edad')).toBe('34');
+    expect(rowValue('Fecha última consulta')).toBe('15/03/2026');
+    expect(rowValue('Objetivo')).toBe('Bajar de peso');
+    expect(rowValue('Régimen')).toBe('Régimen hipocalórico hiperproteico.');
+    expect(rowValue('Calorías')).toBe('2000 kcal');
+    expect(rowValue('Proteínas')).toBe('150 g');
+    expect(rowValue('Carbohidratos')).toBe('200 g');
+    expect(rowValue('Lípidos')).toBe('60 g');
+  });
+
+  it('skips missing name parts when building the full name', () => {
     render(
       <PanelSummary
-        summary={{ firstName: null, paternalLastName: null, age: null, goal: null, nutritionalPlan: null }}
+        summary={{ ...baseSummary, middleName: null, maternalLastName: null }}
         orders={baseOrders}
       />,
     );
 
-    expect(screen.getByText('Sin datos')).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
-    expect(screen.getByText('Aún no definido')).toBeInTheDocument();
+    expect(rowValue('Nombre completo')).toBe('Ana Pérez');
   });
 
-  it('shows the "no plan yet" message when nutritionalPlan is null', () => {
-    render(<PanelSummary summary={baseSummary} orders={baseOrders} />);
+  it('shows placeholders when there is no personal data, consultation or plan', () => {
+    render(<PanelSummary summary={emptySummary} orders={baseOrders} />);
 
-    expect(screen.getByText('Todavía no tienes un plan nutricional generado.')).toBeInTheDocument();
-    expect(screen.queryByText('Calorías')).not.toBeInTheDocument();
+    expect(rowValue('Nombre completo')).toBe('Sin datos');
+    expect(rowValue('Edad')).toBe('—');
+    expect(rowValue('Fecha última consulta')).toBe('—');
+    expect(rowValue('Objetivo')).toBe('Aún no definido');
+    expect(rowValue('Régimen')).toBe('—');
+    expect(rowValue('Calorías')).toBe('—');
+    expect(rowValue('Proteínas')).toBe('—');
+    expect(rowValue('Carbohidratos')).toBe('—');
+    expect(rowValue('Lípidos')).toBe('—');
   });
 
-  it('renders the macro breakdown when a nutritionalPlan is present', () => {
+  it('shows a placeholder for the regimen when the plan has none', () => {
     render(
       <PanelSummary
-        summary={{
-          ...baseSummary,
-          nutritionalPlan: { calorieIntake: 2000, proteinIntake: 150, carbohydrateIntake: 200, lipidIntake: 60 },
-        }}
+        summary={{ ...baseSummary, nutritionalPlan: { ...baseSummary.nutritionalPlan!, dietRegimen: null } }}
         orders={baseOrders}
       />,
     );
 
-    expect(screen.getByText('2000 kcal')).toBeInTheDocument();
-    expect(screen.getByText('150 g')).toBeInTheDocument();
-    expect(screen.getByText('200 g')).toBeInTheDocument();
-    expect(screen.getByText('60 g')).toBeInTheDocument();
+    expect(rowValue('Régimen')).toBe('—');
+    expect(rowValue('Calorías')).toBe('2000 kcal');
+  });
+
+  it('no longer renders the "Último plan nutricional" card', () => {
+    render(<PanelSummary summary={baseSummary} orders={baseOrders} />);
+
+    expect(screen.queryByText('Último plan nutricional')).not.toBeInTheDocument();
     expect(screen.queryByText('Todavía no tienes un plan nutricional generado.')).not.toBeInTheDocument();
   });
 

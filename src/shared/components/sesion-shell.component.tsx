@@ -6,6 +6,7 @@ import { useState } from "react";
 //shared
 import { NavbarSesion } from "./navbar-sesion.component";
 import { TopbarSesion } from "./topbar-sesion.component";
+import { Footer } from "./footer.component";
 import { isFocusRoute } from "@/shared/auth/sesion-routes";
 
 // Elección manual del usuario (acoplar/desacoplar) en la sección actual. `focus` indica de qué
@@ -49,6 +50,10 @@ export function SesionShell({ children }: { children: React.ReactNode }) {
             >
                 {children}
             </main>
+            {/* mismo padding lateral que <main>: el sidebar es fixed y taparía el borde izquierdo del footer */}
+            <div className={`${collapsed ? "md:pl-14" : "md:pl-56"} transition-[padding] duration-200`}>
+                <Footer />
+            </div>
         </div>
     )
 }

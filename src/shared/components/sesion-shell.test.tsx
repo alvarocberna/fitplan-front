@@ -119,6 +119,86 @@ describe('SesionShell', () => {
     });
   });
 
+  describe('footer', () => {
+    // El sidebar es fixed y taparía el borde izquierdo del footer: se monta en un wrapper hermano de
+    // <main> con el mismo padding lateral que él.
+    const footerWrapper = () => {
+      const wrapper = screen.getByRole('contentinfo').parentElement;
+      if (!wrapper) throw new Error('footer wrapper not found');
+      return wrapper;
+    };
+
+    it.each(['/panel', '/consulta/inicio'])('renders the Footer (contentinfo) on %s', (pathname) => {
+      renderAt(pathname);
+
+      expect(screen.getAllByRole('contentinfo')).toHaveLength(1);
+      expect(
+        within(screen.getByRole('navigation', { name: 'Enlaces del pie de página' })).getAllByRole('link'),
+      ).toHaveLength(3);
+    });
+
+    it('renders the Footer as a sibling of <main>, not inside it', () => {
+      renderAt('/panel');
+
+      expect(screen.getByRole('main')).not.toContainElement(screen.getByRole('contentinfo'));
+      expect(footerWrapper()).not.toContainElement(screen.getByRole('main'));
+      expect(footerWrapper().parentElement).toBe(screen.getByRole('main').parentElement);
+    });
+
+    it('renders the Footer after <main> in document order', () => {
+      renderAt('/panel');
+
+      expect(
+        screen.getByRole('main').compareDocumentPosition(screen.getByRole('contentinfo')) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it.each(['/panel', '/perfil'])('gives the footer wrapper the undocked padding (md:pl-56) on %s', (pathname) => {
+      renderAt(pathname);
+
+      expect(footerWrapper()).toHaveClass('md:pl-56');
+      expect(footerWrapper()).not.toHaveClass('md:pl-14');
+    });
+
+    it.each(['/consulta/inicio', '/pago/abc-123', '/ordenes/abc-123'])(
+      'gives the footer wrapper the docked padding (md:pl-14) on %s',
+      (pathname) => {
+        renderAt(pathname);
+
+        expect(footerWrapper()).toHaveClass('md:pl-14');
+        expect(footerWrapper()).not.toHaveClass('md:pl-56');
+      },
+    );
+
+    it('keeps the footer padding in sync with <main> when the sidebar is toggled', () => {
+      renderAt('/panel');
+      expect(footerWrapper()).toHaveClass('md:pl-56');
+      expect(screen.getByRole('main')).toHaveClass('md:pl-56');
+
+      fireEvent.click(screen.getByRole('button', { name: DOCK }));
+      expect(footerWrapper()).toHaveClass('md:pl-14');
+      expect(footerWrapper()).not.toHaveClass('md:pl-56');
+      expect(screen.getByRole('main')).toHaveClass('md:pl-14');
+
+      fireEvent.click(screen.getByRole('button', { name: UNDOCK }));
+      expect(footerWrapper()).toHaveClass('md:pl-56');
+      expect(footerWrapper()).not.toHaveClass('md:pl-14');
+    });
+
+    it('resets the footer padding to the new section default when navigating between sections', () => {
+      const { rerender } = renderAt('/panel');
+      fireEvent.click(screen.getByRole('button', { name: DOCK }));
+      expect(footerWrapper()).toHaveClass('md:pl-14');
+
+      navigateTo(rerender, '/consulta/inicio');
+      expect(footerWrapper()).toHaveClass('md:pl-14');
+
+      navigateTo(rerender, '/panel');
+      expect(footerWrapper()).toHaveClass('md:pl-56');
+    });
+  });
+
   describe('toggle', () => {
     it('docks the sidebar on /panel when the toggle is clicked', () => {
       renderAt('/panel');

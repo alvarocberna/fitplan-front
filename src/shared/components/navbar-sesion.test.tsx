@@ -143,33 +143,26 @@ describe('NavbarSesion', () => {
       expect(screen.queryByRole('button', { name: 'Acoplar menú lateral' })).not.toBeInTheDocument();
     });
 
-    it('aligns the toggle icon to the right (justify-end) when not collapsed', () => {
-      usePathnameMock.mockReturnValue('/panel');
-      render(<NavbarSesion collapsed={false} onToggle={vi.fn()} />);
-
-      const button = screen.getByRole('button', { name: 'Acoplar menú lateral' });
-      expect(button).toHaveClass('justify-end');
-      expect(button).not.toHaveClass('justify-center');
-      expect(button).not.toHaveClass('justify-start');
-    });
-
-    it('centers the toggle icon (justify-center) when collapsed', () => {
-      usePathnameMock.mockReturnValue('/panel');
-      render(<NavbarSesion collapsed onToggle={vi.fn()} />);
-
-      const button = screen.getByRole('button', { name: 'Desacoplar menú lateral' });
-      expect(button).toHaveClass('justify-center');
-      expect(button).not.toHaveClass('justify-end');
-      expect(button).not.toHaveClass('justify-start');
-    });
-
-    it('shows the toggle without md-only classes (the whole nav is already md+ only)', () => {
+    it('renders the toggle as a small 16x32px button over the right border (no md-only classes)', () => {
       usePathnameMock.mockReturnValue('/panel');
       render(<NavbarSesion onToggle={vi.fn()} />);
 
       const button = screen.getByRole('button', { name: 'Acoplar menú lateral' });
-      expect(button).toHaveClass('flex');
+      expect(button).toHaveClass('flex', 'absolute', 'right-0', 'top-1/2', 'w-4', 'h-8', 'cursor-pointer');
       expect(button).not.toHaveClass('hidden');
+    });
+
+    it('draws an icon inside the toggle in both states (chevron left / chevron right)', () => {
+      usePathnameMock.mockReturnValue('/panel');
+      const { rerender } = render(<NavbarSesion collapsed={false} onToggle={vi.fn()} />);
+      const openIcon = screen.getByRole('button', { name: 'Acoplar menú lateral' }).querySelector('svg');
+      expect(openIcon).toBeInTheDocument();
+
+      rerender(<NavbarSesion collapsed onToggle={vi.fn()} />);
+      const closedIcon = screen.getByRole('button', { name: 'Desacoplar menú lateral' }).querySelector('svg');
+      expect(closedIcon).toBeInTheDocument();
+      // Icono distinto según el estado (ChevronLeft vs ChevronRight).
+      expect(closedIcon?.innerHTML).not.toBe(openIcon?.innerHTML);
     });
 
     it('defaults to not collapsed when only onToggle is passed', () => {
@@ -206,6 +199,125 @@ describe('NavbarSesion', () => {
       rerender(<NavbarSesion collapsed={false} onToggle={vi.fn()} />);
       expect(container.querySelector('nav')).toHaveClass('w-56');
       expect(container.querySelector('nav')).not.toHaveClass('w-14');
+    });
+
+    describe('click (burbujea al <nav>)', () => {
+      it('calls onToggle once when clicking the nav outside of any link', () => {
+        usePathnameMock.mockReturnValue('/panel');
+        const onToggle = vi.fn();
+        const { container } = render(<NavbarSesion onToggle={onToggle} />);
+
+        fireEvent.click(container.querySelector('nav')!);
+
+        expect(onToggle).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls onToggle exactly once when clicking the button (bubbles to the nav, no double toggle)', () => {
+        usePathnameMock.mockReturnValue('/panel');
+        const onToggle = vi.fn();
+        render(<NavbarSesion onToggle={onToggle} />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Acoplar menú lateral' }));
+
+        expect(onToggle).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls onToggle exactly once when clicking the icon inside the button', () => {
+        usePathnameMock.mockReturnValue('/panel');
+        const onToggle = vi.fn();
+        render(<NavbarSesion onToggle={onToggle} />);
+
+        fireEvent.click(screen.getByRole('button').querySelector('svg')!);
+
+        expect(onToggle).toHaveBeenCalledTimes(1);
+      });
+
+      it.each(['Perfil', 'Home', 'Cerrar sesión'])('does NOT call onToggle when clicking the "%s" link', (name) => {
+        usePathnameMock.mockReturnValue('/panel');
+        const onToggle = vi.fn();
+        render(<NavbarSesion onToggle={onToggle} />);
+
+        const link = screen.getByRole('link', { name });
+        // jsdom intenta navegar al hacer click en un <a>; se cancela para no ensuciar la salida.
+        link.addEventListener('click', (e) => e.preventDefault());
+        fireEvent.click(link);
+
+        expect(onToggle).not.toHaveBeenCalled();
+      });
+
+      it('does NOT call onToggle when clicking the text inside a link (target nested in the <a>)', () => {
+        usePathnameMock.mockReturnValue('/panel');
+        const onToggle = vi.fn();
+        render(<NavbarSesion onToggle={onToggle} />);
+
+        const link = screen.getByRole('link', { name: 'Perfil' });
+        link.addEventListener('click', (e) => e.preventDefault());
+        const inner = link.querySelector('svg') ?? link.firstElementChild;
+        expect(inner).not.toBeNull();
+        fireEvent.click(inner!);
+
+        expect(onToggle).not.toHaveBeenCalled();
+      });
+
+      it('has cursor-pointer on the nav only when onToggle is provided', () => {
+        usePathnameMock.mockReturnValue('/panel');
+        const { container, rerender } = render(<NavbarSesion onToggle={vi.fn()} />);
+        expect(container.querySelector('nav')).toHaveClass('cursor-pointer');
+
+        rerender(<NavbarSesion />);
+        expect(container.querySelector('nav')).not.toHaveClass('cursor-pointer');
+      });
+
+      it('without onToggle, clicking the nav does not throw and there is no cursor-pointer', () => {
+        usePathnameMock.mockReturnValue('/panel');
+        const { container } = render(<NavbarSesion />);
+        const nav = container.querySelector('nav')!;
+
+        expect(() => fireEvent.click(nav)).not.toThrow();
+        expect(nav).not.toHaveClass('cursor-pointer');
+      });
+    });
+
+    describe('resaltado del borde al pasar el mouse / foco sobre el botón', () => {
+      const renderToggle = () => {
+        usePathnameMock.mockReturnValue('/panel');
+        const { container } = render(<NavbarSesion onToggle={vi.fn()} />);
+        return {
+          nav: container.querySelector('nav') as HTMLElement,
+          button: screen.getByRole('button', { name: 'Acoplar menú lateral' }),
+        };
+      };
+
+      it('has no highlight by default', () => {
+        const { nav, button } = renderToggle();
+
+        expect(button.style.borderColor).toBe('');
+        expect(nav.style.borderRightColor).toBe('');
+      });
+
+      it('sets the border of the button and the right border of the nav to var(--color-primary) on mouseEnter, and removes them on mouseLeave', () => {
+        const { nav, button } = renderToggle();
+
+        fireEvent.mouseEnter(button);
+        expect(button.style.borderColor).toBe('var(--color-primary)');
+        expect(nav.style.borderRightColor).toBe('var(--color-primary)');
+
+        fireEvent.mouseLeave(button);
+        expect(button.style.borderColor).toBe('');
+        expect(nav.style.borderRightColor).toBe('');
+      });
+
+      it('sets the same highlight on focus and removes it on blur', () => {
+        const { nav, button } = renderToggle();
+
+        fireEvent.focus(button);
+        expect(button.style.borderColor).toBe('var(--color-primary)');
+        expect(nav.style.borderRightColor).toBe('var(--color-primary)');
+
+        fireEvent.blur(button);
+        expect(button.style.borderColor).toBe('');
+        expect(nav.style.borderRightColor).toBe('');
+      });
     });
   });
 });

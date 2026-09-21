@@ -79,6 +79,8 @@ src/shared/components/topbar-sesion.test.tsx
 src/shared/components/sesion-nav-link.test.tsx
 src/shared/components/sesion-shell.test.tsx
 src/shared/components/navbar-landing-gate.test.tsx
+src/shared/components/footer.test.tsx
+src/shared/components/footer-gate.test.tsx
 src/shared/auth/sesion-routes.test.ts
 src/proxy.test.ts
 src/app/__tests__/orders-id-page.test.tsx
@@ -148,10 +150,11 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   ítem del sidebar, vive en `TopbarSesion`. Qué link queda resaltado según `usePathname` (igualdad exacta con el `href`): el
   activo cambia el `color` del texto a `var(--color-primary)` (no el fondo) y renderiza el indicador
   `data-testid="nav-active-indicator"` (`absolute left-0 inset-y-0 w-[5px]`); los inactivos no lo tienen. Y el toggle del
-  sidebar: el botón solo existe si se pasa `onToggle`, su `aria-label`/`aria-expanded` según `collapsed`, su alineación
-  (`justify-end` desacoplado / `justify-center` acoplado), que los links llevan `hidden` al colapsar y el `<nav>` `w-14` en
-  vez de `w-56`.
-- **`TopbarSesion`** (barra superior `<header>` fija, `h-15`): logo "Nuvi" hacia `/`, botón "Nueva consulta" hacia
+  sidebar: el botón (16×32px sobre el borde derecho) solo existe si se pasa `onToggle`, su `aria-label`/`aria-expanded` según
+  `collapsed`, que un click en el `<nav>` (o en el botón, una sola vez) llama `onToggle` pero no uno sobre un link, el
+  hover/focus del botón que ilumina su borde y el borde derecho del `<nav>` con `var(--color-primary)`, que los links llevan
+  `hidden` al colapsar y el `<nav>` `w-14` en vez de `w-56`.
+- **`TopbarSesion`** (barra superior `<header>` fija, `h-15`): logo "Nuvi" hacia `/panel`, botón "Nueva consulta" hacia
   `/consulta/anamnesis` (siempre visible, fuera del menú móvil), y el `<nav aria-label="Menú de usuario">` (`flex md:hidden`)
   con Perfil, Home y Cerrar sesión (mismos hrefs que el sidebar), con el link activo por pathname en color primary y **sin**
   rectángulo lateral (variante `compact`).
@@ -162,7 +165,10 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   `/panel` y `/perfil`, verificado vía el `md:pl-*` del `<main>`), el toggle, que la elección manual se mantiene al navegar dentro
   de la misma sección (re-render sin remontar, con `usePathname` mockeado), y que al cambiar de sección vale el default de la nueva.
   También que renderiza `TopbarSesion` (banner con logo y "Nueva consulta") como hermano de `<main>`, y el padding superior del
-  `<main>` (`pt-19 md:pt-23`). Gotcha: jsdom no aplica CSS, así que los enlaces Home/Perfil/Cerrar sesión aparecen **dos veces**
+  `<main>` (`pt-19 md:pt-23`). Además renderiza un único `Footer` (`contentinfo`) como hermano de `<main>` (posterior a él en el
+  DOM), dentro de un wrapper con el mismo padding lateral que `<main>` (`md:pl-56` desacoplado / `md:pl-14` acoplado, porque el
+  sidebar es `fixed` y taparía el borde izquierdo del footer), que cambia al hacer toggle y se reinicia al cambiar de sección.
+  Gotcha: jsdom no aplica CSS, así que los enlaces Home/Perfil/Cerrar sesión aparecen **dos veces**
   en el DOM (sidebar + menú móvil `md:hidden` de la barra superior): los tests acotan por contenedor (`within(sidebar)`, donde
   el sidebar es el `<nav>` que contiene el botón de acoplar; o `within(getByRole('navigation', { name: 'Menú de usuario' }))`)
   en vez de `getByRole('link', { name: 'Home' })` a secas, que falla por "múltiples elementos".
@@ -172,6 +178,12 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   `/consultas`) y `usesSesionLayout` (la unión de `isSesionRoute` e `isFocusRoute`).
 - **`NavbarLandingGate`**: no renderiza nada en `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel`, `/perfil` ni `/dev*`; renderiza
   `NavbarLanding` (mockeado) en el resto de rutas.
+- **`Footer`** (`footer.component.tsx`): `<footer>` (`contentinfo`) con el link de marca a `/`, el `<nav aria-label="Enlaces del pie de
+  página">` con sus 3 links (`/#consulta-nutricional-virtual`, `/#plan-personal`, `/#plan-estandarizado-por-disciplina`, en ese
+  orden) y el copyright con el año calculado al renderizar (verificado con `vi.useFakeTimers` + `setSystemTime`).
+- **`FooterGate`** (layout raíz): no renderiza nada en las rutas de sesión (`/panel`, `/perfil`, `/consulta*`, `/pago/*`,
+  `/ordenes/*`) porque ahí `SesionShell` monta su propio `Footer`; sí renderiza `Footer` (mockeado) en `/`, `/articulos`,
+  `/login`, `/dev` y `/dev/*`.
 
 ## Qué cubren los tests e2e
 
@@ -198,7 +210,9 @@ individuales no verían (traspaso de `localStorage`, remonte de `ConsultationPro
    el navbar de la landing, y el botón lo desacopla y lo vuelve a acoplar (sin afectar a la barra superior). En un viewport
    móvil (390px) el sidebar desaparece y Perfil/Home/Cerrar sesión pasan al menú de la barra superior. Los selectores se acotan
    al sidebar (`<nav>` que contiene el botón de acoplar), a la barra superior (`banner`) o al menú móvil
-   (`navigation` "Menú de usuario"), y usan `exact: true` para "Home".
+   (`navigation` "Menú de usuario"), y usan `exact: true` para "Home". Como `SesionShell` monta el `Footer` (que repite los links `/#...` de la landing), la
+   ausencia del navbar de la landing se verifica con su CTA `a[href="/login"]` (count 0) y no con `a[href="/#plan-personal"]`;
+   además se comprueba que haya un único `contentinfo`.
 
 ## Hallazgos durante el proceso
 

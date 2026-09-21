@@ -88,7 +88,7 @@ export function ChatAnamnesis() {
                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                             msg.role === 'user'
-                                ? 'bg-green-600 text-white rounded-br-sm'
+                                ? 'bg-(--color-primary) text-white rounded-br-sm'
                                 : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'
                         }`}>
                             {msg.role === 'assistant' && msg.titleReply && (
@@ -115,7 +115,7 @@ export function ChatAnamnesis() {
                 {/* Mensaje de conversación completa */}
                 {isComplete && (
                     <div className="flex justify-start">
-                        <div className="bg-green-50 border border-green-200 text-green-700 rounded-2xl rounded-bl-sm px-4 py-3 text-sm">
+                        <div className="bg-(--color-primary)/10 border border-(--color-primary)/30 text-(--color-secondary) rounded-2xl rounded-bl-sm px-4 py-3 text-sm">
                             He recopilado suficiente información. Puedes continuar con la evaluación física.
                         </div>
                     </div>
@@ -142,12 +142,12 @@ export function ChatAnamnesis() {
                         disabled={isLoading}
                         placeholder="Escribe tu respuesta... (Enter para enviar)"
                         rows={2}
-                        className="flex-1 resize-none px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+                        className="flex-1 resize-none px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--color-primary) focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
                     />
                     <button
                         onClick={sendMessage}
                         disabled={isLoading || !input.trim()}
-                        className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors self-end"
+                        className="px-5 py-2 bg-(--color-primary) text-white text-sm font-medium rounded-xl hover:brightness-90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors self-end"
                     >
                         Enviar
                     </button>

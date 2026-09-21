@@ -222,19 +222,21 @@ el ancho actual del sidebar y cuyo padding superior (`pt-19 md:pt-23`) deja libr
 `usesSesionLayout(pathname)`, ver `src/shared/auth/sesion-routes.ts`).
 
 - **Barra superior (`TopbarSesion`)**: fija, 100% de ancho, `h-15` (60px). A la izquierda el logo de
-  texto "Nuvi" (link a `/`); a la derecha el botón "Nueva consulta" (link a `/consulta/anamnesis`). En
+  texto "Nuvi" (link a `/panel`); a la derecha el botón "Nueva consulta" (link a `/consulta/anamnesis`). En
   móvil (<md) también aloja las opciones de navegación (Perfil, Home y Cerrar sesión, en variante
   `compact`: ícono sobre la etiqueta), porque el sidebar no se renderiza en esa resolución.
 - **Sidebar (`NavbarSesion`, solo md+)**: `hidden md:flex`, fijo a la izquierda debajo de la barra
   superior (`top-15`, alto `calc(100vh - 3.75rem)`). Sus opciones son Perfil (`/perfil`), Home (etiqueta
   visible de `/panel`; el href sigue siendo `/panel`) y Cerrar sesión (`/api/cognito/logout`), más el
-  botón de acoplar/desacoplar a la derecha; ya no incluye "Nueva consulta" (ahora vive en la barra
+  botón de acoplar/desacoplar (16×32px con una flecha, centrado sobre el borde derecho del sidebar;
+  al pasar el mouse se ilumina su borde y el borde derecho del sidebar con `var(--color-primary)`); ya no incluye "Nueva consulta" (ahora vive en la barra
   superior). La opción activa se marca con el texto en `var(--color-primary)` y un rectángulo de 5px
   en el borde izquierdo, sin fondo. Las opciones y el link con ese estilo son compartidos entre
   sidebar y barra superior (`SESION_NAV_ITEMS`, `SesionNavLink` en
   `src/shared/components/sesion-nav-link.component.tsx`).
-- **Sidebar acoplable (solo md+)**: desacoplado es `w-56` con los links; acoplado es `w-14` con
-  un único ícono para volver a desacoplarlo (en mobile no hay sidebar, así que no aplica). El
+- **Sidebar acoplable (solo md+)**: desacoplado es `w-56` con los links; acoplado es `w-14` sin links
+  (en mobile no hay sidebar, así que no aplica). Se alterna con el botón del borde derecho o con un
+  click en cualquier parte del sidebar que no sea un link de navegación. El
   estado inicial depende de la sección: en `/consulta/*`, `/pago/*` y `/ordenes/*`
   (`isFocusRoute()`, "rutas de flujo") arranca **acoplado** para dejar espacio al contenido del
   flujo; en `/panel` y `/perfil` arranca **desacoplado**. La elección manual del usuario

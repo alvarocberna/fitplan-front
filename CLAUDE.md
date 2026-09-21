@@ -69,11 +69,13 @@ segment): `/panel`, `/perfil`, `/consulta/*`, `/pago/[orderId]` and `/ordenes/[i
 `src/app/(sesion)/layout.tsx`, which renders `SesionShell` (`src/shared/components/sesion-shell.component.tsx`,
 a Client Component): `TopbarSesion` + the `NavbarSesion` sidebar + a `<main>` (`pt-19 md:pt-23`) whose
 left padding follows the sidebar width. `TopbarSesion` is a fixed 60px (`h-15`) full-width bar: the
-"Nuvi" text logo (→ `/`) on the left and the "Nueva consulta" button (→ `/consulta/anamnesis`) on the
+"Nuvi" text logo (→ `/panel`) on the left and the "Nueva consulta" button (→ `/consulta/anamnesis`) on the
 right. The sidebar (md+ only, below the top bar; options Perfil, Home = `/panel`, Cerrar sesión) starts
-**docked** (narrow, `w-14`, only an icon to undock it) in the flow routes `/consulta/*`, `/pago/*`,
+**docked** (narrow, `w-14`, no links) in the flow routes `/consulta/*`, `/pago/*`,
 `/ordenes/*`, and **undocked** (`w-56`, with links) in `/panel` and `/perfil`; the manual choice is kept
-while navigating inside the same section and discarded when switching between sections. On small
+while navigating inside the same section and discarded when switching between sections. It is toggled
+by a 16×32px arrow button centered on the sidebar's right border (hover lights up its border and the
+sidebar's right border with `--color-primary`) or by clicking anywhere on the sidebar except the nav links. On small
 screens there is no sidebar: `TopbarSesion` also hosts those three options (`compact` variant). Both
 share `SESION_NAV_ITEMS` / `SesionNavLink` (`sesion-nav-link.component.tsx`). These routes do
 **not** show `NavbarLanding` — `NavbarLandingGate` (root layout) hides it via `usesSesionLayout()`.
