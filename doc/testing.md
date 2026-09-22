@@ -61,6 +61,17 @@ con corchetes (`[id]`, `[orderId]`), que viven en `src/app/__tests__/` para evit
 src/shared/api/client.test.ts
 src/shared/api/client-cms.test.ts
 src/shared/context/consultation.context.test.tsx
+src/shared/context/plan-selection.context.test.tsx
+src/shared/components/modal.component.test.tsx
+src/shared/components/login-options.test.tsx
+src/shared/data/plan-code.test.ts
+src/shared/auth/return-to.test.ts
+src/features/plans/services/plans.service.test.ts
+src/features/plans/components/plan-selection-modal.test.tsx
+src/features/plans/components/cart-view.test.tsx
+src/app/__tests__/planes-page.test.tsx
+src/app/__tests__/plan-detail-page.test.tsx
+src/app/__tests__/pago-page.test.tsx
 src/features/consultation/services/consultation.service.test.ts
 src/features/consultation/components/form-user-info.test.tsx
 src/features/consultation/components/form-measurements.test.tsx
@@ -184,6 +195,21 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 - **`FooterGate`** (layout raíz): no renderiza nada en las rutas de sesión (`/panel`, `/perfil`, `/consulta*`, `/pago/*`,
   `/ordenes/*`) porque ahí `SesionShell` monta su propio `Footer`; sí renderiza `Footer` (mockeado) en `/`, `/articulos`,
   `/login`, `/dev` y `/dev/*`.
+
+### Planes predefinidos (selección → carro → pago → /panel)
+
+Unitarios: `plan-code` (código de versión, solo 18-30 es "joven", la talla no cambia la versión, `PLANS` coincide con los slugs
+del backend), `plan-selection.context` (hidratación, corrupción de `localStorage`, el carro admite un solo plan),
+`Modal` (portal, Escape, clic en el fondo, foco, scroll), `PlanSelectionModal` (los 4 campos con sus opciones, "Confirmar"
+deshabilitado hasta completar, navegación a `/planes/<slug>`), `/planes` (botón "Seleccionar", ya no "Añadir al carro"),
+`/planes/[slug]` (busca la versión al completar los datos, precio, miniatura o imagen estática, versión no disponible, añadir
+al carro), `CartView` (sin sesión abre el modal de registro con `return_to`, con sesión crea la orden y va a
+`/pago/<id>?tipo=predefinido`, sesión expirada, errores), `/pago/[orderId]` (`?tipo=predefinido` → `/panel`, si no →
+`/ordenes/<id>`), `return-to` y el `callback` con `return_to`.
+
+E2E: `e2e/predefined-plan-purchase.spec.ts` (con handlers nuevos en el backend falso: `productos/predefinidos/:code`,
+`ordenes/crear-predefinido`, `panel/resumen`, `ordenes`). **Nota**: el e2e levanta su propio `next dev` en el puerto 3100 y Next
+permite un solo `next dev` por directorio: hay que detener el `npm run dev` local antes de correrlo.
 
 ## Qué cubren los tests e2e
 

@@ -25,6 +25,17 @@ export * from "./nutrition-plan/dtos/nutrition-plan.dto";
 //user
 export * from './consultation/interfaces/personal-info.interface';
 
+//PLANS
+export * from './plans/components/plan-selection-modal.component';
+export * from './plans/components/plan-selection-fields.component';
+export * from './plans/components/plan-preview-image.component';
+export * from './plans/components/login-modal.component';
+export * from './plans/components/cart-view.component';
+export * from './plans/hooks/use-predefined-product';
+export * from './plans/services/plans.service';
+export * from './plans/dtos/predefined-product.dto';
+export * from './plans/format-price';
+
 //PROFILE
 export * from './profile/components/profile-form.component';
 export * from './profile/services/profile.service';

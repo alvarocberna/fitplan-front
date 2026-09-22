@@ -5,6 +5,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/shared/providers/toast.provider";
 import { NavbarLandingGate } from "@/shared/components/navbar-landing-gate.component";
 import { FooterGate } from "@/shared/components/footer-gate.component";
+import { PlanSelectionProvider } from "@/shared/context/plan-selection.context";
+//features - plans (import directo, no por el barrel: ver "Barrel gotcha" en CLAUDE.md)
+import { PlanSelectionModal } from "@/features/plans/components/plan-selection-modal.component";
 //
 // import "./globals.css";
 
@@ -36,9 +39,13 @@ export default async function RootLayout({
       >
         <Providers />
         {/* <div className="fixed top-0 left-0 w-full h-32 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none" /> */}
-        <NavbarLandingGate />
-        {children}
-        <FooterGate />
+        {/* estado global de la selección de plan predefinido y del carro: lo comparten rutas públicas distintas */}
+        <PlanSelectionProvider>
+          <NavbarLandingGate />
+          {children}
+          <FooterGate />
+          <PlanSelectionModal />
+        </PlanSelectionProvider>
       </body>
     </html>
   );

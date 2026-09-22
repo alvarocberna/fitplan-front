@@ -1,8 +1,5 @@
-//fontawesome
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faGoogle } from '@fortawesome/free-brands-svg-icons'
 //shared
-import {Card, SubsectionHead, SubsectionTitle} from '@/shared'
+import {Card, SubsectionHead, SubsectionTitle, LoginOptions} from '@/shared'
 
 const ERROR_MESSAGES: Record<string, string> = {
   callback_failed: 'No pudimos completar tu inicio de sesión. Intenta de nuevo.',
@@ -30,34 +27,7 @@ export default async function ConsultaLogin({
           </p>
         )}
 
-        <div className="flex flex-col gap-3 mt-6">
-          <a
-            href="/api/cognito/login?identity_provider=Google"
-            className="flex items-center justify-center gap-2 w-[60%] mx-auto px-8 py-2 rounded-lg text-center font-semibold border border-zinc-300"
-          >
-            <div className="w-4 h-4 flex items-center justify-center shrink-0">
-              <FontAwesomeIcon icon={faGoogle} className="w-full h-full" />
-            </div>
-            Continuar con Google
-          </a>
-
-          <p className="text-zinc-500 text-sm text-center my-1">o con tu correo</p>
-
-          <a
-            href="/api/cognito/login?screen_hint=signup"
-            className="block w-[60%] mx-auto px-8 py-2 rounded-lg text-white font-semibold text-center"
-            style={{ backgroundColor: 'var(--color-primary)' }}
-          >
-            Registro
-          </a>
-          <a
-            href="/api/cognito/login"
-            className="block w-[60%] mx-auto px-8 py-2 rounded-lg text-center font-semibold border"
-            style={{ borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}
-          >
-            Inicio de sesión
-          </a>
-        </div>
+        <LoginOptions />
       </Card>
       </div>
     </div>

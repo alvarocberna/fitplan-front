@@ -3,9 +3,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
 //SHARED
-import { PLANS } from '@/shared'
+import { PLANS, usePlanSelection } from '@/shared'
 
 export default function Plans() {
+  const { openSelectionModal } = usePlanSelection()
+
   return (
     <div className="w-full min-h-screen flex flex-col items-center text-center px-6 pt-40 pb-20">
       {/* inner container */}
@@ -41,13 +43,14 @@ export default function Plans() {
                   >
                     Ver más
                   </Link>
-                  <Link
-                    href="/carrito"
+                  <button
+                    type="button"
+                    onClick={() => openSelectionModal(plan.slug)}
                     className="w-36 px-4 py-1.5 rounded-full text-white text-sm font-semibold text-center hover:opacity-90 transition-opacity"
                     style={{ backgroundColor: 'var(--color-primary)' }}
                   >
-                    Añadir al carro
-                  </Link>
+                    Seleccionar
+                  </button>
                 </div>
               </div>
             </div>

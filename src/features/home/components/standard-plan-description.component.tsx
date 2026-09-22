@@ -7,12 +7,13 @@ import Link from 'next/link'
 //GSAP
 import { gsap } from 'gsap'
 //SHARED
-import { PLANS } from '@/shared';
+import { PLANS, usePlanSelection } from '@/shared';
 
 const VISIBLE = 3
 const INTERVAL_MS = 3000
 
 export function StandardPlanDescription() {
+  const { openSelectionModal } = usePlanSelection()
   const containerRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const indexRef = useRef(0)
@@ -93,13 +94,14 @@ export function StandardPlanDescription() {
                     >
                       Ver más
                     </Link>
-                    <Link
-                      href="/carrito"
+                    <button
+                      type="button"
+                      onClick={() => openSelectionModal(plan.slug)}
                       className="w-36 px-4 py-1.5 rounded-full text-white text-sm font-semibold text-center hover:opacity-90 transition-opacity"
                       style={{ backgroundColor: 'var(--color-primary)' }}
                     >
-                      Añadir al carro
-                    </Link>
+                      Seleccionar
+                    </button>
                   </div>
                 </div>
               </div>

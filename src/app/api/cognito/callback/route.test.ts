@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET } from './route';
+import { cookies } from 'next/headers';
 import { authorizationCodeGrant, fetchUserInfo } from 'openid-client';
 import { getCognitoConfig } from '@/shared/auth/cognito-config';
 import { createSession } from '@/shared/auth/session';
@@ -112,6 +113,40 @@ describe('GET /api/cognito/callback', () => {
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe('http://localhost:3000/consulta/inicio');
     expect(mockedCreateSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('vuelve a /carrito (y no a /panel) si el login se inició con return_to=/carrito, sin saltarse el chequeo de perfil', async () => {
+    const cookieStore = {
+      get: vi.fn((name: string) => (name === 'post_login_return_to' ? { value: '/carrito' } : undefined)),
+      delete: vi.fn(),
+    };
+    vi.mocked(cookies).mockResolvedValueOnce(cookieStore as never);
+    mockedAuthorizationCodeGrant.mockResolvedValue(makeTokens() as never);
+    mockedFetchUserInfo.mockResolvedValue({ sub: 'sub-123', email: 'user@test.com' } as never);
+    mockedApiFetch.mockResolvedValue({ profileComplete: true } as never);
+
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/carrito');
+    // el chequeo crea la identidad que el backend necesita para crear la orden
+    expect(mockedApiFetch).toHaveBeenCalledWith('auth/perfil', 'POST', { email: 'user@test.com' }, 'token-abc');
+    expect(cookieStore.delete).toHaveBeenCalledWith('post_login_return_to');
+  });
+
+  it('ignora un return_to fuera de la lista permitida y usa el destino por defecto', async () => {
+    const cookieStore = {
+      get: vi.fn((name: string) => (name === 'post_login_return_to' ? { value: 'https://evil.example' } : undefined)),
+      delete: vi.fn(),
+    };
+    vi.mocked(cookies).mockResolvedValueOnce(cookieStore as never);
+    mockedAuthorizationCodeGrant.mockResolvedValue(makeTokens() as never);
+    mockedFetchUserInfo.mockResolvedValue({ sub: 'sub-123', email: 'user@test.com' } as never);
+    mockedApiFetch.mockResolvedValue({ profileComplete: true } as never);
+
+    const response = await GET(makeRequest());
+
+    expect(response.headers.get('location')).toBe('http://localhost:3000/panel');
   });
 
   it('calls apiFetch with the email from fetchUserInfo and the access token from the token exchange (no la cookie de sesión recién escrita)', async () => {

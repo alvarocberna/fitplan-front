@@ -119,6 +119,37 @@ Key steps:
 
 Backend data model (separate repo, NestJS + PostgreSQL): a single `orden` entity holding the submitted consultation data, `estado_pago` (`pendiente|pagado`), `estado_generacion` (`no_iniciado|generando|completado|error`), and `plan_json`.
 
+### Predefined plans (selection → cart → payment → /panel)
+
+Second way to buy, next to the paid consultation: 4 ready-made plans (`PLANS` in `src/shared/data/data.ts`:
+`plan-gimnasio-volumen`, `plan-gimnasio-definicion`, `plan-running`, `plan-deporte-cancha`), each in 28 hidden
+versions (7 weight ranges × 2 sexes × 2 age groups). The user never sees the versions: they fill weight, height, sex and
+age and the system picks theirs. Public routes: `/` (carousel), `/planes`, `/planes/[slug]`, `/carrito`. Full flow, tables and
+S3 naming: `../doc/flows/purchase-flow-predefined-plan.md`.
+
+- **Selection**: "Seleccionar" (carousel + `/planes`) opens `PlanSelectionModal` ("Completa tu información para obtener el plan
+  más adecuado"; mounted once in the root `layout.tsx`, rendered through a portal by `Modal` because the GSAP carousel's
+  `transform` would break a `position: fixed` inside it). "Confirmar" goes to `/planes/<slug>`, which shows the same 4 fields
+  (`PlanSelectionFields`), the version's thumbnail and price, and "Añadir al carro".
+- **State**: `PlanSelectionProvider` / `usePlanSelection` (`src/shared/context/plan-selection.context.tsx`, root layout,
+  persisted in `localStorage` under `plan_selection`): `selection` (weight range, height, sex, age range), `cartItem`
+  (`{ planSlug, code }` — **one plan per purchase**, adding replaces) and the modal state. Height is captured but does not
+  affect which version is chosen.
+- **Version code**: `buildPlanCode(slug, selection)` (`src/shared/data/plan-code.ts`) → `<plan>-<minKg>-<maxKg>-<m|f>-<joven|adulto>`,
+  e.g. `plan-gimnasio-volumen-50-60-m-joven`; only 18-30 is `joven`. It must match the backend's `Product.code`. The backend does not trust
+  it: price and files always come from its database (`GET productos/predefinidos/:code`, public, via `PlansService`).
+- **Cart / payment**: `/carrito` is a Server Component that reads `getSession()` (the cookie is httpOnly) and passes
+  `isAuthenticated` to `CartView`. "Pagar" without a session opens `LoginModal` (same options as `/login`, shared `LoginOptions`,
+  `return_to=/carrito`); with a session it calls `POST ordenes/crear-predefinido` and goes to `/pago/<id>?tipo=predefinido`, which
+  after the simulated payment clears the cart and goes to `/panel` (without `?tipo`, the consultation flow keeps going to
+  `/ordenes/[id]`). `/pago/*` and `/panel` need a session (`src/proxy.ts`); the cart and the plan pages don't.
+- **Login with return**: `/api/cognito/login?return_to=/carrito` stores the destination in a short-lived httpOnly cookie
+  (`post_login_return_to`); `/api/cognito/callback` consumes it. Only routes in the allowlist of `src/shared/auth/return-to.ts`
+  are accepted (no open redirect). The callback still runs the profile sync, which creates the identity the backend needs.
+- Code: `src/features/plans/` (components, `hooks/use-predefined-product.ts`, `services/plans.{actions,service}.ts`).
+  `ActionResult` gained an optional `code: 'unauthenticated'` so the UI can tell "no session" from a generic error
+  (`SessionRequiredError`).
+
 ### CMS-backed content (articles, testimonials, home)
 
 `ArticlesServicePublic` and the testimonials service follow a DTO (wire shape from CMS) → entity (typed domain shape used by components) split, unlike the consultation feature which uses DTOs directly. These pages read/write through the CMS backend via `apiFetchCMS`, independent of the consultation flow's backend.

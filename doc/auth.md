@@ -90,6 +90,13 @@ perfil con `fetchUserInfo`, y llama a `createSession({ userInfo, accessToken, re
 accessTokenExpiresAt })` — guarda los tokens, no solo el perfil (necesario para las llamadas
 autenticadas al backend).
 
+**Volver a un destino concreto (`return_to`)**: `/api/cognito/login` acepta `?return_to=<ruta>` (lo agrega el modal de
+registro al pagar desde `/carrito`) y lo guarda en una cookie httpOnly de 10 minutos (`post_login_return_to`; si no se
+pide destino, borra una vieja de un intento abandonado). El callback la lee y la borra, y **solo** si la ruta está en la
+lista permitida de `src/shared/auth/return-to.ts` (hoy `/carrito`) redirige ahí en vez de a `/panel` o `/consulta/inicio`;
+cualquier otro valor se ignora (evita usar el login como redirección abierta). El chequeo de perfil (`POST /auth/perfil`)
+se ejecuta igual: es lo que crea la identidad que el backend necesita para crear la orden.
+
 **UX de errores**: si el intercambio falla (usuario cancela en Google/Hosted UI, `state` no
 coincide, etc.), redirige a `/login?error=callback_failed` con un mensaje visible, en vez
 de fingir éxito.

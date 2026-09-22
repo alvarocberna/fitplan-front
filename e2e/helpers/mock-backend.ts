@@ -67,3 +67,23 @@ export async function mockSimulatePayment(options: { fail?: boolean } = {}) {
 export async function mockOrderStatusSequence(sequence: Array<Record<string, unknown>>) {
   await setMock('orderStatus', { sequence });
 }
+
+// productos/predefinidos/:code (público). Responde con la ficha del code pedido; los codes en
+// `unavailableCodes` responden 404 (versión inexistente o inactiva).
+export async function mockPredefinedProduct(options: { price?: number; unavailableCodes?: string[] } = {}) {
+  await setMock('predefinedProduct', options);
+}
+
+// ordenes/crear-predefinido (con sesión).
+export async function mockCreatePredefinedOrder(options: { orderId?: string; fail?: boolean } = {}) {
+  await setMock('createPredefinedOrder', {
+    orderId: options.orderId ?? 'order-predef-1',
+    fail: options.fail,
+    message: 'Error al crear la orden',
+  });
+}
+
+// ordenes (listado de planes del panel). Sin llamar a esto el listado responde vacío.
+export async function mockOrdersList(orders: Array<Record<string, unknown>>) {
+  await setMock('orders', { orders });
+}

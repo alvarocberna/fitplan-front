@@ -68,6 +68,17 @@ const PROFILE_DEFAULT = {
   rutCheckDigit: null,
 }
 
+const PANEL_SUMMARY_DEFAULT = {
+  firstName: 'Ana',
+  middleName: null,
+  paternalLastName: 'Pérez',
+  maternalLastName: null,
+  age: 30,
+  lastConsultationDate: null,
+  goal: null,
+  nutritionalPlan: null,
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`)
   const path = url.pathname
@@ -117,6 +128,41 @@ const server = http.createServer(async (req, res) => {
       const mock = mocks.createOrder
       if (!mock) return send(res, 501, { message: 'ordenes/crear sin mock' })
       return respond(res, mock, { orderId: mock.orderId ?? 'order-e2e-123' })
+    }
+
+    // ---- planes predefinidos ----
+    // ficha pública de una versión (sin auth, como en el backend real): responde con el code pedido
+    if (/^\/productos\/predefinidos\/[^/]+$/.test(path) && method === 'GET') {
+      const mock = mocks.predefinedProduct
+      if (!mock) return send(res, 501, { message: 'productos/predefinidos sin mock' })
+      const code = decodeURIComponent(path.split('/').pop())
+      if (mock.unavailableCodes?.includes(code)) return send(res, 404, { message: `Plan ${code} no disponible` })
+      return send(res, 200, {
+        code,
+        name: `Plan ${code}`,
+        description: 'Plan de prueba',
+        price: mock.price ?? 14990,
+        currency: 'CLP',
+        thumbnailUrl: null,
+      })
+    }
+
+    if (path === '/ordenes/crear-predefinido' && method === 'POST') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      const mock = mocks.createPredefinedOrder
+      if (!mock) return send(res, 501, { message: 'ordenes/crear-predefinido sin mock' })
+      return respond(res, mock, { orderId: mock.orderId ?? 'order-predef-1' })
+    }
+
+    // ---- panel: resumen del usuario y listado de planes (el destino tras pagar un plan predefinido) ----
+    if (path === '/panel/resumen' && method === 'GET') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      return send(res, 200, mocks.panelSummary?.summary ?? PANEL_SUMMARY_DEFAULT)
+    }
+
+    if (path === '/ordenes' && method === 'GET') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      return send(res, 200, mocks.orders?.orders ?? [])
     }
 
     // ---- pago simulado (sin auth en el backend real: es el stand-in del webhook) ----

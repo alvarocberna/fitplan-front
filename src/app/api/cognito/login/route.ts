@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { buildAuthorizationUrl, randomState, randomNonce } from 'openid-client'
 import { getCognitoConfig } from '@/shared/auth/cognito-config'
+import { RETURN_TO_COOKIE, sanitizeReturnTo } from '@/shared/auth/return-to'
 
 const ALLOWED_SCREEN_HINTS = new Set(['signup'])
 const ALLOWED_IDENTITY_PROVIDERS = new Set(['Google'])
@@ -58,6 +59,15 @@ export async function GET(request: Request) {
   }
   response.cookies.set('cognito_state', state, cookieOptions)
   response.cookies.set('cognito_nonce', nonce, cookieOptions)
+
+  // Destino al que volver tras el login (solo rutas de la lista permitida, ver return-to.ts).
+  const returnTo = sanitizeReturnTo(requestUrl.searchParams.get('return_to'))
+  if (returnTo) {
+    response.cookies.set(RETURN_TO_COOKIE, returnTo, cookieOptions)
+  } else {
+    // sin destino pedido: descarta uno viejo de un intento abandonado, para que este login no lo herede
+    response.cookies.delete(RETURN_TO_COOKIE)
+  }
 
   return response
 }
