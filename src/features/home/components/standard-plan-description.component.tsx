@@ -1,23 +1,57 @@
 'use client'
 //REACT
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 //NEXT
-import Image from 'next/image'
 import Link from 'next/link'
 //GSAP
 import { gsap } from 'gsap'
 //SHARED
 import { PLANS, usePlanSelection } from '@/shared';
+//features - plans (import directo, no por el barrel: ver "Barrel gotcha" en CLAUDE.md)
+import { usePlanPreviews } from '@/features/plans/hooks/use-plan-previews'
+import { PlanPreviewImage } from '@/features/plans/components/plan-preview-image.component'
 
 const VISIBLE = 3
 const INTERVAL_MS = 3000
 
+interface CarouselItem {
+  code: string
+  title: string
+  thumbnailUrl: string | null
+  fallbackSrc: string
+}
+
+//catálogo estático como respaldo (mientras carga la vista previa de la BD, o si falla): mismo
+//criterio que ya usa PlanPreviewImage por ítem (miniatura real si existe, si no la imagen fija)
+const STATIC_ITEMS: CarouselItem[] = PLANS.map((plan) => ({
+  code: plan.slug,
+  title: plan.title,
+  thumbnailUrl: null,
+  fallbackSrc: plan.imgUrl,
+}))
+
 export function StandardPlanDescription() {
   const { openSelectionModal } = usePlanSelection()
+  const previewsState = usePlanPreviews()
   const containerRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const indexRef = useRef(0)
-  const [slides] = useState(() => [...PLANS, ...PLANS.slice(0, VISIBLE)])
+
+  //título + miniatura real desde la BD una vez lista; mientras carga o si falla, el catálogo
+  //estático (así el carrusel nunca queda vacío por un hiccup del backend)
+  const items: CarouselItem[] =
+    previewsState.status === 'ready'
+      ? previewsState.previews.map((preview) => ({
+          code: preview.code,
+          title: preview.name,
+          thumbnailUrl: preview.thumbnailUrl,
+          fallbackSrc:
+            STATIC_ITEMS.find((item) => item.code === preview.code)?.fallbackSrc ??
+            STATIC_ITEMS[0].fallbackSrc,
+        }))
+      : STATIC_ITEMS
+
+  const slides = useMemo(() => [...items, ...items.slice(0, VISIBLE)], [items])
 
   useEffect(() => {
     const container = containerRef.current
@@ -41,7 +75,7 @@ export function StandardPlanDescription() {
       indexRef.current += 1
       goToIndex(indexRef.current, true)
 
-      if (indexRef.current === PLANS.length) {
+      if (indexRef.current === items.length) {
         setTimeout(() => {
           indexRef.current = 0
           goToIndex(0, false)
@@ -56,7 +90,11 @@ export function StandardPlanDescription() {
       clearInterval(interval)
       window.removeEventListener('resize', onResize)
     }
-  }, [])
+    //depende de la cantidad de ítems (no de la referencia de `items`, que cambia cada vez que
+    //recalcula el respaldo/BD): si la cantidad no cambió (hoy siempre 4), el carrusel sigue
+    //girando sin reiniciarse justo cuando llegan los datos reales.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length])
 
   return (
     <div id="plan-estandarizado-por-disciplina" className="w-full min-h-screen flex flex-col items-center justify-center text-center px-6 mb-20">
@@ -74,29 +112,27 @@ export function StandardPlanDescription() {
         {/* carrusel de planes */}
         <div ref={containerRef} className="w-full overflow-hidden">
           <div ref={trackRef} className="flex">
-            {slides.map((plan, i) => (
-              <div key={`${plan.id}-${i}`} className="w-1/3 flex-shrink-0 px-16">
+            {slides.map((item, i) => (
+              <div key={`${item.code}-${i}`} className="w-1/3 flex-shrink-0 px-16">
                 <p className='text-md text-zinc-800 font-semibold mb-2'>
-                  {plan.title}
+                  {item.title}
                 </p>
                 <div className="relative overflow-hidden border border-zinc-400 rounded-2xl group">
-                  <Image
-                    src={plan.imgUrl}
-                    alt="img informe"
-                    width={1241}
-                    height={1755}
-                    className="w-full h-auto rounded-2xl"
+                  <PlanPreviewImage
+                    thumbnailUrl={item.thumbnailUrl}
+                    fallbackSrc={item.fallbackSrc}
+                    alt={item.title}
                   />
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                     <Link
-                      href={`/planes/${plan.slug}`}
+                      href={`/planes/${item.code}`}
                       className="w-36 px-4 py-1.5 rounded-full bg-white text-zinc-800 text-sm font-semibold text-center hover:bg-zinc-100 transition-colors"
                     >
                       Ver más
                     </Link>
                     <button
                       type="button"
-                      onClick={() => openSelectionModal(plan.slug)}
+                      onClick={() => openSelectionModal(item.code)}
                       className="w-36 px-4 py-1.5 rounded-full text-white text-sm font-semibold text-center hover:opacity-90 transition-opacity"
                       style={{ backgroundColor: 'var(--color-primary)' }}
                     >
@@ -109,7 +145,7 @@ export function StandardPlanDescription() {
           </div>
         </div>
         {/* ver mas */}
-        <Link 
+        <Link
             href={`/planes`}
             className="mt-8 px-6 py-2 rounded-full border border-zinc-800 text-zinc-800 font-semibold hover:bg-zinc-800 hover:text-white transition-colors">
           Ver más

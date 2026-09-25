@@ -1,6 +1,7 @@
 //features - plans
-import { getPredefinedProductAction, createPredefinedOrderAction, type ActionResult } from './plans.actions'
+import { getPredefinedProductAction, createPredefinedOrderAction, getPlanPreviewsAction, type ActionResult } from './plans.actions'
 import { PredefinedProductDto } from '../dtos/predefined-product.dto'
+import { PlanPreviewDto } from '../dtos/plan-preview.dto'
 
 //se lanza cuando la acción falló por no haber sesión válida: la UI abre el modal de registro/login
 export class SessionRequiredError extends Error {
@@ -28,6 +29,11 @@ export class PlansService {
     //crea la orden pendiente del plan predefinido elegido; lanza SessionRequiredError si no hay sesión
     public static async createPredefinedOrder(code: string): Promise<{ orderId: string }> {
         return unwrap(await createPredefinedOrderAction(code))
+    }
+
+    //las (hasta) 4 fichas de vista previa (una por familia) para el carrusel del home
+    public static async getPlanPreviews(): Promise<PlanPreviewDto[]> {
+        return unwrap(await getPlanPreviewsAction())
     }
 
 }

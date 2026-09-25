@@ -4,12 +4,18 @@ import { apiFetch } from '@/shared/api/client'
 import { runAction, type ActionResult } from '@/shared/api/action-result'
 import { getValidAccessToken } from '@/shared/auth/tokens'
 import { PredefinedProductDto } from '../dtos/predefined-product.dto'
+import { PlanPreviewDto } from '../dtos/plan-preview.dto'
 
 export type { ActionResult }
 
 //ficha pública de la versión (precio y miniatura): no requiere sesión
 export async function getPredefinedProductAction(code: string): Promise<ActionResult<PredefinedProductDto>> {
   return runAction(() => apiFetch<PredefinedProductDto>(`productos/predefinidos/${encodeURIComponent(code)}`))
+}
+
+//las (hasta) 4 fichas de vista previa (una por familia) para el carrusel del home: no requiere sesión
+export async function getPlanPreviewsAction(): Promise<ActionResult<PlanPreviewDto[]>> {
+  return runAction(() => apiFetch<PlanPreviewDto[]>('productos/vista-previa'))
 }
 
 //crea la orden (pendiente de pago) del plan predefinido. El backend toma el precio del producto: solo se envía el code

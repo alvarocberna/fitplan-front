@@ -32,8 +32,10 @@ export * from './plans/components/plan-preview-image.component';
 export * from './plans/components/login-modal.component';
 export * from './plans/components/cart-view.component';
 export * from './plans/hooks/use-predefined-product';
+export * from './plans/hooks/use-plan-previews';
 export * from './plans/services/plans.service';
 export * from './plans/dtos/predefined-product.dto';
+export * from './plans/dtos/plan-preview.dto';
 export * from './plans/format-price';
 
 //PROFILE
