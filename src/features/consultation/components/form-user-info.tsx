@@ -28,17 +28,19 @@ export function FormUserInfo({ profile }: FormUserInfoProps) {
             paternalLastName: profile?.paternalLastName ?? undefined,
             gender: profile?.gender ?? undefined,
             email: profile?.email ?? undefined,
+            athlete: profile?.athlete ?? false,
             dateOfBirth: profile?.dateOfBirth ? (profile.dateOfBirth.slice(0, 10) as unknown as Date) : undefined,
         },
     })
 
-    //on submit: persiste el perfil en el backend (User) antes de avanzar
+    //on submit: persiste el perfil en el backend (User, incluido athlete) antes de avanzar
     const onSubmit: SubmitHandler<FormPersonalInfoInterface> = async (data) => {
         const result = await updateProfileAction({
             firstName: data.firstName,
             paternalLastName: data.paternalLastName,
             gender: data.gender,
             dateOfBirth: new Date(data.dateOfBirth).toISOString(),
+            athlete: data.athlete,
         })
 
         if (!result.ok) {
@@ -102,7 +104,6 @@ export function FormUserInfo({ profile }: FormUserInfoProps) {
             {...register("athlete", {required: false, setValueAs: (value) => value === "true"})}
                 id="floating-outlined-deportista"
                 className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-800 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-primary peer"
-                defaultValue=""
             >
                 <option value="false">No, no hago ningún deporte</option>
                 <option value="false">Sí, de forma recreacional o como hobby</option>

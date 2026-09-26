@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 //shared
 import { Card, PlanPreviewCard, SubsectionHead, SubsectionTitle, useConsultation } from '@/shared'
 //features
-import { ConsultationService, OrderStatusDto } from '@/features'
+import { ConsultationService, GenerationStatus, OrderStatusDto } from '@/features'
 
 const POLLING_INTERVAL_MS = 4000
 // a partir de este tiempo sin terminar, se muestra un mensaje de "esto está tardando más de lo normal"
@@ -39,7 +39,7 @@ export default function OrderPage() {
                 const data: OrderStatusDto = await ConsultationService.getOrderStatus(orderId)
                 if (cancelled) return
 
-                if (data.generationStatus === 'completado' && data.pdfUrl) {
+                if (data.generationStatus === GenerationStatus.COMPLETED && data.pdfUrl) {
                     cancelled = true
                     setPlan({ pdfUrl: data.pdfUrl, thumbnailUrl: data.thumbnailUrl ?? null })
                     if (data.planJson) setNutritionPlan(data.planJson)
@@ -47,13 +47,13 @@ export default function OrderPage() {
                     return
                 }
 
-                if (data.generationStatus === 'error') {
+                if (data.generationStatus === GenerationStatus.ERROR) {
                     cancelled = true
                     setViewState('error')
                     return
                 }
 
-                //'no_iniciado' (aún no llega la confirmación de pago) o 'generando'
+                //NOT_STARTED (aún no llega la confirmación de pago) o GENERATING
                 setViewState('generating')
                 if (Date.now() - startRef.current > DELAY_THRESHOLD_MS) setIsDelayed(true)
             } catch {

@@ -63,6 +63,7 @@ const PROFILE_DEFAULT = {
   maternalLastName: null,
   gender: null,
   dateOfBirth: null,
+  athlete: false,
   email: 'ana@test.com',
   rut: null,
   rutCheckDigit: null,

@@ -18,10 +18,10 @@ test('completes the full consultation flow end-to-end: personal info -> anamnesi
   await mockCreateOrder({ orderId: ORDER_ID });
   await mockSimulatePayment();
   await mockOrderStatusSequence([
-    { paymentStatus: 'pagado', generationStatus: 'generando', planJson: null, pdfUrl: null, thumbnailUrl: null },
+    { paymentStatus: 'PAID', generationStatus: 'GENERATING', planJson: null, pdfUrl: null, thumbnailUrl: null },
     {
-      paymentStatus: 'pagado',
-      generationStatus: 'completado',
+      paymentStatus: 'PAID',
+      generationStatus: 'COMPLETED',
       planJson: nutritionPlanMock,
       pdfUrl: 'https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com/plan-e2e.pdf',
       thumbnailUrl: null,

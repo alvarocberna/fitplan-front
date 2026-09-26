@@ -9,10 +9,10 @@ const PDF_URL = 'https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaw
 const THUMBNAIL_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
-const GENERATING = { paymentStatus: 'pagado', generationStatus: 'generando', planJson: null, pdfUrl: null, thumbnailUrl: null };
+const GENERATING = { paymentStatus: 'PAID', generationStatus: 'GENERATING', planJson: null, pdfUrl: null, thumbnailUrl: null };
 const COMPLETED = {
-  paymentStatus: 'pagado',
-  generationStatus: 'completado',
+  paymentStatus: 'PAID',
+  generationStatus: 'COMPLETED',
   planJson: nutritionPlanMock,
   pdfUrl: PDF_URL,
   thumbnailUrl: THUMBNAIL_URL,
@@ -56,7 +56,7 @@ test.describe('Order status & plan', () => {
   });
 
   test('shows a reassuring error state and no download button when generation fails', async ({ page }) => {
-    await mockOrderStatusSequence([{ ...GENERATING, generationStatus: 'error' }]);
+    await mockOrderStatusSequence([{ ...GENERATING, generationStatus: 'ERROR' }]);
 
     await page.goto('/ordenes/order-e2e-123');
 

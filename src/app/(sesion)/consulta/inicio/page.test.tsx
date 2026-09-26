@@ -32,6 +32,7 @@ function profile(overrides: Partial<PerfilStatus> = {}): PerfilStatus {
     maternalLastName: null,
     gender: null,
     dateOfBirth: null,
+    athlete: false,
     email: null,
     rut: null,
     rutCheckDigit: null,

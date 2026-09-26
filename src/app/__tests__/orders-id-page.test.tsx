@@ -23,8 +23,8 @@ function renderPage() {
 
 function status(overrides: Partial<OrderStatusDto>): OrderStatusDto {
   return {
-    paymentStatus: 'pagado',
-    generationStatus: 'generando',
+    paymentStatus: 'PAID',
+    generationStatus: 'GENERATING',
     planJson: null,
     pdfUrl: null,
     thumbnailUrl: null,
@@ -57,8 +57,8 @@ describe('OrderPage', () => {
     expect(screen.getByText(/Estamos generando tu plan nutricional/)).toBeInTheDocument();
   });
 
-  it('polls the order status every 4 seconds while it stays in "generando"', async () => {
-    getOrderStatus.mockResolvedValue(status({ generationStatus: 'generando' }));
+  it('polls the order status every 4 seconds while it stays in GENERATING', async () => {
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'GENERATING' }));
     renderPage();
     await tick(0);
     expect(getOrderStatus).toHaveBeenCalledTimes(1);
@@ -71,7 +71,7 @@ describe('OrderPage', () => {
   });
 
   it('shows a delay notice once generation has been running past 45 seconds', async () => {
-    getOrderStatus.mockResolvedValue(status({ generationStatus: 'generando' }));
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'GENERATING' }));
     renderPage();
     await tick(0);
     expect(screen.queryByText(/tardando más de lo normal/)).not.toBeInTheDocument();
@@ -87,7 +87,7 @@ describe('OrderPage', () => {
     const planJson = { personalInfo: { name: 'Ana', lastName: 'Pérez' } } as OrderStatusDto['planJson'];
     const pdfUrl = 'https://signed-url.example/plan.pdf';
     const thumbnailUrl = 'https://signed-url.example/plan.webp';
-    getOrderStatus.mockResolvedValue(status({ generationStatus: 'completado', planJson, pdfUrl, thumbnailUrl }));
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'COMPLETED', planJson, pdfUrl, thumbnailUrl }));
     renderPage();
     await tick(0);
 
@@ -108,7 +108,7 @@ describe('OrderPage', () => {
 
   it('shows a placeholder, keeping the download button, when the completed plan has no thumbnail', async () => {
     const pdfUrl = 'https://signed-url.example/plan.pdf';
-    getOrderStatus.mockResolvedValue(status({ generationStatus: 'completado', pdfUrl, thumbnailUrl: null }));
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'COMPLETED', pdfUrl, thumbnailUrl: null }));
     renderPage();
     await tick(0);
 
@@ -118,8 +118,8 @@ describe('OrderPage', () => {
     expect(screen.getByRole('link', { name: /Descargar/ })).toHaveAttribute('href', pdfUrl);
   });
 
-  it('shows a reassuring error state and stops polling when generationStatus is "error"', async () => {
-    getOrderStatus.mockResolvedValue(status({ generationStatus: 'error' }));
+  it('shows a reassuring error state and stops polling when generationStatus is ERROR', async () => {
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'ERROR' }));
     renderPage();
     await tick(0);
 
@@ -145,7 +145,7 @@ describe('OrderPage', () => {
   });
 
   it('clears the polling interval on unmount', async () => {
-    getOrderStatus.mockResolvedValue(status({ generationStatus: 'generando' }));
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'GENERATING' }));
     const { unmount } = renderPage();
     await tick(0);
     expect(getOrderStatus).toHaveBeenCalledTimes(1);

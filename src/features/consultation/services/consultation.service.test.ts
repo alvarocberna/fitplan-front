@@ -66,7 +66,7 @@ describe('ConsultationService', () => {
   it('getOrderStatus performs a GET against the status endpoint interpolated with the order id', async () => {
     mockedGetOrderStatusAction.mockResolvedValue({
       ok: true,
-      data: { paymentStatus: 'pagado', generationStatus: 'completado', planJson: null, pdfUrl: null, thumbnailUrl: null },
+      data: { paymentStatus: 'PAID', generationStatus: 'COMPLETED', planJson: null, pdfUrl: null, thumbnailUrl: null },
     });
 
     await ConsultationService.getOrderStatus('order-456');

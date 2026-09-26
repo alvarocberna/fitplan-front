@@ -32,7 +32,7 @@ export function GenerateOrderButton(){
                 measurements,
             };
 
-            //crea la orden en el backend (paymentStatus='pendiente'). La IA todavía NO se ejecuta acá:
+            //crea la orden en el backend (paymentStatus=PENDING). La IA todavía NO se ejecuta acá:
             //solo se dispara cuando el pago se confirma (webhook), para no gastar en usuarios que no pagan.
             const { orderId } = await ConsultationService.createOrder(completeConsultation);
 

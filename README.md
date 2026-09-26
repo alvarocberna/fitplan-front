@@ -65,7 +65,7 @@ el estado local, la consulta completa se envía recién en el paso siguiente.
 Página de resumen/checkout (precio fijo `PRECIO_CONSULTA`). El botón `BtnGenerarOrden`:
 1. Arma `ConsultaCompletaDto` (`informacion_personal` + `anamnesis` + `mediciones`) desde el context.
 2. Llama a `POST ordenes/crear` (`ConsultaService.crearOrden`), que crea la fila `orden` en el backend con
-   `estado_pago: 'pendiente'`. **La IA todavía no genera el plan en este punto** — eso se difiere hasta que
+   `estado_pago: 'PENDING'`. **La IA todavía no genera el plan en este punto** — eso se difiere hasta que
    el pago se confirme, para no gastar cómputo en usuarios que abandonan antes de pagar.
 3. Redirige a `/pago/{orden_id}`.
 
@@ -82,9 +82,9 @@ un proveedor de pago (Mercado Pago, Flow, Stripe, etc.) al confirmar un cobro. T
 ### 6. Orden — `/ordenes/[id]`
 Hace polling a `GET ordenes/obtener-estado/{id}` (`ConsultaService.obtenerEstadoOrden`) cada 4s
 (`INTERVALO_POLLING_MS`), leyendo `EstadoOrdenDto { estado_pago, estado_generacion, plan_json, pdf_url }`:
-- `no_iniciado` / `generando` → spinner ("Estamos generando tu plan nutricional..."). Pasados 45s
+- `NOT_STARTED` / `GENERATING` → spinner ("Estamos generando tu plan nutricional..."). Pasados 45s
   (`UMBRAL_DEMORA_MS`) se muestra un aviso de demora, aclarando que el pago ya quedó registrado.
-- `completado` (con `pdf_url`) → detiene el polling y muestra `PlanPreviewCard`
+- `COMPLETED` (con `pdf_url`) → detiene el polling y muestra `PlanPreviewCard`
   (`src/shared/components/plan-preview-card.component.tsx`, la misma tarjeta que usa `/panel`): la miniatura
   de la página 1 del plan (`thumbnailUrl`, URL firmada de S3 de corta duración; placeholder si es `null`) y un
   botón "Descargar" hacia `pdfUrl` (URL firmada con `Content-Disposition: attachment`, que baja el PDF
@@ -123,8 +123,8 @@ a través del context.
 
 Vive en otro repo. Su base de datos SQLite contiene una única entidad, **`orden`**, que concentra:
 - los datos de la consulta enviados al crearla (`informacion_personal`, `anamnesis`, `mediciones`),
-- `estado_pago`: `'pendiente' | 'pagado'`,
-- `estado_generacion`: `'no_iniciado' | 'generando' | 'completado' | 'error'`,
+- `estado_pago`: `'PENDING' | 'PAID'`,
+- `estado_generacion`: `'NOT_STARTED' | 'GENERATING' | 'COMPLETED' | 'ERROR'`,
 - `plan_json`: el `PlanNutricionalDto` resultante, una vez generado.
 - `pdf_url`: URL firmada (de corta duración) del PDF del plan, ya almacenado en un bucket S3 privado,
   una vez generado.
@@ -134,7 +134,7 @@ Endpoints consumidos por este frontend (`ConsultaService`, `src/features/consult
 | Método | Endpoint | Uso |
 |---|---|---|
 | POST | `consulta/chat` | turno de chat de anamnesis |
-| POST | `ordenes/crear` | crea la orden (`estado_pago: 'pendiente'`) |
+| POST | `ordenes/crear` | crea la orden (`estado_pago: 'PENDING'`) |
 | POST | `webhooks/ordenes/:ordenId/simular-pago` | simula la confirmación de pago (stand-in del webhook real) |
 | GET | `ordenes/obtener-estado/:ordenId` | polling de estado de pago/generación, `plan_json` y `pdf_url` |
 | GET | `ordenes` | lista las órdenes con plan generado del usuario, del más nuevo al más antiguo (usada en `/panel`) |

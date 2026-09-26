@@ -34,7 +34,7 @@ test.describe('Consultation - personal info', () => {
     const patch = (await getBackendCalls()).find((c) => c.method === 'PATCH' && c.path === '/auth/perfil');
     expect(patch).toMatchObject({
       authorized: true,
-      body: { firstName: 'Ana', paternalLastName: 'Pérez', gender: 'FEMENINO' },
+      body: { firstName: 'Ana', paternalLastName: 'Pérez', gender: 'FEMENINO', athlete: true },
     });
   });
 

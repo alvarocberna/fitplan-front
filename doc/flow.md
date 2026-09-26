@@ -138,9 +138,9 @@ usuario con perfil ya completo entra directo a `/consulta/anamnesis` (saltándos
 contexto se **hidrata desde el perfil del backend** (`syncProfileAction()` en un `useEffect` de
 `consulta/anamnesis/page.tsx`) antes de que el usuario note nada.
 
-**Deuda técnica documentada**: el campo "Deportista" (`athlete`) no vive en `User` — es propio de
-cada consulta (`NutritionalConsultation.athlete`). Un usuario que salta `informacion-personal`
-porque su perfil ya está completo nunca vuelve a responder esa pregunta; se asume `false`.
+El campo "Deportista" (`athlete`) vive en `User`: `informacion-personal` lo envía en
+`updateProfileAction` (`PATCH /auth/perfil`) y lo pre-llena desde el perfil. Un usuario que salta
+`informacion-personal` conserva su última respuesta.
 
 ## 3. Google como Identity Provider — qué cambió y qué no
 

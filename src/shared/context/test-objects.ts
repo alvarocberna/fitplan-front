@@ -31,7 +31,7 @@ const anamnesis = {
     "r24h": [
       {
         "mealTime": "desayuno",
-        "carbohydrate": "1 pan",
+        "cereals": "1 pan",
         "freeConsumptionVegetable": "media palta",
         "generalConsumptionVegetable": null,
         "fruit": "1 manzana",
@@ -48,7 +48,7 @@ const anamnesis = {
       },
       {
         "mealTime": "almuerzo",
-        "carbohydrate": "200gr de arroz o fideo",
+        "cereals": "200gr de arroz o fideo",
         "freeConsumptionVegetable": null,
         "generalConsumptionVegetable": "ensalada",
         "fruit": null,
@@ -65,7 +65,7 @@ const anamnesis = {
       },
       {
         "mealTime": "once",
-        "carbohydrate": "pan",
+        "cereals": "pan",
         "freeConsumptionVegetable": null,
         "generalConsumptionVegetable": null,
         "fruit": null,

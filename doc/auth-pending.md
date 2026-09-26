@@ -101,9 +101,8 @@ contra un user pool real (sin credenciales en este entorno) y no está conectado
       cliente desde el perfil del backend si `personalInfo` no está en localStorage (ej. otro
       dispositivo) — necesario porque `evaluacion-fisica`/`generar-orden` bloquean el avance
       basados en el contexto local, no en el backend.
-      **Deuda técnica documentada, no resuelta**: el campo "Deportista" (`athlete`) no es un campo
-      de `User` (es por consulta) — un usuario que salta `informacion-personal` porque su perfil ya
-      está completo nunca vuelve a responderlo, se asume `false`.
+      ~~Deuda técnica: el campo "Deportista" (`athlete`) no era un campo de `User`~~ — **resuelta**:
+      `athlete` vive en `User` y se guarda vía `PATCH /auth/perfil`.
       **Bug encontrado y arreglado durante la verificación manual**: `getValidAccessToken()`
       (`tokens.ts`) intentaba persistir el token refrescado con `createSession()` (escribe la
       cookie) sin importar desde dónde se llamaba. Invocado desde el render de un Server Component

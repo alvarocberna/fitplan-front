@@ -20,6 +20,7 @@ const baseProfile: PerfilStatus = {
   maternalLastName: null,
   gender: null,
   dateOfBirth: null,
+  athlete: false,
   email: 'ana@test.com',
   rut: null,
   rutCheckDigit: null,
@@ -57,7 +58,7 @@ describe('FormUserInfo', () => {
     await user.click(screen.getByRole('button', { name: 'Siguiente' }));
 
     await waitFor(() => expect(mockedUpdateProfileAction).toHaveBeenCalledWith(
-      expect.objectContaining({ firstName: 'Ana', paternalLastName: 'Pérez', gender: 'FEMENINO' }),
+      expect.objectContaining({ firstName: 'Ana', paternalLastName: 'Pérez', gender: 'FEMENINO', athlete: true }),
     ));
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/consulta/anamnesis'));
     const stored = JSON.parse(localStorage.getItem('consulta_context')!);

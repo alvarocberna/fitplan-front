@@ -18,7 +18,7 @@ function unwrap<T>(result: ActionResult<T>): T {
 
 export class ConsultationService{
 
-    //crea la orden de cobro (paymentStatus='pendiente') ANTES de generar el plan
+    //crea la orden de cobro (paymentStatus=PENDING) ANTES de generar el plan
     public static async createOrder(completeConsultation: CompleteConsultationDto): Promise<{ orderId: string }> {
         return unwrap(await createOrderAction(completeConsultation))
     }

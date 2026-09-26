@@ -39,7 +39,7 @@ test.describe('Session layout (con sesión)', () => {
     test(`${path} shows the topbar, the docked session sidebar and no landing navbar`, async ({ page }) => {
       // /ordenes/[id] hace polling al montar; el resto de las rutas no llama a este endpoint
       await mockOrderStatusSequence([
-        { paymentStatus: 'pagado', generationStatus: 'generando', planJson: null, pdfUrl: null, thumbnailUrl: null },
+        { paymentStatus: 'PAID', generationStatus: 'GENERATING', planJson: null, pdfUrl: null, thumbnailUrl: null },
       ]);
       await page.goto(path);
 

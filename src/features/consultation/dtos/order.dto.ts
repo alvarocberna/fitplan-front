@@ -1,7 +1,19 @@
 import { NutritionPlanDto } from '../../nutrition-plan/dtos/nutrition-plan.dto';
 
-export type PaymentStatus = 'pendiente' | 'pagado';
-export type GenerationStatus = 'no_iniciado' | 'generando' | 'completado' | 'error';
+// Espejo de los enums del backend (enums nativos de Postgres, ver back/src/domain/entities/enums.ts).
+export const PaymentStatus = {
+    PENDING: 'PENDING',
+    PAID: 'PAID',
+} as const;
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+
+export const GenerationStatus = {
+    NOT_STARTED: 'NOT_STARTED',
+    GENERATING: 'GENERATING',
+    COMPLETED: 'COMPLETED',
+    ERROR: 'ERROR',
+} as const;
+export type GenerationStatus = (typeof GenerationStatus)[keyof typeof GenerationStatus];
 
 export interface OrderStatusDto {
     paymentStatus: PaymentStatus

@@ -13,6 +13,7 @@ export interface PerfilStatus {
   maternalLastName: string | null
   gender: string | null
   dateOfBirth: string | null
+  athlete: boolean
   email: string | null
   rut: string | null
   rutCheckDigit: string | null
@@ -35,6 +36,7 @@ export interface UpdateProfileInput {
   paternalLastName: string
   gender: string
   dateOfBirth: string // ISO
+  athlete?: boolean
 }
 
 export async function updateProfileAction(
