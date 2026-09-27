@@ -84,10 +84,15 @@ own `min-h-screen` / large top padding (they use `py-4`).
 
 Gating is by `src/proxy.ts`, which redirects to `/login` without a valid session cookie:
 `/consulta/*` (except the bare `/consulta`, empty and intentionally public), `/pago/*`, `/ordenes/*`
-(via `isSessionGatedPrefix`), and `/panel`, `/perfil` (via `isSesionRoute`). Route lists live in
+(via `isSessionGatedPrefix`), and `/panel`, `/perfil` and their subroutes, e.g. the consultation detail
+`/panel/consultas/[id]` (via `isSesionRoute`, prefix match). Route lists live in
 `src/shared/auth/sesion-routes.ts` — when adding a route to the session area, update that file **and**
-put the page under `(sesion)`; `isSesionRoute` (exact match, proxy) is deliberately separate from
+put the page under `(sesion)`; `isSesionRoute` (proxy) is deliberately separate from
 `isFocusRoute` / `usesSesionLayout` (presentation only).
+
+`apiFetch` throws `ApiError` (with the HTTP `status`) and `runAction` forwards that `status` in the failed
+`ActionResult`, so a service can tell a 404 apart (e.g. `PanelService.getConsultation` returns `null` →
+the page calls `notFound()`).
 
 ### Paid consultation flow (the core product)
 

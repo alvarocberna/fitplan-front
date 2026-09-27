@@ -87,3 +87,14 @@ export async function mockCreatePredefinedOrder(options: { orderId?: string; fai
 export async function mockOrdersList(orders: Array<Record<string, unknown>>) {
   await setMock('orders', { orders });
 }
+
+// me/consultations (tarjeta "Mis consultas" del panel). Sin llamar a esto el listado responde vacío.
+export async function mockConsultationsList(consultations: Array<Record<string, unknown>>) {
+  await setMock('consultations', { consultations });
+}
+
+// me/consultations/:id (detalle en /panel/consultas/[id]). Responde `detail` solo para su
+// `consultationId`; cualquier otro id (o sin llamar a esto) responde 404, como el backend real.
+export async function mockConsultationDetail(detail: Record<string, unknown> & { consultationId: string }) {
+  await setMock('consultationDetail', { detail });
+}

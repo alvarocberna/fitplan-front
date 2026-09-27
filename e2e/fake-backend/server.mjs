@@ -81,6 +81,7 @@ const PANEL_SUMMARY_DEFAULT = {
   lastConsultationDate: null,
   goal: null,
   nutritionalPlan: null,
+  lastMeasurement: null,
 }
 
 const server = http.createServer(async (req, res) => {
@@ -173,6 +174,22 @@ const server = http.createServer(async (req, res) => {
     if (path === '/me/plans' && method === 'GET') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       return send(res, 200, mocks.orders?.orders ?? [])
+    }
+
+    if (path === '/me/consultations' && method === 'GET') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      return send(res, 200, mocks.consultations?.consultations ?? [])
+    }
+
+    if (/^\/me\/consultations\/[^/]+$/.test(path) && method === 'GET') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      const consultationId = decodeURIComponent(path.split('/').pop())
+      const detail = mocks.consultationDetail?.detail
+      // como el backend real: inexistente o ajena -> 404
+      if (!detail || detail.consultationId !== consultationId) {
+        return send(res, 404, { message: 'Consulta no encontrada' })
+      }
+      return send(res, 200, detail)
     }
 
     // ---- pago simulado (sin auth en el backend real: es el stand-in del webhook) ----

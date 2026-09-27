@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { apiFetch } from './client';
+import { apiFetch, ApiError } from './client';
 
 function mockFetchOnce(response: Partial<Response> & { json?: () => Promise<unknown> }) {
   const fetchMock = vi.fn().mockResolvedValue(response as Response);
@@ -82,5 +82,14 @@ describe('apiFetch', () => {
     mockFetchOnce({ ok: false, status: 403, statusText: 'Forbidden', json: async () => ({ unrelated: true }) });
 
     await expect(apiFetch('consultations/chat', 'POST', {})).rejects.toThrow('Error HTTP 403');
+  });
+
+  it('throws an ApiError carrying the HTTP status', async () => {
+    mockFetchOnce({ ok: false, status: 404, statusText: 'Not Found', json: async () => ({ message: 'Consulta no encontrada' }) });
+
+    const error = await apiFetch('me/consultations/x', 'GET').catch((err: unknown) => err);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ message: 'Consulta no encontrada', status: 404 });
   });
 });

@@ -4,6 +4,8 @@ import { apiFetch } from '@/shared/api/client'
 import { runAction, type ActionResult } from '@/shared/api/action-result'
 import { getValidAccessToken } from '@/shared/auth/tokens'
 import { PanelSummaryDto } from '../dtos/panel-summary.dto'
+import { ConsultationSummaryDto } from '../dtos/consultation-summary.dto'
+import { ConsultationDetailDto } from '../dtos/consultation-detail.dto'
 
 export type { ActionResult }
 
@@ -11,5 +13,24 @@ export async function getPanelSummaryAction(): Promise<ActionResult<PanelSummary
     return runAction(async () => {
         const accessToken = await getValidAccessToken()
         return apiFetch<PanelSummaryDto>('me/summary', 'GET', undefined, accessToken)
+    })
+}
+
+export async function getMyConsultationsAction(): Promise<ActionResult<ConsultationSummaryDto[]>> {
+    return runAction(async () => {
+        const accessToken = await getValidAccessToken()
+        return apiFetch<ConsultationSummaryDto[]>('me/consultations', 'GET', undefined, accessToken)
+    })
+}
+
+export async function getMyConsultationAction(consultationId: string): Promise<ActionResult<ConsultationDetailDto>> {
+    return runAction(async () => {
+        const accessToken = await getValidAccessToken()
+        return apiFetch<ConsultationDetailDto>(
+            `me/consultations/${encodeURIComponent(consultationId)}`,
+            'GET',
+            undefined,
+            accessToken,
+        )
     })
 }

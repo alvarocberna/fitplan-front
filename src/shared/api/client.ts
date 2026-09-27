@@ -3,6 +3,15 @@ import 'server-only'
 // Versión de la API del backend: todas sus rutas cuelgan de /api/v1 (setGlobalPrefix en main.ts).
 export const API_PREFIX = 'api/v1'
 
+// Error de una respuesta no-2xx del backend: conserva el status HTTP para que quien llama pueda
+// distinguir, p. ej., un 404 (recurso inexistente o ajeno) de un error genérico.
+export class ApiError extends Error {
+    constructor(message: string, public readonly status: number) {
+        super(message)
+        this.name = 'ApiError'
+    }
+}
+
 export async function apiFetch<T>(
     endpoint: string,
     method?: string,
@@ -28,7 +37,7 @@ export async function apiFetch<T>(
         } catch {
             errorData = { message: `Error HTTP ${res.status}: ${res.statusText}` };
         }
-        throw new Error(errorData?.message || errorData?.error || `Error HTTP ${res.status}`);
+        throw new ApiError(errorData?.message || errorData?.error || `Error HTTP ${res.status}`, res.status);
     }
 
     if (res.status === 204) {

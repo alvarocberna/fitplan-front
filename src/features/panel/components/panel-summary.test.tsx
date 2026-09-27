@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { PanelSummary } from './panel-summary.component';
 import type { PanelSummaryDto } from '../dtos/panel-summary.dto';
-import type { OrderSummaryDto } from '../../consultation/dtos/order.dto';
 
 const baseSummary: PanelSummaryDto = {
   firstName: 'Ana',
@@ -19,6 +18,14 @@ const baseSummary: PanelSummaryDto = {
     carbohydrateIntake: 200,
     lipidIntake: 60,
   },
+  lastMeasurement: {
+    measuredAt: '2026-04-01T12:00:00.000Z',
+    weight: 70.5,
+    height: 172,
+    bmi: 23.83,
+    bmiClassification: 'NORMAL_WEIGHT',
+    bfPercentage: 18.2,
+  },
 };
 
 const emptySummary: PanelSummaryDto = {
@@ -30,9 +37,8 @@ const emptySummary: PanelSummaryDto = {
   lastConsultationDate: null,
   goal: null,
   nutritionalPlan: null,
+  lastMeasurement: null,
 };
-
-const baseOrders: OrderSummaryDto[] = [];
 
 // Valor (<dd>) de la fila cuyo <dt> es `label`.
 function rowValue(label: string): string | null {
@@ -42,7 +48,7 @@ function rowValue(label: string): string | null {
 
 describe('PanelSummary', () => {
   it('renders one row per field in the "Mi información" card, in order', () => {
-    render(<PanelSummary summary={baseSummary} orders={baseOrders} />);
+    render(<PanelSummary summary={baseSummary} />);
 
     const labels = screen.getAllByRole('term').map((dt) => dt.textContent);
     expect(labels).toEqual([
@@ -55,11 +61,15 @@ describe('PanelSummary', () => {
       'Proteínas',
       'Carbohidratos',
       'Lípidos',
+      'Fecha última medición',
+      'Peso',
+      'IMC',
+      '% grasa',
     ]);
   });
 
   it('renders the user info, consultation date, regimen and macros', () => {
-    render(<PanelSummary summary={baseSummary} orders={baseOrders} />);
+    render(<PanelSummary summary={baseSummary} />);
 
     expect(rowValue('Nombre completo')).toBe('Ana María Pérez Soto');
     expect(rowValue('Edad')).toBe('34');
@@ -72,19 +82,38 @@ describe('PanelSummary', () => {
     expect(rowValue('Lípidos')).toBe('60 g');
   });
 
-  it('skips missing name parts when building the full name', () => {
+  it('renders the last measurement indicators', () => {
+    render(<PanelSummary summary={baseSummary} />);
+
+    expect(rowValue('Fecha última medición')).toBe('01/04/2026');
+    expect(rowValue('Peso')).toBe('70.5 kg');
+    expect(rowValue('IMC')).toBe('23.8 (Normal)');
+    expect(rowValue('% grasa')).toBe('18.2 %');
+  });
+
+  it('shows placeholders for BMI and body fat when the measurement has no stored results', () => {
     render(
       <PanelSummary
-        summary={{ ...baseSummary, middleName: null, maternalLastName: null }}
-        orders={baseOrders}
+        summary={{
+          ...baseSummary,
+          lastMeasurement: { ...baseSummary.lastMeasurement!, bmi: null, bmiClassification: null, bfPercentage: null },
+        }}
       />,
     );
+
+    expect(rowValue('Peso')).toBe('70.5 kg');
+    expect(rowValue('IMC')).toBe('—');
+    expect(rowValue('% grasa')).toBe('—');
+  });
+
+  it('skips missing name parts when building the full name', () => {
+    render(<PanelSummary summary={{ ...baseSummary, middleName: null, maternalLastName: null }} />);
 
     expect(rowValue('Nombre completo')).toBe('Ana Pérez');
   });
 
-  it('shows placeholders when there is no personal data, consultation or plan', () => {
-    render(<PanelSummary summary={emptySummary} orders={baseOrders} />);
+  it('shows placeholders and a call to start a consultation when there is no consultation nor measurement', () => {
+    render(<PanelSummary summary={emptySummary} />);
 
     expect(rowValue('Nombre completo')).toBe('Sin datos');
     expect(rowValue('Edad')).toBe('—');
@@ -92,66 +121,26 @@ describe('PanelSummary', () => {
     expect(rowValue('Objetivo')).toBe('Aún no definido');
     expect(rowValue('Régimen')).toBe('—');
     expect(rowValue('Calorías')).toBe('—');
-    expect(rowValue('Proteínas')).toBe('—');
-    expect(rowValue('Carbohidratos')).toBe('—');
-    expect(rowValue('Lípidos')).toBe('—');
+    expect(rowValue('Fecha última medición')).toBe('—');
+    expect(rowValue('Peso')).toBe('—');
+    expect(rowValue('IMC')).toBe('—');
+    expect(screen.getByRole('link', { name: 'Iniciar una consulta' })).toHaveAttribute('href', '/consulta/inicio');
+  });
+
+  it('does not show the call to action when there is a consultation', () => {
+    render(<PanelSummary summary={{ ...baseSummary, lastMeasurement: null }} />);
+
+    expect(screen.queryByRole('link', { name: 'Iniciar una consulta' })).not.toBeInTheDocument();
   });
 
   it('shows a placeholder for the regimen when the plan has none', () => {
     render(
       <PanelSummary
         summary={{ ...baseSummary, nutritionalPlan: { ...baseSummary.nutritionalPlan!, dietRegimen: null } }}
-        orders={baseOrders}
       />,
     );
 
     expect(rowValue('Régimen')).toBe('—');
     expect(rowValue('Calorías')).toBe('2000 kcal');
-  });
-
-  it('no longer renders the "Último plan nutricional" card', () => {
-    render(<PanelSummary summary={baseSummary} orders={baseOrders} />);
-
-    expect(screen.queryByText('Último plan nutricional')).not.toBeInTheDocument();
-    expect(screen.queryByText('Todavía no tienes un plan nutricional generado.')).not.toBeInTheDocument();
-  });
-
-  it('shows the "no plans yet" message when the orders list is empty', () => {
-    render(<PanelSummary summary={baseSummary} orders={[]} />);
-
-    expect(screen.getByText('Todavía no tienes ningún plan nutricional generado.')).toBeInTheDocument();
-  });
-
-  it('renders a plan preview per order, newest first as given by the caller', () => {
-    const orders: OrderSummaryDto[] = [
-      {
-        orderId: 'order-2',
-        creationDate: '2026-02-01T00:00:00.000Z',
-        pdfUrl: 'https://signed.example/order-2.pdf',
-        thumbnailUrl: 'https://signed.example/order-2.webp',
-      },
-      {
-        orderId: 'order-1',
-        creationDate: '2026-01-01T00:00:00.000Z',
-        pdfUrl: 'https://signed.example/order-1.pdf',
-        thumbnailUrl: 'https://signed.example/order-1.webp',
-      },
-    ];
-
-    render(<PanelSummary summary={baseSummary} orders={orders} />);
-
-    const thumbnails = screen.getAllByAltText(/Vista previa del plan nutricional/);
-    expect(thumbnails).toHaveLength(2);
-    expect(thumbnails[0]).toHaveAttribute('src', 'https://signed.example/order-2.webp');
-    expect(thumbnails[1]).toHaveAttribute('src', 'https://signed.example/order-1.webp');
-
-    const downloads = screen.getAllByRole('link', { name: /Descargar/ });
-    expect(downloads).toHaveLength(2);
-    expect(downloads[0]).toHaveAttribute('href', 'https://signed.example/order-2.pdf');
-    expect(downloads[1]).toHaveAttribute('href', 'https://signed.example/order-1.pdf');
-
-    // ya no se incrusta el PDF en un <iframe>
-    expect(document.querySelector('iframe')).toBeNull();
-    expect(screen.queryByText('Todavía no tienes ningún plan nutricional generado.')).not.toBeInTheDocument();
   });
 });

@@ -185,8 +185,8 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   en el DOM (sidebar + menú móvil `md:hidden` de la barra superior): los tests acotan por contenedor (`within(sidebar)`, donde
   el sidebar es el `<nav>` que contiene el botón de acoplar; o `within(getByRole('navigation', { name: 'Menú de usuario' }))`)
   en vez de `getByRole('link', { name: 'Home' })` a secas, que falla por "múltiples elementos".
-- **`sesion-routes.ts`**: `isSesionRoute` (solo `/panel` y `/perfil`, igualdad exacta, la usa el proxy; `/pago/*` y `/ordenes/*`
-  dan false), `isSessionGatedPrefix` (`/pago` y `/ordenes`, raíz y subrutas, sin falsos positivos tipo `/pagos`, `/pago-x`,
+- **`sesion-routes.ts`**: `isSesionRoute` (`/panel`, `/perfil` y sus subrutas como `/panel/consultas/abc`, sin falsos positivos
+  tipo `/panelx`; la usa el proxy; `/pago/*` y `/ordenes/*` dan false), `isSessionGatedPrefix` (`/pago` y `/ordenes`, raíz y subrutas, sin falsos positivos tipo `/pagos`, `/pago-x`,
   `/ordenesx`; `/consulta` no entra), `isFocusRoute` (prefijos `/consulta`, `/pago` y `/ordenes` sin falsos positivos tipo
   `/consultas`) y `usesSesionLayout` (la unión de `isSesionRoute` e `isFocusRoute`).
 - **`NavbarLandingGate`**: no renderiza nada en `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel`, `/perfil` ni `/dev*`; renderiza

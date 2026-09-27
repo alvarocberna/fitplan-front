@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { SESION_PATHS, isSesionRoute, isSessionGatedPrefix, isFocusRoute, usesSesionLayout } from './sesion-routes';
 
 describe('isSesionRoute', () => {
-  it.each(['/panel', '/perfil'])('is true for %s', (pathname) => {
+  it.each(['/panel', '/perfil', '/panel/consultas/abc-123', '/perfil/sub'])('is true for %s (raíz y subrutas)', (pathname) => {
     expect(isSesionRoute(pathname)).toBe(true);
   });
 
-  it.each(['/', '/consulta/inicio', '/ordenes/abc', '/pago/abc', '/panel/', '/panel/sub', '/perfilx', '/dev'])(
-    'is false for %s (exact match only, used by the proxy)',
+  it.each(['/', '/consulta/inicio', '/ordenes/abc', '/pago/abc', '/panelx', '/perfilx', '/dev'])(
+    'is false for %s',
     (pathname) => {
       expect(isSesionRoute(pathname)).toBe(false);
     },
@@ -54,7 +54,7 @@ describe('isFocusRoute', () => {
 });
 
 describe('usesSesionLayout', () => {
-  it.each(['/panel', '/perfil', '/consulta', '/consulta/inicio', '/consulta/anamnesis', '/pago/abc', '/ordenes/abc-123'])(
+  it.each(['/panel', '/panel/consultas/abc-123', '/perfil', '/consulta', '/consulta/inicio', '/consulta/anamnesis', '/pago/abc', '/ordenes/abc-123'])(
     'is true for %s',
     (pathname) => {
       expect(usesSesionLayout(pathname)).toBe(true);

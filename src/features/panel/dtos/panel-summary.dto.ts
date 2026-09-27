@@ -9,6 +9,17 @@ export interface PanelNutritionalPlanDto {
     lipidIntake: number;
 }
 
+// Última medición del historial (consulta o registrada por el usuario). bmi, bmiClassification y
+// bfPercentage vienen de measurement_results y pueden ser null si no se calcularon.
+export interface PanelLastMeasurementDto {
+    measuredAt: string;
+    weight: number | null;
+    height: number | null;
+    bmi: number | null;
+    bmiClassification: string | null;
+    bfPercentage: number | null;
+}
+
 export interface PanelSummaryDto {
     firstName: string | null;
     middleName: string | null;
@@ -19,4 +30,5 @@ export interface PanelSummaryDto {
     lastConsultationDate: string | null;
     goal: string | null;
     nutritionalPlan: PanelNutritionalPlanDto | null;
+    lastMeasurement: PanelLastMeasurementDto | null;
 }

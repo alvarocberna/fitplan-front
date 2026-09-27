@@ -14,10 +14,10 @@ function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
-// Rutas que el proxy protege exigiendo sesión por igualdad exacta (/consulta/*, /pago/* y
-// /ordenes/* se resuelven aparte, ver src/proxy.ts).
+// Área de usuario (/panel, /perfil y sus subrutas, p. ej. /panel/consultas/[id]): el proxy exige
+// sesión (/consulta/*, /pago/* y /ordenes/* se resuelven aparte, ver src/proxy.ts).
 export function isSesionRoute(pathname: string): boolean {
-  return SESION_PATHS.has(pathname);
+  return [...SESION_PATHS].some((path) => matchesPrefix(pathname, path));
 }
 
 // /pago/* y /ordenes/*: rutas del flujo que el proxy protege por prefijo.

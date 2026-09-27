@@ -161,8 +161,9 @@ ese barrel y necesite código `server-only` va a pisar el mismo problema.
   (el backend unificó `auth/perfil` y `user/me` en `/me`, con un único DTO de campos opcionales): este
   archivo solo lee/edita nombre, apellido y fecha de nacimiento, mientras que `updateProfileAction`
   completa el perfil obligatorio (género, deportista) que gatea el wizard de `/consulta/*`.
-- `src/features/panel/services/panel.actions.ts` — `getPanelSummaryAction` (`GET /me/summary`),
-  usada por `/panel`.
+- `src/features/panel/services/panel.actions.ts` — `getPanelSummaryAction` (`GET /me/summary`) y
+  `getMyConsultationsAction` (`GET /me/consultations`), usadas por `/panel`, y
+  `getMyConsultationAction` (`GET /me/consultations/:id`), usada por `/panel/consultas/[id]`.
 - `src/shared/api/action-result.ts` — `ActionResult<T>`/`runAction()` compartido por todos los
   archivos de arriba. Las acciones **no lanzan** errores (siguen la guía oficial de Next para
   Server Functions: *"avoid using try/catch blocks and throw errors. Instead, model expected
@@ -192,9 +193,11 @@ mecanismos:
   punta.
 - **`PROTECTED_PATHS`** (hoy `SESION_PATHS` / `isSesionRoute()` en `src/shared/auth/sesion-routes.ts`):
   un set explícito de rutas *fuera* de los prefijos anteriores que también requieren
-  sesión — `/panel` y `/perfil` (área de usuario logueado, ver sección siguiente). A diferencia de
-  los prefijos, acá la comparación es por igualdad exacta: una ruta nueva fuera de `/consulta/*`,
-  `/pago/*` y `/ordenes/*` queda pública salvo que se agregue explícitamente a este set.
+  sesión — `/panel` y `/perfil` (área de usuario logueado, ver sección siguiente), **con sus
+  subrutas** (p. ej. `/panel/consultas/[id]`, el detalle de una consulta): la comparación es por
+  prefijo (`/panel` y `/panel/*`, sin falsos positivos tipo `/panelx`). Una ruta nueva fuera de
+  `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel/*` y `/perfil/*` queda pública salvo que se agregue
+  explícitamente a este set.
 
 Si la ruta lo requiere, lee la cookie `session` con `request.cookies.get(...)` (no `cookies()` de
 `next/headers`, para no depender de un comportamiento no verificado dentro de proxy) y, si no es
@@ -258,7 +261,7 @@ el ancho actual del sidebar y cuyo padding superior (`pt-19 md:pt-23`) deja libr
 - **Gating**: `/panel` y `/perfil` están en `PROTECTED_PATHS` (ver arriba); `/consulta/*` (salvo
   `/consulta`) y `/pago/*` + `/ordenes/*` se protegen por prefijo — sin sesión válida,
   `src/proxy.ts` redirige a `/login` antes de que el layout o la página se rendericen.
-  `isSesionRoute()` (solo `/panel` y `/perfil`) e `isSessionGatedPrefix()` (`/pago`, `/ordenes`) son
+  `isSesionRoute()` (`/panel`, `/perfil` y sus subrutas) e `isSessionGatedPrefix()` (`/pago`, `/ordenes`) son
   lo que consulta el proxy; `isFocusRoute()` y `usesSesionLayout()` (que agrupa `isSesionRoute` +
   `isFocusRoute`) solo deciden presentación (navbar/sidebar), no seguridad.
 

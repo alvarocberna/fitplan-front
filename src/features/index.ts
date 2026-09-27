@@ -45,8 +45,14 @@ export * from './profile/dtos/user-profile.dto';
 
 //PANEL
 export * from './panel/components/panel-summary.component';
+export * from './panel/components/consultations-list.component';
+export * from './panel/components/plans-list.component';
+export * from './panel/components/consultation-detail.component';
+export * from './panel/components/plan-status-badge.component';
 export * from './panel/services/panel.service';
 export * from './panel/dtos/panel-summary.dto';
+export * from './panel/dtos/consultation-summary.dto';
+export * from './panel/dtos/consultation-detail.dto';
 
 //ARTICLES
 export * from './articles/components/article-section.component';
