@@ -10,7 +10,7 @@ export type { ActionResult }
 export async function getUserProfileAction(): Promise<ActionResult<UserProfileDto>> {
     return runAction(async () => {
         const accessToken = await getValidAccessToken()
-        return apiFetch<UserProfileDto>('user/me', 'GET', undefined, accessToken)
+        return apiFetch<UserProfileDto>('me', 'GET', undefined, accessToken)
     })
 }
 
@@ -19,6 +19,6 @@ export async function updateUserProfileAction(
 ): Promise<ActionResult<UserProfileDto>> {
     return runAction(async () => {
         const accessToken = await getValidAccessToken()
-        return apiFetch<UserProfileDto>('user/me', 'PATCH', data, accessToken)
+        return apiFetch<UserProfileDto>('me', 'PATCH', data, accessToken)
     })
 }

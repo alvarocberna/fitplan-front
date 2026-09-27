@@ -15,13 +15,13 @@
 | Refresh silencioso del access_token | **Implementado** | `nutricionista-virtual-front/src/shared/auth/tokens.ts` |
 | Google como Identity Provider en el User Pool de Cognito | **Implementado** (AWS Console) | Configuración de Cognito, fuera de ambos repos |
 | Puente same-origin frontend↔backend (Server Actions, no llamadas directas del navegador) | **Implementado** | `nutricionista-virtual-front/src/features/consultation/services/consultation.actions.ts`, `src/shared/auth/profile.actions.ts` |
-| Guard que valida el Access Token en el backend | **Implementado** | `nutricionista-virtual-back/src/presentation/auth/cognito-auth.guard.ts` |
-| Creación de identidad (`AuthIdentity`+`User` esqueleto) al primer login | **Implementado** | `POST /auth/perfil` → `AuthIdentityService.syncUser` |
-| Completar el perfil (RUT, nombre, género, fecha de nacimiento) | **Implementado**, separado del registro | `PATCH /auth/perfil` → `AuthIdentityService.updateProfile` |
+| Guard que valida el Access Token en el backend | **Implementado** | `nutricionista-virtual-back/src/common/auth/cognito-auth.guard.ts` |
+| Creación de identidad (`AuthIdentity`+`User` esqueleto) al primer login | **Implementado** | `POST /me/sync` → `SyncIdentityUseCase` |
+| Completar el perfil (RUT, nombre, género, fecha de nacimiento) | **Implementado**, separado del registro | `PATCH /me` → `UpdateMyProfileUseCase` |
 | Gating de rutas `/consulta/*` según sesión + perfil completo | **Implementado** | `src/proxy.ts` (sesión — protege todo `/consulta/*` salvo `/consulta`, vacía y sin uso; incluye `/consulta/inicio`) + `src/app/(sesion)/consulta/inicio/page.tsx` (perfil completo, además de su propia verificación de sesión como defensa en profundidad, ya casi nunca alcanzada porque el proxy corta antes) |
 | Botones "Iniciar Consulta" de la home ya evalúan sesión (antes iban siempre a `/consulta/inicio`) | **Implementado** | `src/shared/auth/session.ts` (`getStartConsultationHref`), usado en `navbar-landing.component.tsx`/`hero.component.tsx` |
-| BOLA en `ordenes/obtener-estado/:id` | **Resuelto** (backend, repo separado) | Ver sección 5 |
-| Atajo directo a `/panel` desde el propio callback si el perfil ya está completo (evita pasar por `/consulta/inicio`) | **Implementado** | `nutricionista-virtual-front/src/app/api/cognito/callback/route.ts` — chequeo best-effort de `POST /auth/perfil`, nunca bloquea el login si falla |
+| BOLA en `/orders/:id/status` | **Resuelto** (backend, repo separado) | Ver sección 5 |
+| Atajo directo a `/panel` desde el propio callback si el perfil ya está completo (evita pasar por `/consulta/inicio`) | **Implementado** | `nutricionista-virtual-front/src/app/api/cognito/callback/route.ts` — chequeo best-effort de `POST /me/sync`, nunca bloquea el login si falla |
 | Área de usuario logueado `/panel` y `/perfil`, gateada por sesión (`PROTECTED_PATHS`) | **Implementado** | `src/proxy.ts` (`PROTECTED_PATHS`) + `src/app/(sesion)/layout.tsx` (`SesionShell`: `TopbarSesion` + `NavbarSesion`) + `src/app/(sesion)/{panel,perfil}/page.tsx` |
 | Layout `(sesion)` compartido por `/panel`, `/perfil`, `/consulta/*`, `/pago/[orderId]` y `/ordenes/[id]`: barra superior `TopbarSesion` (logo "Nuvi" + botón "Nueva consulta") más sidebar `NavbarSesion` acoplable en md+ (arranca acoplado en `/consulta/*`, `/pago/*` y `/ordenes/*`, desacoplado en `/panel` y `/perfil`; en móvil las opciones del sidebar pasan a la barra superior) en vez del navbar público. El layout en sí es solo presentación; la sesión la exige `src/proxy.ts`, que además de `/consulta/*`, `/panel` y `/perfil` protege `/pago/*` y `/ordenes/*` (`isSessionGatedPrefix`) | **Implementado** | `src/app/(sesion)/layout.tsx` → `SesionShell` (`src/shared/components/sesion-shell.component.tsx`) + `src/shared/auth/sesion-routes.ts` (`isFocusRoute`, `isSessionGatedPrefix`, `usesSesionLayout`). Detalle en `doc/auth.md` |
 
@@ -65,7 +65,7 @@ sequenceDiagram
     FE->>COG: fetchUserInfo(access_token)
     COG-->>FE: claims (sub, email, ...)
     FE->>FE: createSession({userInfo, accessToken, refreshToken, ...}) → cookie session
-    FE->>BE: POST /auth/perfil {email} — Authorization: Bearer <access_token> (chequeo best-effort, con el email/token ya en memoria de este request, no bloquea el login si falla)
+    FE->>BE: POST /me/sync {email} — Authorization: Bearer <access_token> (chequeo best-effort, con el email/token ya en memoria de este request, no bloquea el login si falla)
     alt chequeo responde
         BE->>BE: CognitoAuthGuard valida el token (JWKS)
         BE->>DB: find-or-create AuthIdentity(sub) + User "esqueleto"
@@ -82,7 +82,7 @@ sequenceDiagram
 
     U->>FE: /consulta/inicio (Server Component) — solo si no hubo atajo directo a /panel
     FE->>FE: getSession() → hay sesión
-    FE->>BE: POST /auth/perfil {email} — Authorization: Bearer <access_token> (llamada duplicada respecto a la del callback; aceptado porque el endpoint es idempotente)
+    FE->>BE: POST /me/sync {email} — Authorization: Bearer <access_token> (llamada duplicada respecto a la del callback; aceptado porque el endpoint es idempotente)
     BE->>BE: CognitoAuthGuard valida el token (JWKS)
     BE->>DB: find-or-create AuthIdentity(sub) + User "esqueleto"
     DB-->>BE: User (firstName/gender/dateOfBirth aún null)
@@ -90,7 +90,7 @@ sequenceDiagram
     FE->>U: botón "Iniciar" → /consulta/informacion-personal
 
     U->>FE: completa el formulario (nombre, apellido, género, fecha nacimiento)
-    FE->>BE: PATCH /auth/perfil {...} — Authorization: Bearer
+    FE->>BE: PATCH /me {...} — Authorization: Bearer
     BE->>DB: UPDATE User (completa el perfil)
     BE-->>FE: { profileComplete: true }
     FE->>U: navega a /consulta/anamnesis
@@ -98,7 +98,7 @@ sequenceDiagram
     Note over U,BE: resto del wizard (chat, evaluación física) — ver doc/flow-happy-path.md del backend
 
     U->>FE: "Generar orden"
-    FE->>BE: POST /ordenes/crear — Authorization: Bearer
+    FE->>BE: POST /consultations — Authorization: Bearer
     BE->>BE: CognitoAuthGuard valida el token
     BE->>DB: resuelve User por sub (ya completo) → crea Order + NutritionalConsultation
     BE-->>FE: { orderId }
@@ -109,7 +109,7 @@ Hosted UI de Cognito.
 
 ## 2. Por qué identidad y perfil están separados
 
-Antes, `AuthIdentity`/`User` se creaban recién al llamar `ordenes/crear`, usando el email escrito en
+Antes, `AuthIdentity`/`User` se creaban recién al llamar `/consultations`, usando el email escrito en
 el formulario. Eso generaba tres inconsistencias reales (la discusión completa que llevó a este
 rediseño está en el historial de este proyecto, resumida acá):
 
@@ -126,9 +126,9 @@ nacimiento por este medio). Por eso `User.firstName`/`paternalLastName`/`gender`
 **nullable** en el schema (migración `relax_user_profile_fields` en el backend) — modelan
 correctamente el estado "existe pero no ha completado su perfil".
 
-El resultado: `POST /auth/perfil` crea la identidad con lo único garantizado (el `sub` del token y
-el email de la sesión de Cognito — nunca de un formulario), y `PATCH /auth/perfil` completa el
-resto cuando el usuario llena `informacion-personal`. `ordenes/crear` ya no toca `User` en absoluto
+El resultado: `POST /me/sync` crea la identidad con lo único garantizado (el `sub` del token y
+el email de la sesión de Cognito — nunca de un formulario), y `PATCH /me` completa el
+resto cuando el usuario llena `informacion-personal`. `/consultations` ya no toca `User` en absoluto
 — solo valida que el perfil ya esté completo.
 
 **Consecuencia en el frontend**: el wizard (`evaluacion-fisica`, `generar-orden`) depende de que
@@ -139,7 +139,7 @@ contexto se **hidrata desde el perfil del backend** (`syncProfileAction()` en un
 `consulta/anamnesis/page.tsx`) antes de que el usuario note nada.
 
 El campo "Deportista" (`athlete`) vive en `User`: `informacion-personal` lo envía en
-`updateProfileAction` (`PATCH /auth/perfil`) y lo pre-llena desde el perfil. Un usuario que salta
+`updateProfileAction` (`PATCH /me`) y lo pre-llena desde el perfil. Un usuario que salta
 `informacion-personal` conserva su última respuesta.
 
 ## 3. Google como Identity Provider — qué cambió y qué no
@@ -174,16 +174,16 @@ encontrado y arreglado durante la verificación manual) en `doc/auth.md`, secci�
 
 | Endpoint | Requiere sesión | Nota |
 |---|---|---|
-| `POST /auth/perfil`, `PATCH /auth/perfil` | Sí | Crea/completa la identidad |
-| `POST /ordenes/crear` | Sí | Además valida perfil completo |
-| `POST /consulta/chat` | Sí | Solo gating, no usa la identidad |
-| `GET /ordenes/obtener-estado/:id` | Sí | **BOLA resuelto** (backend, repo separado): ahora valida que la orden sea del usuario del token. Devuelve además `pdfUrl` (URL firmada de S3 con el PDF del plan) una vez `completado` |
-| `GET /ordenes` | Sí | Lista las órdenes con plan generado del usuario del token, del más nuevo al más antiguo (usada en `/panel`, ver `doc/flow.md` del backend y `README.md` de este repo) |
-| `GET /user/me`, `PATCH /user/me` | Sí | Edita datos básicos (`firstName`/`paternalLastName`/`dateOfBirth`) desde `/perfil`; endpoint distinto de `auth/perfil`, ver `doc/auth.md` |
-| `GET /panel/resumen` | Sí | Resumen para `/panel`: datos del usuario + último plan nutricional generado |
-| `POST /webhooks/pago`, `POST /webhooks/ordenes/:id/simular-pago` | No | Los llama la pasarela de pago (o el frontend sin sesión de por medio, en el caso simulado) — necesitan verificación de firma propia, no sesión de usuario |
+| `POST /me/sync`, `PATCH /me` | Sí | Crea/completa la identidad |
+| `POST /consultations` | Sí | Además valida perfil completo |
+| `POST /consultations/chat` | Sí | Solo gating, no usa la identidad |
+| `GET /orders/:id/status` | Sí | **BOLA resuelto** (backend, repo separado): ahora valida que la orden sea del usuario del token. Devuelve además `pdfUrl` (URL firmada de S3 con el PDF del plan) una vez `completado` |
+| `GET /me/plans` | Sí | Lista las órdenes con plan generado del usuario del token, del más nuevo al más antiguo (usada en `/panel`, ver `doc/flow.md` del backend y `README.md` de este repo) |
+| `GET /me`, `PATCH /me` | Sí | Lee/actualiza el perfil (PATCH parcial, un único DTO): lo usan `informacion-personal` (completar perfil) y `/perfil` (editar datos básicos), ver `doc/auth.md` |
+| `GET /me/summary` | Sí | Resumen para `/panel`: datos del usuario + último plan nutricional generado |
+| `POST /webhooks/payments`, `POST /dev/orders/:id/simulate-payment` | No | Los llama la pasarela de pago (o el frontend sin sesión de por medio, en el caso simulado) — necesitan verificación de firma propia, no sesión de usuario |
 
-Detalle completo (Guard, `aws-jwt-verify`, `AuthIdentityService`) en
+Detalle completo (Guard, `aws-jwt-verify`, `CurrentUserResolver`) en
 `nutricionista-virtual-back/doc/auth.md`.
 
 ## 6. Pendientes

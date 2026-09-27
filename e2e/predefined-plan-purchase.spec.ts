@@ -38,7 +38,7 @@ test.describe('Planes predefinidos - selección y carro', () => {
     await expect(page.getByLabel('Edad')).toHaveValue('18-30');
     await expect(page.getByText('$14.990')).toBeVisible();
     // el backend recibió la consulta de la versión que corresponde (sin sesión: es un endpoint público)
-    const productCall = (await getBackendCalls()).find((c) => c.path === `/productos/predefinidos/${CODE}`);
+    const productCall = (await getBackendCalls()).find((c) => c.path === `/plans/standard/${CODE}`);
     expect(productCall?.method).toBe('GET');
   });
 
@@ -93,10 +93,11 @@ test.describe('Planes predefinidos - pago con sesión', () => {
     await expect(page.getByRole('link', { name: 'Descargar' }).first()).toHaveAttribute('href', /plan\.pdf/);
 
     const calls = await getBackendCalls();
-    // la orden se creó con la sesión y solo con el code: el precio no viaja desde el navegador
-    const createCall = calls.find((c) => c.path === '/ordenes/crear-predefinido');
-    expect(createCall).toMatchObject({ method: 'POST', authorized: true, body: { code: CODE } });
-    expect(calls.find((c) => c.path === '/webhooks/ordenes/order-predef-1/simular-pago')?.method).toBe('POST');
+    // la orden se creó con la sesión y solo con el code (en la ruta): el precio no viaja desde el navegador
+    const createCall = calls.find((c) => c.path === `/plans/standard/${CODE}/purchase`);
+    expect(createCall).toMatchObject({ method: 'POST', authorized: true });
+    expect(createCall?.body).toBeUndefined();
+    expect(calls.find((c) => c.path === '/dev/orders/order-predef-1/simulate-payment')?.method).toBe('POST');
   });
 
   test('si el backend rechaza la orden muestra un error y se queda en el carro', async ({ page }) => {
@@ -133,6 +134,6 @@ test.describe('Planes predefinidos - pago sin sesión', () => {
       '/api/cognito/login?screen_hint=signup&return_to=%2Fcarrito',
     );
     await expect(page).toHaveURL(/\/carrito$/);
-    expect((await getBackendCalls()).filter((c) => c.path === '/ordenes/crear-predefinido')).toHaveLength(0);
+    expect((await getBackendCalls()).filter((c) => c.path.endsWith('/purchase'))).toHaveLength(0);
   });
 });

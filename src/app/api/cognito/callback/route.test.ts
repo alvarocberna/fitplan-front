@@ -130,7 +130,7 @@ describe('GET /api/cognito/callback', () => {
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe('http://localhost:3000/carrito');
     // el chequeo crea la identidad que el backend necesita para crear la orden
-    expect(mockedApiFetch).toHaveBeenCalledWith('auth/perfil', 'POST', { email: 'user@test.com' }, 'token-abc');
+    expect(mockedApiFetch).toHaveBeenCalledWith('me/sync', 'POST', { email: 'user@test.com' }, 'token-abc');
     expect(cookieStore.delete).toHaveBeenCalledWith('post_login_return_to');
   });
 
@@ -157,7 +157,7 @@ describe('GET /api/cognito/callback', () => {
     await GET(makeRequest());
 
     expect(mockedApiFetch).toHaveBeenCalledWith(
-      'auth/perfil',
+      'me/sync',
       'POST',
       { email: 'user@test.com' },
       'token-xyz',

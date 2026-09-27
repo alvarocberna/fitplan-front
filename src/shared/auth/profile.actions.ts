@@ -27,7 +27,7 @@ export async function syncProfileAction(): Promise<ActionResult<PerfilStatus>> {
     const { userInfo } = await getSession()
     const email = String(userInfo?.email ?? '')
     const accessToken = await getValidAccessToken()
-    return apiFetch<PerfilStatus>('auth/perfil', 'POST', { email }, accessToken)
+    return apiFetch<PerfilStatus>('me/sync', 'POST', { email }, accessToken)
   })
 }
 
@@ -44,6 +44,6 @@ export async function updateProfileAction(
 ): Promise<ActionResult<PerfilStatus>> {
   return runAction(async () => {
     const accessToken = await getValidAccessToken()
-    return apiFetch<PerfilStatus>('auth/perfil', 'PATCH', data, accessToken)
+    return apiFetch<PerfilStatus>('me', 'PATCH', data, accessToken)
   })
 }

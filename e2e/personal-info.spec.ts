@@ -3,7 +3,7 @@ import { getBackendCalls, mockProfile } from './helpers/mock-backend';
 
 // El formulario ya no pide Rut ni correo: el email sale de la sesión (campo deshabilitado,
 // prellenado desde el perfil del backend) y los datos se guardan en el backend con
-// updateProfileAction (PATCH auth/perfil) antes de avanzar.
+// updateProfileAction (PATCH me) antes de avanzar.
 test.describe('Consultation - personal info', () => {
   test('submits valid data, saves the profile in the backend, persists it and advances to anamnesis', async ({ page }) => {
     await page.goto('/consulta/informacion-personal');
@@ -31,7 +31,7 @@ test.describe('Consultation - personal info', () => {
     });
 
     // el Server Action guardó el perfil en el backend adjuntando el Access Token de la sesión
-    const patch = (await getBackendCalls()).find((c) => c.method === 'PATCH' && c.path === '/auth/perfil');
+    const patch = (await getBackendCalls()).find((c) => c.method === 'PATCH' && c.path === '/me');
     expect(patch).toMatchObject({
       authorized: true,
       body: { firstName: 'Ana', paternalLastName: 'Pérez', gender: 'FEMENINO', athlete: true },

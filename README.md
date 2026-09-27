@@ -43,7 +43,7 @@ rut, nombre, apellidos, género, correo, fecha de nacimiento). Al enviar, guarda
 
 ### 2. Anamnesis — `/consulta/anamnesis`
 Componente `ChatAnamnesis`. Chat guiado por IA que arranca con una pregunta fija ("¿Cómo estás? Soy Nuvi...").
-Cada respuesta del usuario se envía a `POST consulta/chat` (`ConsultaService.enviarTurnoAnamnesis`) con el
+Cada respuesta del usuario se envía a `POST /consultations/chat` (`ConsultaService.enviarTurnoAnamnesis`) con el
 DTO `InputChatDto`: historial completo de mensajes (`{ role, content }`) + el estado actual de `AnamnesisDto`.
 El backend responde `OutputChatDto` con:
 - `reply` / `titleReply`: la siguiente pregunta y su título.
@@ -64,15 +64,15 @@ el estado local, la consulta completa se envía recién en el paso siguiente.
 ### 4. Generar orden — `/consulta/generar-orden`
 Página de resumen/checkout (precio fijo `PRECIO_CONSULTA`). El botón `BtnGenerarOrden`:
 1. Arma `ConsultaCompletaDto` (`informacion_personal` + `anamnesis` + `mediciones`) desde el context.
-2. Llama a `POST ordenes/crear` (`ConsultaService.crearOrden`), que crea la fila `orden` en el backend con
-   `estado_pago: 'PENDING'`. **La IA todavía no genera el plan en este punto** — eso se difiere hasta que
+2. Llama a `POST /consultations` (`createOrderAction`), que crea la consulta y su orden en el backend con
+   `paymentStatus: 'PENDING'`. **La IA todavía no genera el plan en este punto** — eso se difiere hasta que
    el pago se confirme, para no gastar cómputo en usuarios que abandonan antes de pagar.
-3. Redirige a `/pago/{orden_id}`.
+3. Redirige a `/pago/{orderId}`.
 
 ### 5. Pago — `/pago/[ordenId]`
 Pasarela **simulada**: los campos de tarjeta son decorativos/`disabled`, no hay integración real con ningún
-proveedor. El botón "Pagar" llama a `POST webhooks/ordenes/{ordenId}/simular-pago`
-(`ConsultaService.simularPago`), que dispara en el backend la misma lógica que ejecutaría el webhook real de
+proveedor. El botón "Pagar" llama a `POST dev/orders/{orderId}/simulate-payment`
+(`simulatePaymentAction`; en el backend requiere `ENABLE_PAYMENT_SIMULATION=true`), que dispara en el backend la misma lógica que ejecutaría el webhook real de
 un proveedor de pago (Mercado Pago, Flow, Stripe, etc.) al confirmar un cobro. Tras la respuesta, redirige a
 `/ordenes/{ordenId}`.
 
@@ -80,7 +80,7 @@ un proveedor de pago (Mercado Pago, Flow, Stripe, etc.) al confirmar un cobro. T
 > proveedor, y la confirmación llegará por su webhook real en vez del botón "Pagar".
 
 ### 6. Orden — `/ordenes/[id]`
-Hace polling a `GET ordenes/obtener-estado/{id}` (`ConsultaService.obtenerEstadoOrden`) cada 4s
+Hace polling a `GET orders/{id}/status` (`getOrderStatusAction`) cada 4s
 (`INTERVALO_POLLING_MS`), leyendo `EstadoOrdenDto { estado_pago, estado_generacion, plan_json, pdf_url }`:
 - `NOT_STARTED` / `GENERATING` → spinner ("Estamos generando tu plan nutricional..."). Pasados 45s
   (`UMBRAL_DEMORA_MS`) se muestra un aviso de demora, aclarando que el pago ya quedó registrado.
@@ -119,28 +119,25 @@ Nota: `planNutricional` en el context queda hoy sin usar en el flujo principal �
 flujo de orden/pago, el plan se obtiene vía polling en `/ordenes/[id]` (`plan_json` de `EstadoOrdenDto`), no
 a través del context.
 
-## Backend (NestJS + SQLite)
+## Backend (NestJS + PostgreSQL)
 
-Vive en otro repo. Su base de datos SQLite contiene una única entidad, **`orden`**, que concentra:
-- los datos de la consulta enviados al crearla (`informacion_personal`, `anamnesis`, `mediciones`),
-- `estado_pago`: `'PENDING' | 'PAID'`,
-- `estado_generacion`: `'NOT_STARTED' | 'GENERATING' | 'COMPLETED' | 'ERROR'`,
-- `plan_json`: el `PlanNutricionalDto` resultante, una vez generado.
-- `pdf_url`: URL firmada (de corta duración) del PDF del plan, ya almacenado en un bucket S3 privado,
-  una vez generado.
+Vive en otro repo (`../nutricionista-virtual-back`). Su contrato está documentado en su README y en
+`../doc/product/use-cases.md`. Todas sus rutas cuelgan de `/api/v1`: `apiFetch`
+(`src/shared/api/client.ts`, `server-only`) antepone ese prefijo a cada endpoint y usa `BACKEND_URL`
+(privado) como base. Solo se llama desde Server Actions, que adjuntan el Access Token de Cognito.
 
-Endpoints consumidos por este frontend (`ConsultaService`, `src/features/consulta/services/consulta.service.ts`):
-
-| Método | Endpoint | Uso |
-|---|---|---|
-| POST | `consulta/chat` | turno de chat de anamnesis |
-| POST | `ordenes/crear` | crea la orden (`estado_pago: 'PENDING'`) |
-| POST | `webhooks/ordenes/:ordenId/simular-pago` | simula la confirmación de pago (stand-in del webhook real) |
-| GET | `ordenes/obtener-estado/:ordenId` | polling de estado de pago/generación, `plan_json` y `pdf_url` |
-| GET | `ordenes` | lista las órdenes con plan generado del usuario, del más nuevo al más antiguo (usada en `/panel`) |
-
-La URL base sale de `NEXT_PUBLIC_BACKEND_URL` (`src/shared/api/client.ts`), que centraliza el `fetch` y el
-manejo de errores HTTP para todo el servicio.
+| Método | Endpoint (sin `/api/v1`) | Server Action | Uso |
+|---|---|---|---|
+| POST | `me/sync` | `syncProfileAction` + callback de Cognito | crea/sincroniza la identidad y devuelve el perfil |
+| GET / PATCH | `me` | `getUserProfileAction` / `updateUserProfileAction`, `updateProfileAction` | leer / actualizar el perfil (PATCH parcial) |
+| GET | `me/summary` | `getPanelSummaryAction` | resumen de `/panel` |
+| GET | `me/plans` | `getOrdersAction` | planes del usuario con PDF, del más nuevo al más antiguo (`/panel`) |
+| POST | `consultations/chat` | `sendAnamnesisTurnAction` | turno de chat de anamnesis |
+| POST | `consultations` | `createOrderAction` | crea la consulta y su orden (`paymentStatus: 'PENDING'`) |
+| GET | `orders/:id/status` | `getOrderStatusAction` | polling de estado de pago/generación, `planJson`, `pdfUrl`, `thumbnailUrl` |
+| POST | `dev/orders/:id/simulate-payment` | `simulatePaymentAction` | simula la confirmación de pago (stand-in del webhook real) |
+| GET | `plans/standard/previews`, `plans/standard/:code` | `getPlanPreviewsAction`, `getPredefinedProductAction` | catálogo público de planes estándar |
+| POST | `plans/standard/:code/purchase` | `createPredefinedOrderAction` | compra de un plan estándar (sin body) |
 
 ## Deuda técnica
 

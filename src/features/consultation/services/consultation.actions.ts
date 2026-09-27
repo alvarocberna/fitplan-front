@@ -14,31 +14,31 @@ export async function createOrderAction(
 ): Promise<ActionResult<{ orderId: string }>> {
   return runAction(async () => {
     const accessToken = await getValidAccessToken()
-    return apiFetch<{ orderId: string }>('ordenes/crear', 'POST', completeConsultation, accessToken)
+    return apiFetch<{ orderId: string }>('consultations', 'POST', completeConsultation, accessToken)
   })
 }
 
 export async function simulatePaymentAction(orderId: string): Promise<ActionResult<{ status: string }>> {
-  return runAction(() => apiFetch<{ status: string }>(`webhooks/ordenes/${orderId}/simular-pago`, 'POST'))
+  return runAction(() => apiFetch<{ status: string }>(`dev/orders/${orderId}/simulate-payment`, 'POST'))
 }
 
 export async function sendAnamnesisTurnAction(data: InputChatDto): Promise<ActionResult<OutputChatDto>> {
   return runAction(async () => {
     const accessToken = await getValidAccessToken()
-    return apiFetch<OutputChatDto>('consulta/chat', 'POST', data, accessToken)
+    return apiFetch<OutputChatDto>('consultations/chat', 'POST', data, accessToken)
   })
 }
 
 export async function getOrderStatusAction(orderId: string): Promise<ActionResult<OrderStatusDto>> {
   return runAction(async () => {
     const accessToken = await getValidAccessToken()
-    return apiFetch<OrderStatusDto>(`ordenes/obtener-estado/${orderId}`, 'GET', undefined, accessToken)
+    return apiFetch<OrderStatusDto>(`orders/${orderId}/status`, 'GET', undefined, accessToken)
   })
 }
 
 export async function getOrdersAction(): Promise<ActionResult<OrderSummaryDto[]>> {
   return runAction(async () => {
     const accessToken = await getValidAccessToken()
-    return apiFetch<OrderSummaryDto[]>('ordenes', 'GET', undefined, accessToken)
+    return apiFetch<OrderSummaryDto[]>('me/plans', 'GET', undefined, accessToken)
   })
 }

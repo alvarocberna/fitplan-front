@@ -10,19 +10,19 @@ export type { ActionResult }
 
 //ficha pública de la versión (precio y miniatura): no requiere sesión
 export async function getPredefinedProductAction(code: string): Promise<ActionResult<PredefinedProductDto>> {
-  return runAction(() => apiFetch<PredefinedProductDto>(`productos/predefinidos/${encodeURIComponent(code)}`))
+  return runAction(() => apiFetch<PredefinedProductDto>(`plans/standard/${encodeURIComponent(code)}`))
 }
 
 //las (hasta) 4 fichas de vista previa (una por familia) para el carrusel del home: no requiere sesión
 export async function getPlanPreviewsAction(): Promise<ActionResult<PlanPreviewDto[]>> {
-  return runAction(() => apiFetch<PlanPreviewDto[]>('productos/vista-previa'))
+  return runAction(() => apiFetch<PlanPreviewDto[]>('plans/standard/previews'))
 }
 
-//crea la orden (pendiente de pago) del plan predefinido. El backend toma el precio del producto: solo se envía el code
+//crea la orden (pendiente de pago) del plan predefinido. El backend toma el precio del producto: solo viaja el code (en la ruta)
 export async function createPredefinedOrderAction(code: string): Promise<ActionResult<{ orderId: string }>> {
   const accessToken = await getValidAccessToken()
   if (!accessToken) {
     return { ok: false, message: 'Inicia sesión para continuar con el pago', code: 'unauthenticated' }
   }
-  return runAction(() => apiFetch<{ orderId: string }>('ordenes/crear-predefinido', 'POST', { code }, accessToken))
+  return runAction(() => apiFetch<{ orderId: string }>(`plans/standard/${encodeURIComponent(code)}/purchase`, 'POST', undefined, accessToken))
 }

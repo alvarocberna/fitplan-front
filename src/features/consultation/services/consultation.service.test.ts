@@ -33,7 +33,7 @@ beforeEach(() => {
 });
 
 describe('ConsultationService', () => {
-  it('createOrder posts the complete consultation to ordenes/crear', async () => {
+  it('createOrder posts the complete consultation to consultations', async () => {
     mockedCreateOrderAction.mockResolvedValue({ ok: true, data: { orderId: 'order-1' } });
     const dto: CompleteConsultationDto = { personalInfo: null, anamnesis: null, measurements: null };
 
@@ -51,7 +51,7 @@ describe('ConsultationService', () => {
     expect(mockedSimulatePaymentAction).toHaveBeenCalledWith('order-123');
   });
 
-  it('sendAnamnesisTurn posts the chat turn payload to consulta/chat', async () => {
+  it('sendAnamnesisTurn posts the chat turn payload to consultations/chat', async () => {
     const input: InputChatDto = { messages: [], anamnesis: { goals: null, clinical: null, dietary: null, lifestyle: null } };
     mockedSendAnamnesisTurnAction.mockResolvedValue({
       ok: true,

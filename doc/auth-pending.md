@@ -8,7 +8,7 @@ contra un user pool real (sin credenciales en este entorno) y no está conectado
 
 - [x] `.env` con los valores reales de Cognito y `SESSION_SECRET` — configurado por el usuario.
 - [x] Probado manualmente end-to-end contra el user pool real: login nativo → Hosted UI → callback
-      → sesión → `ordenes/crear` autenticado → se crea la fila `auth_identity` → una segunda orden
+      → sesión → `/consultations` autenticado → se crea la fila `auth_identity` → una segunda orden
       reutiliza el mismo `user`/`auth_identity`.
 - [x] **Google como Identity Provider federado**: configurado en el User Pool + App Client (AWS
       Console, hecho por el usuario). En el código: `login/route.ts` acepta
@@ -16,7 +16,7 @@ contra un user pool real (sin credenciales en este entorno) y no está conectado
       `buildAuthorizationUrl`; `src/app/login/page.tsx` tiene un botón "Continuar con Google" que
       apunta ahí. **No hizo falta ningún cambio en el backend** — Cognito abstrae la federación: el
       access_token que llega es igual de un login nativo que de uno vía Google (mismo `sub` estable
-      en el User Pool), así que `AuthIdentityService` sigue creando la fila con
+      en el User Pool), así que `CurrentUserResolver` sigue creando la fila con
       `provider: 'COGNITO'` siempre (el valor `'GOOGLE'` del enum `AuthProvider` queda sin uso real
       con este diseño — es un detalle a tener presente, no un bug).
 - [ ] Repetir el registro de callback/logout URLs (y las credenciales de Google) para el dominio de
@@ -77,20 +77,20 @@ contra un user pool real (sin credenciales en este entorno) y no está conectado
       `Authorization: Bearer <access_token>` (con refresh silencioso vía `refreshTokenGrant` si
       venció — ver `src/shared/auth/tokens.ts`). `ConsultationService` (mismo API público, cero
       cambios en los call sites) delega en esas acciones. En el backend, nuevo módulo
-      `presentation/auth/` con `CognitoAuthGuard` (`aws-jwt-verify`, valida el access_token contra
+      `modules/identity/` con `CognitoAuthGuard` (`aws-jwt-verify`, valida el access_token contra
       JWKS del User Pool), que usa el nuevo método
       `AuthIdentityRepository.findAuthIdentityByProvider('COGNITO', sub)` para vincular la sesión
       de Cognito con `User`/`AuthIdentity` (sin migración de Prisma en ese momento — esas tablas ya
-      existían sin consumidor). `ordenes/crear` y `consulta/chat` ahora exigen sesión válida
-      (`@UseGuards`); `ordenes/obtener-estado/:id` y `webhooks/*` quedan sin cambios (fuera de
+      existían sin consumidor). `/consultations` y `/consultations/chat` ahora exigen sesión válida
+      (`@UseGuards`); `/orders/:id/status` y `webhooks/*` quedan sin cambios (fuera de
       alcance, ver `doc/flow.md`).
 - [x] **Identidad separada de "completar perfil"**: `AuthIdentity`+`User` ("esqueleto") se crean
-      apenas hay sesión válida, ya no al llamar `ordenes/crear`. Nuevos endpoints
-      `POST /auth/perfil` (sincroniza, idempotente — email tomado siempre de la sesión de Cognito,
-      nunca de un formulario) y `PATCH /auth/perfil` (completa `firstName`/`paternalLastName`/
-      `gender`/`dateOfBirth`) en `presentation/auth/auth.controller.ts`.
-      `AuthIdentityService.resolveUser()` se reemplazó por `syncUser()` (find-or-create) y
-      `getUserBySub()` (lookup estricto, usado por `ordenes/crear`, que ahora también valida que el
+      apenas hay sesión válida, ya no al llamar `/consultations`. Nuevos endpoints
+      `POST /me/sync` (sincroniza, idempotente — email tomado siempre de la sesión de Cognito,
+      nunca de un formulario) y `PATCH /me` (completa `firstName`/`paternalLastName`/
+      `gender`/`dateOfBirth`) en `modules/identity/auth.controller.ts`.
+      `CurrentUserResolver.resolveUser()` se reemplazó por `syncUser()` (find-or-create) y
+      `getUserBySub()` (lookup estricto, usado por `/consultations`, que ahora también valida que el
       perfil esté completo antes de crear la orden). **Migración de Prisma real** (primera de todo
       este trabajo): `User.firstName`/`paternalLastName`/`gender`/`dateOfBirth` pasan de NOT NULL a
       nullable (`rut`/`rutCheckDigit`/`middleName`/`maternalLastName`/`email` ya eran nullable).
@@ -102,7 +102,7 @@ contra un user pool real (sin credenciales en este entorno) y no está conectado
       dispositivo) — necesario porque `evaluacion-fisica`/`generar-orden` bloquean el avance
       basados en el contexto local, no en el backend.
       ~~Deuda técnica: el campo "Deportista" (`athlete`) no era un campo de `User`~~ — **resuelta**:
-      `athlete` vive en `User` y se guarda vía `PATCH /auth/perfil`.
+      `athlete` vive en `User` y se guarda vía `PATCH /me`.
       **Bug encontrado y arreglado durante la verificación manual**: `getValidAccessToken()`
       (`tokens.ts`) intentaba persistir el token refrescado con `createSession()` (escribe la
       cookie) sin importar desde dónde se llamaba. Invocado desde el render de un Server Component
@@ -110,12 +110,12 @@ contra un user pool real (sin credenciales en este entorno) y no está conectado
       evento de cliente) esa escritura de cookie falla (Next.js solo permite `cookies().set()`
       dentro de un Server Action o Route Handler) — y como el `catch` envolvía tanto el refresh
       como el `createSession`, un fallo ahí descartaba el access_token recién obtenido de Cognito
-      y devolvía `null`, haciendo que `POST /auth/perfil` fallara con 401 aunque el usuario sí
+      y devolvía `null`, haciendo que `POST /me/sync` fallara con 401 aunque el usuario sí
       tuviera una sesión válida. Se separó el `try/catch`: el refresh contra Cognito sigue
       invalidando el resultado si falla, pero un fallo al persistir la cookie ahora solo loguea un
       warning y el token igual se devuelve/usa para esa respuesta (se persistirá en la próxima
       llamada real desde un Server Action, ej. al enviar el formulario o un mensaje del chat).
-- [x] **`ordenes/obtener-estado/:id` ahora exige sesión válida** (mismo `CognitoAuthGuard`, sin
+- [x] **`/orders/:id/status` ahora exige sesión válida** (mismo `CognitoAuthGuard`, sin
       `@CognitoUser()` porque `getStatus` no usa la identidad para nada). `getOrderStatusAction`
       (frontend) actualizado para adjuntar el `access_token`, si no el polling hubiera empezado a
       fallar con 401 incluso para el dueño de la orden.

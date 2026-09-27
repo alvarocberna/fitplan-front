@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   let postLoginRedirect: string = POST_LOGIN_REDIRECT
   try {
     const email = String(userInfo.email ?? '')
-    const perfil = await apiFetch<PerfilStatus>('auth/perfil', 'POST', { email }, accessToken)
+    const perfil = await apiFetch<PerfilStatus>('me/sync', 'POST', { email }, accessToken)
     if (perfil.profileComplete) {
       postLoginRedirect = PROFILE_COMPLETE_REDIRECT
     }
@@ -70,6 +70,6 @@ export async function GET(request: Request) {
 
   // Si el login se inició para volver a un lugar concreto, ese destino manda sobre el por defecto (que
   // depende del estado del perfil). El chequeo de arriba igual se hizo: es el que crea la identidad
-  // (auth/perfil) que necesita el backend para crear la orden.
+  // (me/sync) que necesita el backend para crear la orden.
   return NextResponse.redirect(new URL(returnTo ?? postLoginRedirect, request.url))
 }

@@ -57,7 +57,7 @@ instead of importing server-only code inside a component that's re-exported from
 
 This app talks to **two unrelated backends**, each with its own fetch wrapper — don't mix them up:
 
-- **Order/consultation backend** (`src/shared/api/client.ts`, `apiFetch`) — `server-only`, hits the private `BACKEND_URL`. Only ever called from Server Actions (`consultation.actions.ts`, `profile.actions.ts`), which attach `Authorization: Bearer <access_token>` for the endpoints that require a session (order creation, chat, order status polling — see `doc/auth.md`). `ConsultationService` (`src/features/consultation/services/consultation.service.ts`) is the public-facing wrapper Client Components actually call — same shape as before this became auth-aware, so call sites didn't change.
+- **Order/consultation backend** (`src/shared/api/client.ts`, `apiFetch`) — `server-only`, hits the private `BACKEND_URL` and prepends the backend's `api/v1` prefix (`API_PREFIX`) to every endpoint (routes: `me`, `consultations`, `orders/:id/status`, `plans/standard/...`, `dev/orders/:id/simulate-payment`; see the backend README). Only ever called from Server Actions (`consultation.actions.ts`, `profile.actions.ts`), which attach `Authorization: Bearer <access_token>` for the endpoints that require a session (order creation, chat, order status polling — see `doc/auth.md`). `ConsultationService` (`src/features/consultation/services/consultation.service.ts`) is the public-facing wrapper Client Components actually call — same shape as before this became auth-aware, so call sites didn't change.
 - **CMS backend** (`src/shared/api/client-cms.ts`, `apiFetchCMS` / `apiFetchFormData`) — used by `ArticlesServicePublic` and the testimonials service. In the browser it always goes through the `/api/*` → CMS rewrite in `next.config.ts` (never calls the CMS origin directly), carries cookies (`credentials: 'include'`), fetches a CSRF token for mutating requests, and auto-retries once on 401 via `/auth/refresh`. On the server it calls `NEXT_PUBLIC_BACKEND_CMS_URL` directly.
 
 The Content-Security-Policy is nonce-based and generated per-request in `src/proxy.ts` (Next.js 16's replacement for the `middleware.ts` file convention), since the nonce must change on every response. `next.config.ts` keeps only the static security headers (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Strict-Transport-Security` in prod) and the `images.remotePatterns` allowlist (local uploads + the S3 bucket the CMS serves images from) — extend that allowlist, and the `img-src`/`connect-src` directives in `src/proxy.ts`, rather than loosening CSP if a new image host or backend origin is needed. See `doc/security.md` for details.
@@ -137,10 +137,10 @@ S3 naming: `../doc/flows/purchase-flow-predefined-plan.md`.
   affect which version is chosen.
 - **Version code**: `buildPlanCode(slug, selection)` (`src/shared/data/plan-code.ts`) → `<plan>-<minKg>-<maxKg>-<m|f>-<joven|adulto>`,
   e.g. `plan-gimnasio-volumen-50-60-m-joven`; only 18-30 is `joven`. It must match the backend's `Product.code`. The backend does not trust
-  it: price and files always come from its database (`GET productos/predefinidos/:code`, public, via `PlansService`).
+  it: price and files always come from its database (`GET /plans/standard/:code`, public, via `PlansService`).
 - **Cart / payment**: `/carrito` is a Server Component that reads `getSession()` (the cookie is httpOnly) and passes
   `isAuthenticated` to `CartView`. "Pagar" without a session opens `LoginModal` (same options as `/login`, shared `LoginOptions`,
-  `return_to=/carrito`); with a session it calls `POST ordenes/crear-predefinido` and goes to `/pago/<id>?tipo=predefinido`, which
+  `return_to=/carrito`); with a session it calls `POST /plans/standard/:code/purchase` and goes to `/pago/<id>?tipo=predefinido`, which
   after the simulated payment clears the cart and goes to `/panel` (without `?tipo`, the consultation flow keeps going to
   `/ordenes/[id]`). `/pago/*` and `/panel` need a session (`src/proxy.ts`); the cart and the plan pages don't.
 - **Login with return**: `/api/cognito/login?return_to=/carrito` stores the destination in a short-lived httpOnly cookie
@@ -156,7 +156,7 @@ S3 naming: `../doc/flows/purchase-flow-predefined-plan.md`.
 
 ### Known inconsistency: README vs. code naming
 
-Routes were renamed from English to Spanish (`/consultation/...` → `/consulta/...`, `/orders/[id]` → `/ordenes/[id]`, `/payment/[orderId]` → `/pago/[orderId]`, `/articles` → `/articulos`, `/cart` → `/carrito`, `/plans` → `/planes`, `/testimonials` → `/testimonios`, etc.) so the routes now **match** `README.md`, which already documented Spanish route names from before an earlier English naming-convention refactor. What's still inconsistent between docs/README and code is naming *below* the route level: internal DTOs/services/functions keep the project's English convention (`PersonalInfoDto`, `ConsultationService` in `src/features/consultation`, ...) — only `src/app` folder names and the URLs they produce changed, `src/features/*` and `src/shared/*` did not. The backend (separate repo) exposes its own Spanish endpoint paths (`consulta/chat`, `ordenes/crear`, `ordenes/obtener-estado/:id`), unrelated to and unchanged by this frontend route rename. When in doubt, trust the code over any doc's naming for internal DTOs/functions — but for navigable routes, code and README now agree.
+Routes were renamed from English to Spanish (`/consultation/...` → `/consulta/...`, `/orders/[id]` → `/ordenes/[id]`, `/payment/[orderId]` → `/pago/[orderId]`, `/articles` → `/articulos`, `/cart` → `/carrito`, `/plans` → `/planes`, `/testimonials` → `/testimonios`, etc.) so the routes now **match** `README.md`, which already documented Spanish route names from before an earlier English naming-convention refactor. What's still inconsistent between docs/README and code is naming *below* the route level: internal DTOs/services/functions keep the project's English convention (`PersonalInfoDto`, `ConsultationService` in `src/features/consultation`, ...) — only `src/app` folder names and the URLs they produce changed, `src/features/*` and `src/shared/*` did not. The backend (separate repo) exposes its own Spanish endpoint paths (`/consultations/chat`, `/consultations`, `/orders/:id/status`), unrelated to and unchanged by this frontend route rename. When in doubt, trust the code over any doc's naming for internal DTOs/functions — but for navigable routes, code and README now agree.
 
 ## Documentation maintenance
 
@@ -172,8 +172,8 @@ E2E gotchas (details in `doc/testing.md`): the backend is called from Server Act
 
 - ~~The order/consultation backend URL is exposed as a public env var...~~ — **resolved**: `BACKEND_URL` is private, every call goes through a Server Action carrying the Cognito Access Token. See `doc/auth.md`.
 - Anamnesis state is only persisted to context/localStorage once the chat completes; a mid-chat reload re-runs (and re-bills, token-wise) the whole conversation. Intended fix: persist incrementally per turn, plus add an explicit reset action for users who want to restart.
-- `athlete` ("Deportista" in `informacion-personal`) is persisted on the backend `User` via `PATCH /auth/perfil` (`updateProfileAction`) and prefilled from `PerfilStatus.athlete`. (The BOLA on `GET /ordenes/obtener-estado/:id` is recorded as **resolved** in the backend repo — see `doc/flow.md`; not re-verified from this repo.)
-- E2E doesn't cover the real Cognito login (the session cookie is fabricated) nor `/panel` / `/perfil` with a session (the fake backend has no `panel/resumen`, `user/me`, `ordenes` handlers yet).
+- `athlete` ("Deportista" in `informacion-personal`) is persisted on the backend `User` via `PATCH /me` (`updateProfileAction`) and prefilled from `PerfilStatus.athlete`. (The BOLA on `GET /orders/:id/status` is recorded as **resolved** in the backend repo — see `doc/flow.md`; not re-verified from this repo.)
+- E2E doesn't cover the real Cognito login (the session cookie is fabricated). The fake backend (`e2e/fake-backend/server.mjs`) mirrors the backend's `/api/v1` routes and rejects calls without the prefix; `/perfil` has no e2e spec yet.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

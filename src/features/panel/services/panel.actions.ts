@@ -10,6 +10,6 @@ export type { ActionResult }
 export async function getPanelSummaryAction(): Promise<ActionResult<PanelSummaryDto>> {
     return runAction(async () => {
         const accessToken = await getValidAccessToken()
-        return apiFetch<PanelSummaryDto>('panel/resumen', 'GET', undefined, accessToken)
+        return apiFetch<PanelSummaryDto>('me/summary', 'GET', undefined, accessToken)
     })
 }

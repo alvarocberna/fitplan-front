@@ -38,7 +38,7 @@ beforeEach(() => {
 
 describe('SimulatedPaymentPage (/pago/[orderId])', () => {
   it('plan personalizado (sin ?tipo): tras pagar va a /ordenes/<id>, donde se espera la generación del plan', async () => {
-    simulatePayment.mockResolvedValue({ status: 'procesado' });
+    simulatePayment.mockResolvedValue({ status: 'processed' });
     const user = userEvent.setup();
     renderPage();
 
@@ -54,7 +54,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
       'plan_selection',
       JSON.stringify({ selection: {}, cartItem: { planSlug: 'plan-gimnasio-volumen', code: 'plan-gimnasio-volumen-50-60-m-joven' } })
     );
-    simulatePayment.mockResolvedValue({ status: 'procesado' });
+    simulatePayment.mockResolvedValue({ status: 'processed' });
     const user = userEvent.setup();
     renderPage();
     //espera a que el proveedor se hidrate desde localStorage antes de pagar
@@ -69,7 +69,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
 
   it('un ?tipo desconocido se trata como plan personalizado', async () => {
     searchParams = new URLSearchParams('tipo=otro');
-    simulatePayment.mockResolvedValue({ status: 'procesado' });
+    simulatePayment.mockResolvedValue({ status: 'processed' });
     const user = userEvent.setup();
     renderPage();
 

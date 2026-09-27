@@ -1,5 +1,6 @@
-// Espejo de UserProfileResponseDto / UpdateUserProfileDtoImpl en el backend
-// (nutricionista-virtual-back/src/presentation/user/dto/user-profile.dto.ts).
+// Subconjunto de ProfileDto / UpdateProfileDtoImpl del backend (GET y PATCH /me, ver
+// nutricionista-virtual-back/src/modules/identity/dto/profile.dto.ts): la pantalla de perfil solo
+// usa y edita estos campos. PATCH /me acepta cualquier subconjunto de campos.
 
 export interface UserProfileDto {
     firstName: string | null;

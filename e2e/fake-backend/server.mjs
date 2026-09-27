@@ -15,10 +15,13 @@
 //   Action adjunta el Access Token de la cookie de sesión.
 // - POST /__control/reset limpia mocks y el registro de llamadas; GET /__control/calls devuelve
 //   el registro para aserciones tipo "el backend NO fue llamado".
+// - Como el backend real, la API cuelga de /api/v1 (API_PREFIX). Una llamada sin el prefijo responde
+//   404; el registro de llamadas guarda la ruta SIN el prefijo (ej. '/consultations').
 // El estado es global (no por test), por eso la suite corre en serie (workers: 1).
 import http from 'node:http'
 
 const PORT = Number(process.env.FAKE_BACKEND_PORT ?? 3101)
+const API_PREFIX = '/api/v1'
 const E2E_ACCESS_TOKEN = process.env.E2E_ACCESS_TOKEN ?? 'e2e-access-token'
 
 // mocks: { [nombre]: config } — ver cada handler abajo para la forma de cada uno
@@ -82,60 +85,66 @@ const PANEL_SUMMARY_DEFAULT = {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`)
-  const path = url.pathname
+  const fullPath = url.pathname
   const method = req.method ?? 'GET'
 
   try {
     // ---- control ----
-    if (path === '/__health') return send(res, 200, { ok: true })
-    if (path === '/__control/reset' && method === 'POST') {
+    if (fullPath === '/__health') return send(res, 200, { ok: true })
+    if (fullPath === '/__control/reset' && method === 'POST') {
       mocks = {}
       calls = []
       return send(res, 200, { ok: true })
     }
-    if (path === '/__control/calls' && method === 'GET') return send(res, 200, calls)
-    if (path === '/__control/mock' && method === 'POST') {
+    if (fullPath === '/__control/calls' && method === 'GET') return send(res, 200, calls)
+    if (fullPath === '/__control/mock' && method === 'POST') {
       const { name, config } = await readJson(req)
       mocks[name] = { ...config, calls: 0 }
       return send(res, 200, { ok: true })
     }
 
+    if (!fullPath.startsWith(`${API_PREFIX}/`)) {
+      return send(res, 404, { message: `Ruta fuera de ${API_PREFIX}: ${method} ${fullPath}` })
+    }
+    const path = fullPath.slice(API_PREFIX.length)
+
     const body = ['POST', 'PATCH', 'PUT'].includes(method) ? await readJson(req) : undefined
     calls.push({ method, path, authorized: isAuthorized(req), body })
 
-    // ---- perfil (Server Actions syncProfileAction / updateProfileAction) ----
-    if (path === '/auth/perfil') {
+    // ---- perfil (Server Actions syncProfileAction / updateProfileAction / getUserProfileAction) ----
+    if (path === '/me/sync' || path === '/me') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       const mock = mocks.profile
-      if (method === 'POST') return respond(res, mock, { ...PROFILE_DEFAULT, ...(mock?.profile ?? {}) })
-      if (method === 'PATCH') {
+      if (method === 'POST' && path === '/me/sync') return respond(res, mock, { ...PROFILE_DEFAULT, ...(mock?.profile ?? {}) })
+      if (method === 'GET' && path === '/me') return respond(res, mock, { ...PROFILE_DEFAULT, ...(mock?.profile ?? {}) })
+      if (method === 'PATCH' && path === '/me') {
         // el perfil queda completo con lo que el formulario envió (firstName, paternalLastName, gender, dateOfBirth)
         return respond(res, mock, { ...PROFILE_DEFAULT, ...(mock?.profile ?? {}), ...body, profileComplete: true })
       }
     }
 
     // ---- chat de anamnesis ----
-    if (path === '/consulta/chat' && method === 'POST') {
+    if (path === '/consultations/chat' && method === 'POST') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       const mock = mocks.chat
-      if (!mock) return send(res, 501, { message: 'consulta/chat sin mock' })
+      if (!mock) return send(res, 501, { message: 'consultations/chat sin mock' })
       if (mock.fail) return respond(res, mock)
       return send(res, 200, nextInSequence(mock))
     }
 
-    // ---- crear orden ----
-    if (path === '/ordenes/crear' && method === 'POST') {
+    // ---- crear consulta (y su orden) ----
+    if (path === '/consultations' && method === 'POST') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       const mock = mocks.createOrder
-      if (!mock) return send(res, 501, { message: 'ordenes/crear sin mock' })
+      if (!mock) return send(res, 501, { message: 'consultations sin mock' })
       return respond(res, mock, { orderId: mock.orderId ?? 'order-e2e-123' })
     }
 
     // ---- planes predefinidos ----
     // ficha pública de una versión (sin auth, como en el backend real): responde con el code pedido
-    if (/^\/productos\/predefinidos\/[^/]+$/.test(path) && method === 'GET') {
+    if (/^\/plans\/standard\/[^/]+$/.test(path) && method === 'GET') {
       const mock = mocks.predefinedProduct
-      if (!mock) return send(res, 501, { message: 'productos/predefinidos sin mock' })
+      if (!mock) return send(res, 501, { message: 'plans/standard/:code sin mock' })
       const code = decodeURIComponent(path.split('/').pop())
       if (mock.unavailableCodes?.includes(code)) return send(res, 404, { message: `Plan ${code} no disponible` })
       return send(res, 200, {
@@ -148,36 +157,36 @@ const server = http.createServer(async (req, res) => {
       })
     }
 
-    if (path === '/ordenes/crear-predefinido' && method === 'POST') {
+    if (/^\/plans\/standard\/[^/]+\/purchase$/.test(path) && method === 'POST') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       const mock = mocks.createPredefinedOrder
-      if (!mock) return send(res, 501, { message: 'ordenes/crear-predefinido sin mock' })
+      if (!mock) return send(res, 501, { message: 'plans/standard/:code/purchase sin mock' })
       return respond(res, mock, { orderId: mock.orderId ?? 'order-predef-1' })
     }
 
     // ---- panel: resumen del usuario y listado de planes (el destino tras pagar un plan predefinido) ----
-    if (path === '/panel/resumen' && method === 'GET') {
+    if (path === '/me/summary' && method === 'GET') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       return send(res, 200, mocks.panelSummary?.summary ?? PANEL_SUMMARY_DEFAULT)
     }
 
-    if (path === '/ordenes' && method === 'GET') {
+    if (path === '/me/plans' && method === 'GET') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       return send(res, 200, mocks.orders?.orders ?? [])
     }
 
     // ---- pago simulado (sin auth en el backend real: es el stand-in del webhook) ----
-    if (/^\/webhooks\/ordenes\/[^/]+\/simular-pago$/.test(path) && method === 'POST') {
+    if (/^\/dev\/orders\/[^/]+\/simulate-payment$/.test(path) && method === 'POST') {
       const mock = mocks.payment
-      if (!mock) return send(res, 501, { message: 'simular-pago sin mock' })
-      return respond(res, mock, { status: 'pagado' })
+      if (!mock) return send(res, 501, { message: 'simulate-payment sin mock' })
+      return respond(res, mock, { status: 'processed' })
     }
 
     // ---- estado de la orden (polling de /ordenes/[id]) ----
-    if (/^\/ordenes\/obtener-estado\/[^/]+$/.test(path) && method === 'GET') {
+    if (/^\/orders\/[^/]+\/status$/.test(path) && method === 'GET') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       const mock = mocks.orderStatus
-      if (!mock) return send(res, 501, { message: 'ordenes/obtener-estado sin mock' })
+      if (!mock) return send(res, 501, { message: 'orders/:id/status sin mock' })
       return send(res, 200, nextInSequence(mock))
     }
 

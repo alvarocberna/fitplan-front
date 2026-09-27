@@ -28,7 +28,7 @@ export interface OrderStatusDto {
     thumbnailUrl: string | null
 }
 
-// Ítem del listado de órdenes con plan generado del usuario autenticado (GET /ordenes).
+// Ítem del listado de órdenes con plan generado del usuario autenticado (GET /me/plans).
 export interface OrderSummaryDto {
     orderId: string
     creationDate: string

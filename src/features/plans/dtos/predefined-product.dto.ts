@@ -1,4 +1,4 @@
-// Ficha pública de una versión de plan predefinido (GET productos/predefinidos/:code del backend).
+// Ficha pública de una versión de plan predefinido (GET plans/standard/:code del backend).
 // El backend no expone el PDF ni sus keys: solo lo necesario para mostrar el plan antes de comprar.
 export interface PredefinedProductDto {
     code: string

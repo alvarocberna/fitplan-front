@@ -86,7 +86,7 @@ de ZAP — pero podría agregarse más adelante como mejora de UX si alguna secc
 renderiza `SesionShell` (barra superior `TopbarSesion`, sidebar `NavbarSesion` a la izquierda en md+, acoplable, más
 `<main>{children}</main>` con el padding correspondiente); `/panel` y `/perfil` son Server Components `async` que hacen `await
 PanelService.getSummary()` / `ProfileService.getProfile()` sin `try/catch`, así que cualquier falla de esas
-llamadas (ej. el backend caído, o los 404 que se vieron mientras `/user/me` y `/panel/resumen` corrían contra
+llamadas (ej. el backend caído, o los 404 que se vieron mientras `/me` y `/me/summary` corrían contra
 un proceso de dev server desactualizado — ver `nutricionista-virtual-back/doc/technical-debt.md`) se propaga
 como un `throw`. Sin un `error.tsx` propio en `(sesion)`, ese throw lo capturaba el `error.tsx` de raíz, que
 reemplaza *todo* `{children}` del layout raíz — incluyendo `(sesion)/layout.tsx` completo, sidebar y todo, no

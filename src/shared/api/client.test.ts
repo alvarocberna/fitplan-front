@@ -12,12 +12,12 @@ beforeEach(() => {
 });
 
 describe('apiFetch', () => {
-  it('builds the URL from the backend env var and the endpoint, with method/headers/body', async () => {
+  it('builds the URL from the backend env var, the /api/v1 prefix and the endpoint, with method/headers/body', async () => {
     const fetchMock = mockFetchOnce({ ok: true, status: 200, json: async () => ({ ok: true }) });
 
-    await apiFetch('ordenes/crear', 'POST', { foo: 'bar' });
+    await apiFetch('consultations', 'POST', { foo: 'bar' });
 
-    expect(fetchMock).toHaveBeenCalledWith('https://api.consultation.test/ordenes/crear', {
+    expect(fetchMock).toHaveBeenCalledWith('https://api.consultation.test/api/v1/consultations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ foo: 'bar' }),
@@ -27,10 +27,10 @@ describe('apiFetch', () => {
   it('omits the body when no data is passed', async () => {
     const fetchMock = mockFetchOnce({ ok: true, status: 200, json: async () => ({}) });
 
-    await apiFetch('ordenes/obtener-estado/123', 'GET');
+    await apiFetch('orders/123/status', 'GET');
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.consultation.test/ordenes/obtener-estado/123',
+      'https://api.consultation.test/api/v1/orders/123/status',
       expect.objectContaining({ body: undefined })
     );
   });
@@ -39,7 +39,7 @@ describe('apiFetch', () => {
     const jsonSpy = vi.fn();
     mockFetchOnce({ ok: true, status: 204, json: jsonSpy });
 
-    const result = await apiFetch('webhooks/ordenes/1/simular-pago', 'POST');
+    const result = await apiFetch('dev/orders/1/simulate-payment', 'POST');
 
     expect(result).toBeUndefined();
     expect(jsonSpy).not.toHaveBeenCalled();
@@ -48,7 +48,7 @@ describe('apiFetch', () => {
   it('returns the parsed JSON body on success', async () => {
     mockFetchOnce({ ok: true, status: 200, json: async () => ({ orderId: 'order-1' }) });
 
-    const result = await apiFetch<{ orderId: string }>('ordenes/crear', 'POST', {});
+    const result = await apiFetch<{ orderId: string }>('consultations', 'POST', {});
 
     expect(result).toEqual({ orderId: 'order-1' });
   });
@@ -56,13 +56,13 @@ describe('apiFetch', () => {
   it('throws using the "message" field from the error body', async () => {
     mockFetchOnce({ ok: false, status: 400, statusText: 'Bad Request', json: async () => ({ message: 'Datos inválidos' }) });
 
-    await expect(apiFetch('consulta/chat', 'POST', {})).rejects.toThrow('Datos inválidos');
+    await expect(apiFetch('consultations/chat', 'POST', {})).rejects.toThrow('Datos inválidos');
   });
 
   it('throws using the "error" field when "message" is absent', async () => {
     mockFetchOnce({ ok: false, status: 400, statusText: 'Bad Request', json: async () => ({ error: 'Falló la validación' }) });
 
-    await expect(apiFetch('consulta/chat', 'POST', {})).rejects.toThrow('Falló la validación');
+    await expect(apiFetch('consultations/chat', 'POST', {})).rejects.toThrow('Falló la validación');
   });
 
   it('falls back to a generic HTTP message when the error body is not JSON', async () => {
@@ -75,12 +75,12 @@ describe('apiFetch', () => {
       },
     });
 
-    await expect(apiFetch('consulta/chat', 'POST', {})).rejects.toThrow('Error HTTP 500: Internal Server Error');
+    await expect(apiFetch('consultations/chat', 'POST', {})).rejects.toThrow('Error HTTP 500: Internal Server Error');
   });
 
   it('falls back to a generic HTTP message when the error body has neither message nor error', async () => {
     mockFetchOnce({ ok: false, status: 403, statusText: 'Forbidden', json: async () => ({ unrelated: true }) });
 
-    await expect(apiFetch('consulta/chat', 'POST', {})).rejects.toThrow('Error HTTP 403');
+    await expect(apiFetch('consultations/chat', 'POST', {})).rejects.toThrow('Error HTTP 403');
   });
 });

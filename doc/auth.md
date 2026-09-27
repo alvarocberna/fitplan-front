@@ -94,7 +94,7 @@ autenticadas al backend).
 registro al pagar desde `/carrito`) y lo guarda en una cookie httpOnly de 10 minutos (`post_login_return_to`; si no se
 pide destino, borra una vieja de un intento abandonado). El callback la lee y la borra, y **solo** si la ruta está en la
 lista permitida de `src/shared/auth/return-to.ts` (hoy `/carrito`) redirige ahí en vez de a `/panel` o `/consulta/inicio`;
-cualquier otro valor se ignora (evita usar el login como redirección abierta). El chequeo de perfil (`POST /auth/perfil`)
+cualquier otro valor se ignora (evita usar el login como redirección abierta). El chequeo de perfil (`POST /me/sync`)
 se ejecuta igual: es lo que crea la identidad que el backend necesita para crear la orden.
 
 **UX de errores**: si el intercambio falla (usuario cancela en Google/Hosted UI, `state` no
@@ -102,7 +102,7 @@ coincide, etc.), redirige a `/login?error=callback_failed` con un mensaje visibl
 de fingir éxito.
 
 Al terminar (éxito), hace un chequeo **best-effort** del estado del perfil antes de decidir el
-redirect: llama `POST /auth/perfil` (mismo endpoint que ya usaba `syncProfileAction()`) directo vía
+redirect: llama `POST /me/sync` (mismo endpoint que ya usaba `syncProfileAction()`) directo vía
 `apiFetch`, con el `email`/`accessToken` que ya tiene en memoria de este mismo request — sin releer
 la cookie de sesión recién escrita. Si `profileComplete === true`, redirige directo a **`/panel`**,
 saltándose `/consulta/inicio`. Si da `false`, o si la llamada falla (red, backend caído), redirige a
@@ -111,7 +111,7 @@ pantalla de error, porque la sesión ya se creó independientemente de él (el `
 chequeo es separado del que envuelve el intercambio de tokens). `/consulta/inicio/page.tsx` no
 cambió: sigue llamando a `syncProfileAction()` por su cuenta como defensa en profundidad para quien
 llegue ahí con perfil incompleto (o si el chequeo del callback falló) — en el caso "perfil
-incompleto" eso implica una llamada duplicada a `POST /auth/perfil` (una en el callback, otra en
+incompleto" eso implica una llamada duplicada a `POST /me/sync` (una en el callback, otra en
 `/consulta/inicio`), aceptada como trade-off porque el endpoint es idempotente. Ver `doc/flow.md`
 para el diagrama completo.
 
@@ -150,18 +150,18 @@ ese barrel y necesite código `server-only` va a pisar el mismo problema.
 
 - `src/features/consultation/services/consultation.actions.ts` — `createOrderAction`,
   `simulatePaymentAction`, `sendAnamnesisTurnAction`, `getOrderStatusAction`. Las que llaman a
-  endpoints protegidos (`ordenes/crear`, `consulta/chat`, `ordenes/obtener-estado/:id`) obtienen el
+  endpoints protegidos (`/consultations`, `/consultations/chat`, `/orders/:id/status`) obtienen el
   token con `getValidAccessToken()` y lo adjuntan como `Authorization: Bearer`.
-- `src/shared/auth/profile.actions.ts` — `syncProfileAction` (`POST /auth/perfil`) y
-  `updateProfileAction` (`PATCH /auth/perfil`), usadas por el flujo de registro/perfil (ver
+- `src/shared/auth/profile.actions.ts` — `syncProfileAction` (`POST /me/sync`) y
+  `updateProfileAction` (`PATCH /me`), usadas por el flujo de registro/perfil (ver
   `doc/flow.md`).
-- `src/features/profile/services/profile.actions.ts` — `getUserProfileAction` (`GET user/me`) y
-  `updateUserProfileAction` (`PATCH user/me`), usadas por `/perfil` (ver sección "Área de usuario
-  logueado" más abajo). **No confundir** con `src/shared/auth/profile.actions.ts`: ese archivo
-  sincroniza la identidad y completa el perfil obligatorio (RUT/género) que gatea el wizard de
-  `/consulta/*`; `user/me` es un endpoint distinto y más simple, para editar nombre/apellido/fecha
-  de nacimiento una vez que la cuenta ya existe.
-- `src/features/panel/services/panel.actions.ts` — `getPanelSummaryAction` (`GET panel/resumen`),
+- `src/features/profile/services/profile.actions.ts` — `getUserProfileAction` (`GET /me`) y
+  `updateUserProfileAction` (`PATCH /me`), usadas por `/perfil` (ver sección "Área de usuario
+  logueado" más abajo). Pegan al **mismo** recurso que `src/shared/auth/profile.actions.ts`
+  (el backend unificó `auth/perfil` y `user/me` en `/me`, con un único DTO de campos opcionales): este
+  archivo solo lee/edita nombre, apellido y fecha de nacimiento, mientras que `updateProfileAction`
+  completa el perfil obligatorio (género, deportista) que gatea el wizard de `/consulta/*`.
+- `src/features/panel/services/panel.actions.ts` — `getPanelSummaryAction` (`GET /me/summary`),
   usada por `/panel`.
 - `src/shared/api/action-result.ts` — `ActionResult<T>`/`runAction()` compartido por todos los
   archivos de arriba. Las acciones **no lanzan** errores (siguen la guía oficial de Next para
@@ -267,7 +267,7 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
 - **`/panel`** (`src/app/(sesion)/panel/page.tsx`, Server Component): llama en paralelo
   `PanelService.getSummary()` (`src/features/panel/services/panel.service.ts`, que invoca el
   Server Action `getPanelSummaryAction` (`panel.actions.ts`) — obtiene el access token con
-  `getValidAccessToken()` y llama `GET panel/resumen` vía `apiFetch`) y
+  `getValidAccessToken()` y llama `GET /me/summary` vía `apiFetch`) y
   `ConsultationService.getOrders()` (`getOrdersAction` → `GET ordenes`, con el mismo access token).
   Renderiza `PanelSummary` (`panel-summary.component.tsx`) con dos cards: `firstName`/
   `paternalLastName`/`age`/`goal` del usuario y, si existe, `calorieIntake`/`proteinIntake`/
@@ -282,15 +282,14 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
   `PdfViewer` se eliminó).
 - **`/perfil`** (`src/app/(sesion)/perfil/page.tsx`, Server Component): llama
   `ProfileService.getProfile()` (`src/features/profile/services/profile.service.ts` →
-  `getUserProfileAction` → `GET user/me`) y renderiza `ProfileForm` (Client Component,
+  `getUserProfileAction` → `GET /me`) y renderiza `ProfileForm` (Client Component,
   react-hook-form) para editar `firstName`/`paternalLastName`/`dateOfBirth`; el correo se muestra
   pero queda deshabilitado (viene fijo de la sesión de Cognito, no es editable acá). Al guardar,
-  llama `updateUserProfileAction` → `PATCH user/me`.
+  llama `updateUserProfileAction` → `PATCH /me` (solo con los campos editados).
 
-Ambos endpoints (`GET`/`PATCH user/me`, `GET panel/resumen`) son nuevos en el backend
-(`nutricionista-virtual-back`, módulos `presentation/user` y `presentation/panel`), protegidos por
-el mismo `CognitoAuthGuard` que el resto de rutas autenticadas — ver también la nota sobre no
-confundir `user/me` con `auth/perfil` en la sección anterior.
+Ambos endpoints (`GET`/`PATCH /me`, `GET /me/summary`) viven en el módulo `identity` del backend
+(`nutricionista-virtual-back/src/modules/identity`), protegidos por el mismo `CognitoAuthGuard` que el
+resto de rutas autenticadas. Todas las rutas llevan el prefijo `/api/v1`, que agrega `apiFetch`.
 
 ## Variables de entorno (`.env.template`)
 
@@ -319,10 +318,10 @@ Todas server-only, sin prefijo `NEXT_PUBLIC_`:
 Ver `nutricionista-virtual-back/doc/auth.md` para el detalle completo. Resumen:
 
 - El backend valida el Access Token (`CognitoAuthGuard`, `aws-jwt-verify` contra el JWKS del User
-  Pool) en las rutas que lo requieren: `ordenes/crear`, `consulta/chat`,
-  `ordenes/obtener-estado/:id`, `ordenes` (listado usado en `/panel`).
+  Pool) en las rutas que lo requieren: `/consultations`, `/consultations/chat`,
+  `/orders/:id/status`, `me/plans` (listado usado en `/panel`).
 - La identidad (`AuthIdentity`+`User` "esqueleto") se crea apenas hay sesión válida
-  (`POST /auth/perfil`), separada de completar el perfil (`PATCH /auth/perfil`) — ver `doc/flow.md`
+  (`POST /me/sync`), separada de completar el perfil (`PATCH /me`) — ver `doc/flow.md`
   para el flujo completo, incluido por qué están separados.
 - Google como Identity Provider no requirió **ningún** cambio en el backend: Cognito abstrae la
   federación, así que un login nativo y uno vía Google producen el mismo tipo de token.

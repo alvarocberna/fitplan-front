@@ -34,13 +34,13 @@ export async function getBackendCalls(): Promise<BackendCall[]> {
   return (await control('/__control/calls')).json();
 }
 
-// Perfil (auth/perfil). Sin llamar a esto el backend responde un perfil incompleto con el
+// Perfil (POST me/sync, GET/PATCH me). Sin llamar a esto el backend responde un perfil incompleto con el
 // email de la sesión de prueba. `profile` pisa campos de ese perfil (ej. { profileComplete: true }).
 export async function mockProfile(options: { profile?: Record<string, unknown>; fail?: boolean; message?: string } = {}) {
   await setMock('profile', options);
 }
 
-// consulta/chat. Cada llamada sucesiva devuelve la siguiente respuesta de la secuencia (la última
+// consultations/chat. Cada llamada sucesiva devuelve la siguiente respuesta de la secuencia (la última
 // se repite si hay más llamadas que respuestas), simulando los turnos del chat de anamnesis.
 export async function mockChatTurn(responses: Array<Record<string, unknown>>) {
   await setMock('chat', { sequence: responses });
@@ -62,19 +62,19 @@ export async function mockSimulatePayment(options: { fail?: boolean } = {}) {
   await setMock('payment', { fail: options.fail, message: 'Error al procesar el pago' });
 }
 
-// ordenes/obtener-estado/:id con una secuencia de estados (la última se repite), simulando la
+// orders/:id/status con una secuencia de estados (la última se repite), simulando la
 // progresión que el polling de /ordenes/[id] vería del backend real.
 export async function mockOrderStatusSequence(sequence: Array<Record<string, unknown>>) {
   await setMock('orderStatus', { sequence });
 }
 
-// productos/predefinidos/:code (público). Responde con la ficha del code pedido; los codes en
+// plans/standard/:code (público). Responde con la ficha del code pedido; los codes en
 // `unavailableCodes` responden 404 (versión inexistente o inactiva).
 export async function mockPredefinedProduct(options: { price?: number; unavailableCodes?: string[] } = {}) {
   await setMock('predefinedProduct', options);
 }
 
-// ordenes/crear-predefinido (con sesión).
+// plans/standard/:code/purchase (con sesión).
 export async function mockCreatePredefinedOrder(options: { orderId?: string; fail?: boolean } = {}) {
   await setMock('createPredefinedOrder', {
     orderId: options.orderId ?? 'order-predef-1',

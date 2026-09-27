@@ -17,7 +17,7 @@ test.describe('Consultation - generate order', () => {
 
     await expect(page).toHaveURL(/\/pago\/order-e2e-123$/);
     // el Server Action creó la orden adjuntando el Access Token de la sesión
-    const createCall = (await getBackendCalls()).find((c) => c.path === '/ordenes/crear');
+    const createCall = (await getBackendCalls()).find((c) => c.path === '/consultations');
     expect(createCall).toMatchObject({ method: 'POST', authorized: true });
   });
 
@@ -40,7 +40,7 @@ test.describe('Consultation - generate order', () => {
     await page.getByRole('button', { name: 'Realizar pago' }).click();
 
     await expect(page.getByText('Faltan datos de pasos anteriores')).toBeVisible();
-    expect((await getBackendCalls()).filter((c) => c.path === '/ordenes/crear')).toHaveLength(0);
+    expect((await getBackendCalls()).filter((c) => c.path === '/consultations')).toHaveLength(0);
   });
 });
 
@@ -52,7 +52,7 @@ test.describe('Consultation - simulated payment', () => {
     await page.getByRole('button', { name: 'Pagar' }).click();
 
     await expect(page).toHaveURL(/\/ordenes\/order-e2e-123$/);
-    const payCall = (await getBackendCalls()).find((c) => c.path === '/webhooks/ordenes/order-e2e-123/simular-pago');
+    const payCall = (await getBackendCalls()).find((c) => c.path === '/dev/orders/order-e2e-123/simulate-payment');
     expect(payCall?.method).toBe('POST');
   });
 

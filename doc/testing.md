@@ -7,7 +7,9 @@
   (`@nivo/*`) que bajo Jest requieren configuración adicional de transformación; Vitest los resuelve nativamente al estar
   construido sobre Vite/esbuild, y además arranca e itera más rápido.
 - **E2E**: [Playwright](https://playwright.dev) contra `next dev`, con un **backend falso** en Node
-  (`e2e/fake-backend/server.mjs`) en lugar del backend real, y una cookie de sesión firmada en lugar del login de Cognito. Se
+  (`e2e/fake-backend/server.mjs`) en lugar del backend real, y una cookie de sesión firmada en lugar del login de Cognito.
+  El backend falso replica las rutas del real bajo `/api/v1` (responde 404 si falta el prefijo) y registra cada llamada con la
+  ruta **sin** el prefijo (ej. `/consultations`), que es lo que comparan los specs. Se
   eligió sobre Cypress porque integra mejor con esperas asíncronas reales para flujos con polling.
 
 No hay backend real disponible en este repo (vive aparte, ver `README.md`), así que **ambas capas reemplazan al backend en vez
@@ -144,7 +146,7 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   (gateadas por `isSessionGatedPrefix`) repiten ese patrón para la raíz (`/pago`, `/ordenes`) y una subruta
   (`/pago/abc`, `/ordenes/abc`), más la comprobación de que paths parecidos (`/pagox`, `/ordenesx`) no quedan gateados.
   `/consulta/*` sigue protegida salvo `/consulta`, que es pública.
-- **`ProfileService` / `PanelService`**: que cada método pega al endpoint esperado (`user/me`, `panel/resumen`) y que un
+- **`ProfileService` / `PanelService`**: que cada método pega al endpoint esperado (`me`, `me/summary`) y que un
   `ActionResult` con `ok: false` se traduce en una excepción con el mensaje del backend — mismo patrón que `ConsultationService`.
 - **`ProfileForm`**: prellenado de los campos editables desde el perfil (con el correo deshabilitado y de solo lectura),
   envío que convierte la fecha a ISO y llama a `ProfileService.updateProfile`, toast de éxito/error, y las validaciones de
@@ -207,8 +209,8 @@ al carro), `CartView` (sin sesión abre el modal de registro con `return_to`, co
 `/pago/<id>?tipo=predefinido`, sesión expirada, errores), `/pago/[orderId]` (`?tipo=predefinido` → `/panel`, si no →
 `/ordenes/<id>`), `return-to` y el `callback` con `return_to`.
 
-E2E: `e2e/predefined-plan-purchase.spec.ts` (con handlers nuevos en el backend falso: `productos/predefinidos/:code`,
-`ordenes/crear-predefinido`, `panel/resumen`, `ordenes`). **Nota**: el e2e levanta su propio `next dev` en el puerto 3100 y Next
+E2E: `e2e/predefined-plan-purchase.spec.ts` (con handlers nuevos en el backend falso: `/plans/standard/:code`,
+`/plans/standard/:code/purchase`, `/me/summary`, `/me/plans`). **Nota**: el e2e levanta su propio `next dev` en el puerto 3100 y Next
 permite un solo `next dev` por directorio: hay que detener el `npm run dev` local antes de correrlo.
 
 ## Qué cubren los tests e2e
@@ -217,7 +219,7 @@ Los 6 pasos del flujo de consulta, cada uno con su happy path y sus casos de err
 etapas de punta a punta (`consultation-full-flow.spec.ts`) para detectar problemas de integración entre pasos que los specs
 individuales no verían (traspaso de `localStorage`, remonte de `ConsultationProvider` entre layouts):
 
-1. **Información personal**: envío válido (el perfil se guarda en el backend con `PATCH auth/perfil` y el Access Token de la
+1. **Información personal**: envío válido (el perfil se guarda en el backend con `PATCH me` y el Access Token de la
    sesión, y se persiste en `localStorage`), correo prellenado y de solo lectura, prellenado desde el perfil que el backend ya
    tiene, bloqueo con campos vacíos, error del backend en un toast, y que el `<select>` de género no ofrece "Otro". El
    formulario ya no pide Rut ni correo.
@@ -265,7 +267,7 @@ individuales no verían (traspaso de `localStorage`, remonte de `ConsultationPro
   el navegador.
 - El login real contra Cognito (Hosted UI, Google) **no** se prueba en e2e: la cookie de sesión se fabrica directamente. Lo
   que sí ejercita el e2e es todo lo que depende de tener una sesión válida (proxy, layout, Access Token hacia el backend).
-- Los e2e no cubren `/panel` ni `/perfil` con sesión (sus páginas piden datos a endpoints del backend que el falso aún no
-  implementa: `panel/resumen`, `ordenes`, `user/me`).
+- `/perfil` no tiene e2e propio, y `/panel` solo se recorre como destino de la compra de un plan estándar (el backend falso
+  responde `me/summary` y `me/plans` con valores por defecto).
 - No hay CI configurado (no existe `.github/workflows` en el repo) — correr `npm test` / `npm run test:e2e` en un pipeline
   queda pendiente como tarea aparte.
