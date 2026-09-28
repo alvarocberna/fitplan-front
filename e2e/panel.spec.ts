@@ -146,7 +146,7 @@ test.describe('Panel - mis planes', () => {
     await expect(row.getByRole('link', { name: 'Descargar plan Plan personalizado' })).toHaveAttribute('href', /plan\.pdf/);
     await expect(row.getByRole('link', { name: 'Ver plan Plan personalizado' })).toHaveAttribute(
       'href',
-      '/panel/planes/order-1',
+      '/planes/order-1',
     );
   });
 
@@ -189,9 +189,9 @@ test.describe('Panel - mis planes', () => {
 
     await page.getByRole('link', { name: 'Ver plan Plan personalizado' }).click();
 
-    await expect(page).toHaveURL(/\/panel\/planes\/order-1$/);
+    await expect(page).toHaveURL(/\/planes\/order-1$/);
     await expect(page.getByRole('heading', { name: 'Plan personalizado' })).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Desayuno' }).getByText('Pan con quesillo')).toBeVisible();
+    await expect(page.getByRole('listitem', { name: 'Resumen de Desayuno' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Descargar plan nutricional' })).toHaveAttribute('href', /plan\.pdf/);
 
     const calls = await getBackendCalls();
@@ -199,7 +199,7 @@ test.describe('Panel - mis planes', () => {
   });
 
   test('un plan inexistente, ajeno o no listo muestra "Plan no encontrado"', async ({ page }) => {
-    await page.goto('/panel/planes/no-existe');
+    await page.goto('/planes/no-existe');
 
     await expect(page.getByRole('heading', { name: 'Plan no encontrado' })).toBeVisible();
   });

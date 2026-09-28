@@ -165,7 +165,7 @@ ese barrel y necesite código `server-only` va a pisar el mismo problema.
   `getMyConsultationsAction` (`GET /me/consultations`), usadas por `/panel`, y
   `getMyConsultationAction` (`GET /me/consultations/:id`), usada por `/panel/consultas/[id]`,
   `getMyPlansAction` (`GET /me/plans`, `/panel`) y `getMyPlanAction` (`GET /me/plans/:orderId`,
-  `/panel/planes/[orderId]`).
+  `/planes/[orderId]`).
 - `src/features/measurements/services/measurements.actions.ts` — `getMyMeasurementsAction`
   (`GET /me/measurements`, `/panel`), `getMyMeasurementAction` (`GET /me/measurements/:id`),
   `recordMeasurementAction` (`POST /me/measurements`) y `updateMeasurementAction`
@@ -282,14 +282,18 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
   medición), `ConsultationsList` (cada consulta abre `/panel/consultas/[id]`) y `PlansList` ("Mis planes
   nutricionales"): una fila por plan (`MyPlanSummaryDto`, ya ordenados del más nuevo al más antiguo por el
   backend) con nombre, tipo (Personalizado/Estándar), fecha de compra, régimen y macros, y dos botones:
-  "Ver plan" (→ `/panel/planes/[orderId]`) y "Descargar plan" (`pdfUrl`, URL firmada con
+  "Ver plan" (→ `/planes/[orderId]`) y "Descargar plan" (`pdfUrl`, URL firmada con
   `Content-Disposition: attachment`, por lo que descarga el PDF completo en vez de abrirlo).
-- **`/panel/planes/[orderId]`** (Server Component): `PanelService.getPlan(orderId)` (`GET /me/plans/:orderId`;
-  `null` ante 404 → `notFound()` → "Plan no encontrado"). Renderiza `PlanDetail`: encabezado con
-  `PlanPreviewCard` (miniatura + "Descargar plan") y el detalle guardado en la base — personalizado:
-  resumen (`NutritionalPlanSummary`, el mismo bloque del detalle de consulta), requerimientos vs ingesta,
-  tiempos de comida, suplementación y recomendaciones deportivas; estándar: descripción y resumen del
-  producto. Ninguna vista incrusta el PDF en un `<iframe>` (`PdfViewer` se eliminó).
+- **`/planes/[orderId]`** (Server Component): `PanelService.getPlan(orderId)` (`GET /me/plans/:orderId`;
+  `null` ante 404 → `notFound()` → "Plan no encontrado"; contenido al 90 % del ancho disponible). Renderiza `PlanDetail`:
+  encabezado en dos columnas (apiladas en móvil) — a la izquierda (60 %) título, fecha de compra, una card
+  "Datos del plan" (objetivo, régimen y duración, calculada con `planDurationLabel` de `panel/format.ts`
+  desde `startDate`/`endDate`; "—" en los estándar o sin término) y una card "Macronutrientes" (calorías,
+  proteínas, carbohidratos y lípidos); a la derecha (40 %) la card del PDF (miniatura, "Plan nutricional",
+  "PDF" y "Descargar plan"). Debajo, el detalle guardado en la base — personalizado: "Resumen del plan"
+  (una sub-card por tiempo de comida, en una columna: tiempo y hora | porciones con valor), suplementación y
+  recomendaciones deportivas (la card "Tiempos de comida" con el detalle está oculta por ahora); estándar: descripción (sus datos
+  del encabezado salen del resumen del producto). Ya no hay card "Resumen". Ninguna vista incrusta el PDF en un `<iframe>` (`PdfViewer` se eliminó).
 - **`/mediciones/[id]`**, **`/mediciones/nueva`** y **`/mediciones/[id]/editar`**: detalle
   (`MeasurementDetail`, datos y resultados juntos por tema: card "Peso e IMC" con la escala del IMC por rangos
   OMS (`BmiScale`), card "Composición corporal" solo si hay componentes (barras en kg con `@nivo/bar` y torta
@@ -298,9 +302,13 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
   vive en `features/measurements/measurement-detail-data.ts`; 404 → "Medición no encontrada"), registro y corrección de una medición (`MeasurementForm`, Client Component con
   react-hook-form que llama a `MeasurementsService` y, al guardar, navega al detalle). Registro y edición
   van dentro de una `Card` sólida. Todas vuelven a `/mediciones`. `/panel` no muestra mediciones.
-- **`/planes`** (`src/app/(sesion)/planes/page.tsx`, Server Component): solo la card `PlansList`
-  (`PanelService.getPlans()` → `GET /me/plans`), la misma que muestra `/panel`. Los links de detalle siguen
-  apuntando a `/panel/planes/[orderId]`.
+- **`/planes`** (`src/app/(sesion)/planes/page.tsx`, Server Component): título "Mis planes nutricionales"
+  (arriba de la lista, a la izquierda) y `MyPlansList` (`PanelService.getPlans()` → `GET /me/plans`; no es la
+  `PlansList` de `/panel`; sin card contenedor): cada plan es un card blanco de 3 columnas — ícono de comida en un cuadrado redondeado;
+  nombre + tipo, fecha de compra, régimen, una línea divisoria y los 4 macronutrientes con su ícono (`features/panel/plan-icons.ts`,
+  compartido con el detalle); "Ver plan" y "Descargar plan" — y el primero (el último plan) lleva una pestaña
+  del color primario a la izquierda. "Ver plan" (en `/planes` y en `/panel`) abre `/planes/[orderId]`, cuyo
+  "Volver" regresa a `/planes`.
 - **`/mediciones`** (`src/app/(sesion)/mediciones/page.tsx`, Server Component): la card `MeasurementsChart`
   (gráfico de evolución, Client Component con `@nivo/line`) y la card `MeasurementsList`
   (`MeasurementsService.getMeasurements()` → `GET /me/measurements`); es la única página que las muestra. El

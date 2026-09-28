@@ -10,7 +10,7 @@ export default async function ConsultationDetailPage({ params }: { params: Promi
     if (!consultation) notFound()
 
     return (
-        <div className="max-w-3xl mx-auto px-4">
+        <div className="w-[90%] mx-auto">
             <ConsultationDetail consultation={consultation} />
         </div>
     )

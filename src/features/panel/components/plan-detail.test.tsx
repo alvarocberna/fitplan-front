@@ -16,7 +16,7 @@ const generatedPlan: MyPlanDetailDto = {
     planName: 'Plan personalizado',
     period: null,
     startDate: '2026-02-01T00:00:00.000Z',
-    endDate: null,
+    endDate: '2026-05-01T00:00:00.000Z',
     goal: 'definicion',
     dietRegimen: 'Hipocalórico',
     requirements: { calories: 2100, protein: 160, carbohydrate: 210, fat: 65 },
@@ -66,46 +66,86 @@ const predefinedPlan: MyPlanDetailDto = {
   predefined: { description: 'Plan para corredores', summary: null },
 };
 
+// Valores (<dd>) del dato con esa etiqueta dentro de una card del encabezado.
+function stat(cardName: string, label: string): string {
+  const card = screen.getByRole('region', { name: cardName });
+  // por el contenido completo del <dt>: con ícono, la etiqueta va en un <span> dentro de él
+  const term = within(card).getByText((_, element) => element?.tagName === 'DT' && element.textContent === label);
+  return within(term.parentElement as HTMLElement)
+    .getAllByRole('definition')
+    .map((dd) => dd.textContent)
+    .join(' | ');
+}
+
 function paragraph(container: HTMLElement, text: string) {
   return within(container).getByText((_, element) => element?.tagName === 'P' && element.textContent === text);
 }
 
 describe('PlanDetail', () => {
-  it('renders the header with name, type, purchase date, back link, thumbnail and "Descargar plan"', () => {
+  it('renders the header with name, type, purchase date, back link and the PDF card', () => {
     render(<PlanDetail plan={generatedPlan} />);
 
     expect(screen.getByRole('heading', { name: 'Plan personalizado' })).toBeInTheDocument();
     expect(screen.getByText('Personalizado')).toBeInTheDocument();
     expect(screen.getByText('Comprado el 01/02/2026')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '← Volver al panel' })).toHaveAttribute('href', '/panel');
+    expect(screen.getByRole('link', { name: '← Volver a mis planes' })).toHaveAttribute('href', '/planes');
     expect(screen.getByAltText('Vista previa de tu plan nutricional')).toHaveAttribute(
       'src',
       'https://signed.example/order-1.webp',
     );
-    const download = screen.getByRole('link', { name: 'Descargar plan nutricional' });
+    const file = screen.getByRole('region', { name: 'Archivo del plan' });
+    expect(within(file).getByText('Plan nutricional')).toBeInTheDocument();
+    expect(within(file).getByText('PDF')).toBeInTheDocument();
+    const download = within(file).getByRole('link', { name: 'Descargar plan nutricional' });
     expect(download).toHaveAttribute('href', 'https://signed.example/order-1.pdf');
     expect(download).toHaveTextContent('Descargar plan');
   });
 
-  it('renders the summary and the requirements vs intake table of a personalized plan', () => {
+  it('shows goal, regimen and duration, and the macronutrients of a personalized plan, without a "Resumen" card', () => {
     render(<PlanDetail plan={generatedPlan} />);
 
-    expect(paragraph(document.body, 'Régimen: Hipocalórico')).toBeInTheDocument();
-    const caloriesRow = screen.getByRole('row', { name: /Calorías/ });
-    expect(within(caloriesRow).getByText('2100 kcal')).toBeInTheDocument();
-    expect(within(caloriesRow).getByText('2000 kcal')).toBeInTheDocument();
+    expect(stat('Datos del plan', 'Objetivo')).toBe('definicion');
+    expect(stat('Datos del plan', 'Régimen')).toBe('Hipocalórico');
+    expect(stat('Datos del plan', 'Duración')).toBe('3 meses | 01/02/2026 – 01/05/2026');
+    expect(stat('Macronutrientes', 'Calorías')).toBe('2000 | kcal');
+    expect(stat('Macronutrientes', 'Proteínas')).toBe('150 | g');
+    expect(stat('Macronutrientes', 'Carbohidratos')).toBe('200 | g');
+    expect(stat('Macronutrientes', 'Lípidos')).toBe('60 | g');
+    expect(screen.queryByText('Resumen')).not.toBeInTheDocument();
   });
 
-  it('renders each meal time with its portions and notes', () => {
+  it('shows "—" as duration when the plan has no end date', () => {
+    render(<PlanDetail plan={{ ...generatedPlan, generated: { ...generatedPlan.generated!, endDate: null } }} />);
+
+    expect(stat('Datos del plan', 'Duración')).toBe('—');
+  });
+
+  it('summarizes each meal time with its hour and the portions of the groups that have a value', () => {
     render(<PlanDetail plan={generatedPlan} />);
 
-    const breakfast = screen.getByRole('region', { name: 'Desayuno' });
+    expect(screen.getByText('Resumen del plan')).toBeInTheDocument();
+    const breakfast = screen.getByRole('listitem', { name: 'Resumen de Desayuno' });
+    expect(within(breakfast).getByText('Desayuno')).toBeInTheDocument();
     expect(within(breakfast).getByText('8am')).toBeInTheDocument();
-    expect(within(breakfast).getByText('Cereales: 2')).toBeInTheDocument();
-    expect(within(breakfast).getByText('Lácteos bajos en grasa: 1')).toBeInTheDocument();
-    expect(within(breakfast).getByText('Pan con quesillo')).toBeInTheDocument();
-    expect(within(breakfast).getByText('cereals: avena 1 taza')).toBeInTheDocument();
-    expect(within(breakfast).getByText('Preferir pan integral')).toBeInTheDocument();
+    const portions = within(breakfast)
+      .getAllByRole('listitem')
+      .map((item) => item.textContent);
+    expect(portions).toEqual(['Cereales2', 'Lácteos bajos en grasa1']);
+    expect(screen.queryByText('Requerimientos vs ingesta')).not.toBeInTheDocument();
+  });
+
+  it('has no plan summary when the plan has no meal times', () => {
+    render(<PlanDetail plan={{ ...generatedPlan, generated: { ...generatedPlan.generated!, mealTimes: [] } }} />);
+
+    expect(screen.queryByText('Resumen del plan')).not.toBeInTheDocument();
+  });
+
+  it('hides the meal times detail card for now (examples, equivalences and comments are not shown)', () => {
+    render(<PlanDetail plan={generatedPlan} />);
+
+    expect(screen.queryByText('Tiempos de comida')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Desayuno' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Pan con quesillo')).not.toBeInTheDocument();
   });
 
   it('renders supplements and sports recommendations', () => {
@@ -140,13 +180,39 @@ describe('PlanDetail', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the description and summary of a standard plan', () => {
+  it('renders the description of a standard plan and its header data from the product summary', () => {
     render(<PlanDetail plan={predefinedPlan} />);
 
     expect(screen.getByText('Estándar')).toBeInTheDocument();
     expect(screen.getByText('Plan para corredores')).toBeInTheDocument();
-    expect(paragraph(document.body, 'Régimen: —')).toBeInTheDocument();
+    expect(stat('Datos del plan', 'Régimen')).toBe('—');
+    expect(stat('Datos del plan', 'Duración')).toBe('—');
+    expect(stat('Macronutrientes', 'Calorías')).toBe('—');
     expect(screen.getByText('Vista previa no disponible')).toBeInTheDocument();
     expect(screen.queryByText('Tiempos de comida')).not.toBeInTheDocument();
+  });
+
+  it('takes the header data of a standard plan from its summary when it has one', () => {
+    render(
+      <PlanDetail
+        plan={{
+          ...predefinedPlan,
+          predefined: {
+            description: 'Plan para corredores',
+            summary: {
+              goal: 'Rendimiento',
+              dietRegimen: 'Normocalórico',
+              calorieIntake: 2400,
+              proteinIntake: 120,
+              carbohydrateIntake: 330,
+              lipidIntake: 70,
+            },
+          },
+        }}
+      />,
+    );
+
+    expect(stat('Datos del plan', 'Objetivo')).toBe('Rendimiento');
+    expect(stat('Macronutrientes', 'Carbohidratos')).toBe('330 | g');
   });
 });

@@ -78,7 +78,7 @@ describe('PlansList', () => {
 
     const row = screen.getByRole('listitem', { name: 'Plan personalizado' });
     const view = within(row).getByRole('link', { name: 'Ver plan Plan personalizado' });
-    expect(view).toHaveAttribute('href', '/panel/planes/order-1');
+    expect(view).toHaveAttribute('href', '/planes/order-1');
     expect(view).toHaveTextContent('Ver plan');
 
     const download = within(row).getByRole('link', { name: 'Descargar plan Plan personalizado' });

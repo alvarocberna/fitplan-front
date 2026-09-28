@@ -1,7 +1,11 @@
 //next
 import Link from 'next/link'
+//icons
+import { CalendarDaysIcon, DocumentTextIcon, FireIcon, FlagIcon } from '@heroicons/react/24/outline'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 //shared
-import { Card, PlanPreviewCard, SubsectionHead, SubsectionTitle, SubsectionBody } from '@/shared'
+import { Card, SubsectionHead, SubsectionTitle, SubsectionBody } from '@/shared'
 //features - panel
 import {
     MacrosDto,
@@ -11,52 +15,93 @@ import {
     MyPlanSupplementDto,
     MyPlanSportsRecommendationDto,
 } from '../dtos/my-plan.dto'
-import { MEAL_TIME_LABELS, NO_DATA, PORTION_GROUP_LABELS, formatDate } from '../format'
-import { NutritionalPlanSummary } from './nutritional-plan-summary.component'
+import {
+    INTAKE_FIELDS,
+    MEAL_TIME_LABELS,
+    NO_DATA,
+    PORTION_GROUP_LABELS,
+    formatDate,
+    formatDateOnly,
+    planDurationLabel,
+} from '../format'
+import { ICON_CIRCLE_STYLE, MACRO_ICONS, type IntakeKey } from '../plan-icons'
+import { DIVIDER, MACRO_COLUMN_CLASSES } from '../plan-dividers'
 import { PlanTypeBadge } from './plan-type-badge.component'
 
 interface PlanDetailProps {
     plan: MyPlanDetailDto
 }
 
-// Detalle de solo lectura de un plan del usuario (GET /me/plans/:orderId, HU-PLN-05): encabezado con
-// miniatura y descarga del PDF, y la información del plan guardada en la base (personalizado:
-// resumen, requerimientos vs ingesta, tiempos de comida, suplementación y recomendaciones
-// deportivas; estándar: descripción y resumen del producto).
+// Detalle de solo lectura de un plan del usuario (GET /me/plans/:orderId, HU-PLN-05). Encabezado en dos
+// columnas: a la izquierda (60 %) título, fecha de compra, una card con objetivo, régimen y duración y otra
+// con los macronutrientes; a la derecha (40 %) la card del PDF (miniatura + descarga). Debajo, la
+// información guardada del plan (personalizado: requerimientos vs ingesta, tiempos de comida,
+// suplementación y recomendaciones deportivas; estándar: descripción).
 export function PlanDetail({ plan }: PlanDetailProps) {
     const { type, name, purchasedAt, pdfUrl, thumbnailUrl, generated, predefined } = plan
+    const overview = planOverviewOf(plan)
 
     return (
         <div className="w-full flex flex-col gap-6">
             <div className="w-full flex flex-col md:flex-row md:items-start gap-6">
-                <div className="flex-1 flex flex-col gap-2">
-                    <Link href="/panel" className="self-start text-sm text-zinc-600 hover:text-zinc-900 underline">
-                        ← Volver al panel
-                    </Link>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <h1 className="text-2xl font-bold text-zinc-900">{name}</h1>
-                        <PlanTypeBadge type={type} />
+                <div className="w-full md:w-[60%] flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                        <Link href="/planes" className="self-start text-sm text-zinc-600 hover:text-zinc-900 underline">
+                            ← Volver a mis planes
+                        </Link>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h1 className="text-2xl font-bold text-zinc-900">{name}</h1>
+                            <PlanTypeBadge type={type} />
+                        </div>
+                        <p className="text-zinc-500">Comprado el {formatDate(purchasedAt)}</p>
                     </div>
-                    <p className="text-zinc-500">Comprado el {formatDate(purchasedAt)}</p>
+
+                    <InfoCard label="Datos del plan">
+                        {/* sin gap: el espacio entre columnas lo da el padding de cada una, con el separador al medio */}
+                        <dl className="grid grid-cols-3">
+                            <Stat label="Objetivo" value={overview.goal ?? NO_DATA} icon={FlagIcon} className="pr-4" />
+                            <Stat
+                                label="Régimen"
+                                value={overview.dietRegimen ?? NO_DATA}
+                                icon={FireIcon}
+                                className={`px-4 ${DIVIDER}`}
+                            />
+                            <Stat
+                                label="Duración"
+                                value={overview.duration ?? NO_DATA}
+                                detail={overview.range ?? undefined}
+                                icon={CalendarDaysIcon}
+                                className={`pl-4 ${DIVIDER}`}
+                            />
+                        </dl>
+                    </InfoCard>
+
+                    <InfoCard label="Macronutrientes" title="Macronutrientes">
+                        {/* sin gap horizontal, igual que "Datos del plan": el separador va al medio del padding */}
+                        <dl className="grid grid-cols-2 sm:grid-cols-4 gap-y-4">
+                            {INTAKE_FIELDS.map(({ key, label, unit }, index) => (
+                                <MacroStat
+                                    key={key}
+                                    label={label}
+                                    value={overview.intake?.[key] ?? null}
+                                    unit={unit}
+                                    icon={MACRO_ICONS[key]}
+                                    className={MACRO_COLUMN_CLASSES[index]}
+                                />
+                            ))}
+                        </dl>
+                    </InfoCard>
                 </div>
-                <div className="w-full md:w-[220px] shrink-0">
-                    <PlanPreviewCard pdfUrl={pdfUrl} thumbnailUrl={thumbnailUrl} downloadLabel="Descargar plan" />
+
+                <div className="w-full md:w-[40%]">
+                    <PlanFileCard pdfUrl={pdfUrl} thumbnailUrl={thumbnailUrl} />
                 </div>
             </div>
 
             {type === 'PREDEFINED' && predefined && (
-                <>
-                    <Section title="Descripción">
-                        <p className="w-full text-left text-zinc-700">{predefined.description}</p>
-                    </Section>
-                    <Section title="Resumen">
-                        <NutritionalPlanSummary
-                            goal={predefined.summary?.goal ?? null}
-                            dietRegimen={predefined.summary?.dietRegimen ?? null}
-                            intake={predefined.summary}
-                        />
-                    </Section>
-                </>
+                <Section title="Descripción">
+                    <p className="w-full text-left text-zinc-700">{predefined.description}</p>
+                </Section>
             )}
 
             {type === 'GENERATED' &&
@@ -70,6 +115,183 @@ export function PlanDetail({ plan }: PlanDetailProps) {
                     </Section>
                 ))}
         </div>
+    )
+}
+
+interface PlanOverview {
+    goal: string | null
+    dietRegimen: string | null
+    duration: string | null
+    range: string | null
+    intake: Record<IntakeKey, number | null> | null
+}
+
+// Lo que muestra el encabezado, igual para los dos tipos: el personalizado lo toma del NutritionalPlan
+// (con duración si tiene fechas), el estándar del resumen del producto (sin duración).
+function planOverviewOf({ generated, predefined }: MyPlanDetailDto): PlanOverview {
+    if (generated) {
+        const duration = planDurationLabel(generated.startDate, generated.endDate)
+        return {
+            goal: generated.goal,
+            dietRegimen: generated.dietRegimen,
+            duration,
+            range:
+                duration && generated.startDate && generated.endDate
+                    ? `${formatDateOnly(generated.startDate)} – ${formatDateOnly(generated.endDate)}`
+                    : null,
+            intake: {
+                calorieIntake: generated.intake.calories,
+                proteinIntake: generated.intake.protein,
+                carbohydrateIntake: generated.intake.carbohydrate,
+                lipidIntake: generated.intake.fat,
+            },
+        }
+    }
+    const summary = predefined?.summary ?? null
+    return {
+        goal: summary?.goal ?? null,
+        dietRegimen: summary?.dietRegimen ?? null,
+        duration: null,
+        range: null,
+        intake: summary,
+    }
+}
+
+// Card compacta del encabezado: mismo aspecto que Card variant="solid", sin el padding ni el margen
+// pensados para las secciones de ancho completo.
+function InfoCard({ label, title, children }: { label: string; title?: string; children: React.ReactNode }) {
+    return (
+        <section aria-label={label} className="w-full bg-white border border-white rounded-[12px] shadow-lg p-5 flex flex-col gap-3">
+            {title && <h2 className="text-sm font-semibold text-zinc-700">{title}</h2>}
+            {children}
+        </section>
+    )
+}
+
+function Stat({
+    label,
+    value,
+    detail,
+    icon: Icon,
+    className = '',
+}: {
+    label: string
+    value: string
+    detail?: string
+    // Con ícono: círculo a la izquierda y título + valor a la derecha.
+    icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
+    className?: string
+}) {
+    if (!Icon) {
+        return (
+            <div className={`flex flex-col gap-1 min-w-0 ${className}`}>
+                <dt className="text-xs uppercase tracking-wide text-zinc-500">{label}</dt>
+                <dd className="text-zinc-900 font-semibold break-words">{value}</dd>
+                {detail && <dd className="text-xs text-zinc-500">{detail}</dd>}
+            </div>
+        )
+    }
+
+    // Grilla de 2 columnas: el <dt> usa `contents` para que el círculo (dentro del dt, así el grupo
+    // sigue siendo un <dt>/<dd> válido) ocupe la 1.ª columna a lo alto de todas las filas, y la etiqueta y
+    // los <dd> la 2.ª.
+    return (
+        <div className={`grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 min-w-0 ${className}`}>
+            <dt className="contents">
+                <span
+                    aria-hidden="true"
+                    className="row-span-3 self-center h-10 w-10 rounded-full flex items-center justify-center"
+                    style={ICON_CIRCLE_STYLE}
+                >
+                    <Icon className="h-5 w-5" />
+                </span>
+                <span className="col-start-2 text-xs uppercase tracking-wide text-zinc-500">{label}</span>
+            </dt>
+            <dd className="col-start-2 mt-1 text-zinc-900 font-semibold break-words">{value}</dd>
+            {detail && <dd className="col-start-2 mt-1 text-xs text-zinc-500">{detail}</dd>}
+        </div>
+    )
+}
+
+// Un macronutriente en columna centrada: ícono, valor, unidad y nutriente. Para el lector de pantalla el
+// nutriente sigue siendo el <dt> y valor y unidad los <dd>; el orden visual lo pone `order` (el <dt> usa
+// `contents` para que su ícono y su etiqueta se ordenen como hijos de la columna). Sin dato: "—" y sin unidad.
+function MacroStat({
+    label,
+    value,
+    unit,
+    icon,
+    className = '',
+}: {
+    label: string
+    value: number | null
+    unit: string
+    icon: IconDefinition
+    className?: string
+}) {
+    return (
+        <div className={`flex flex-col items-center gap-1 min-w-0 text-center ${className}`}>
+            <dt className="contents">
+                <span
+                    aria-hidden="true"
+                    className="order-1 mb-1 h-10 w-10 rounded-full flex items-center justify-center"
+                    style={ICON_CIRCLE_STYLE}
+                >
+                    <FontAwesomeIcon icon={icon} className="h-4 w-4" />
+                </span>
+                <span className="order-4 text-xs uppercase tracking-wide text-zinc-500">{label}</span>
+            </dt>
+            <dd className="order-2 text-xl font-bold text-zinc-900 leading-none">{value ?? NO_DATA}</dd>
+            {value != null && <dd className="order-3 text-xs text-zinc-500">{unit}</dd>}
+        </div>
+    )
+}
+
+// Card del PDF en dos mitades iguales: miniatura de la página 1 a la izquierda (su alto sigue la proporción
+// A4) y a la derecha "Plan nutricional", "PDF" y el botón de descarga. La descarga la fuerza el
+// Content-Disposition de la URL firmada (el atributo `download` se ignora en cross-origin). Misma miniatura
+// que PlanPreviewCard (shared), que sigue usándose en /ordenes/[id].
+function PlanFileCard({ pdfUrl, thumbnailUrl }: { pdfUrl: string; thumbnailUrl: string | null }) {
+    return (
+        <section
+            aria-label="Archivo del plan"
+            className="w-full bg-white border border-white rounded-[12px] shadow-lg p-5 grid grid-cols-2 gap-4"
+        >
+            <div className="w-full aspect-[210/297] rounded-[8px] border border-zinc-200 bg-white shadow-sm overflow-hidden">
+                {thumbnailUrl ? (
+                    // <img> plano y no next/image: la URL firmada cambia en cada request y el optimizador
+                    // de Next la proxiaría/cachearía (contenido privado del usuario).
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                        src={thumbnailUrl}
+                        alt="Vista previa de tu plan nutricional"
+                        loading="lazy"
+                        className="w-full h-full object-cover object-top"
+                    />
+                ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-zinc-400 p-2 text-center">
+                        <DocumentTextIcon className="w-8 h-8" aria-hidden="true" />
+                        <p className="text-[11px]">Vista previa no disponible</p>
+                    </div>
+                )}
+            </div>
+            {/* título, formato y botón alineados arriba, a la altura del borde superior de la miniatura */}
+            <div className="min-w-0 flex flex-col gap-4 self-start">
+                <div className="flex flex-col gap-1">
+                    <p className="font-semibold text-zinc-900">Plan nutricional</p>
+                    <p className="text-sm text-zinc-500">PDF</p>
+                </div>
+                <a
+                    href={pdfUrl}
+                    download
+                    aria-label="Descargar plan nutricional"
+                    // h-10! (important): .primary-btn de globals.css fija height:100% sin @layer
+                    className="btn primary-btn h-10! w-full no-underline"
+                >
+                    Descargar plan
+                </a>
+            </div>
+        </section>
     )
 }
 
@@ -87,34 +309,19 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function GeneratedPlanSections({ plan }: { plan: MyGeneratedPlanDetailDto }) {
     return (
         <>
-            <Section title="Resumen">
-                <NutritionalPlanSummary
-                    goal={plan.goal}
-                    dietRegimen={plan.dietRegimen}
-                    intake={{
-                        calorieIntake: plan.intake.calories,
-                        proteinIntake: plan.intake.protein,
-                        carbohydrateIntake: plan.intake.carbohydrate,
-                        lipidIntake: plan.intake.fat,
-                    }}
-                />
-            </Section>
-
-            <Section title="Requerimientos vs ingesta">
-                <RequirementsTable requirements={plan.requirements} intake={plan.intake} />
-            </Section>
-
-            <Section title="Tiempos de comida">
-                {plan.mealTimes.length > 0 ? (
-                    <div className="w-full flex flex-col gap-4">
+            {plan.mealTimes.length > 0 && (
+                <Section title="Resumen del plan">
+                    {/* tiempo, hora y porciones de cada tiempo de comida, uno debajo del otro */}
+                    <ul className="w-full flex flex-col gap-4">
                         {plan.mealTimes.map((mealTime, index) => (
-                            <MealTime key={`${mealTime.time}-${index}`} mealTime={mealTime} />
+                            <MealTimeSummary key={`${mealTime.time}-${index}`} mealTime={mealTime} />
                         ))}
-                    </div>
-                ) : (
-                    <p className="text-zinc-500 text-center">Este plan no tiene tiempos de comida registrados.</p>
-                )}
-            </Section>
+                    </ul>
+                </Section>
+            )}
+
+            {/* La card "Tiempos de comida" (detalle con macros, ejemplos, equivalencias y comentarios, ver
+                MealTime) está oculta por ahora. */}
 
             {plan.supplements.length > 0 && (
                 <Section title="Suplementación">
@@ -146,26 +353,41 @@ const MACRO_ROWS: { key: keyof MacrosDto; label: string; unit: string }[] = [
     { key: 'fat', label: 'Lípidos', unit: 'g' },
 ]
 
-function RequirementsTable({ requirements, intake }: { requirements: MacrosDto; intake: MacrosDto }) {
+type PortionGroup = keyof MyPlanMealTimeDto['portions']
+
+// Grupos de alimentos (de cereal a sugar, en ese orden) con porciones en el tiempo de comida.
+function portionGroupsOf(mealTime: MyPlanMealTimeDto): PortionGroup[] {
+    return (Object.keys(PORTION_GROUP_LABELS) as PortionGroup[]).filter((group) => mealTime.portions[group] != null)
+}
+
+// Sub-card de "Resumen del plan": a la izquierda el tiempo de comida y debajo su hora; a la derecha las
+// porciones de cada grupo con valor.
+function MealTimeSummary({ mealTime }: { mealTime: MyPlanMealTimeDto }) {
+    const label = MEAL_TIME_LABELS[mealTime.time] ?? mealTime.time
+    const groups = portionGroupsOf(mealTime)
+
     return (
-        <table className="w-full text-sm text-left">
-            <thead>
-                <tr className="text-zinc-500 border-b border-zinc-200">
-                    <th className="py-2 font-medium"></th>
-                    <th className="py-2 font-medium text-right">Requerimiento</th>
-                    <th className="py-2 font-medium text-right">Ingesta del plan</th>
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200">
-                {MACRO_ROWS.map(({ key, label, unit }) => (
-                    <tr key={key}>
-                        <th scope="row" className="py-2 font-normal text-zinc-500">{label}</th>
-                        <td className="py-2 text-right text-zinc-900">{`${requirements[key]} ${unit}`}</td>
-                        <td className="py-2 text-right text-zinc-900">{`${intake[key]} ${unit}`}</td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+        <li
+            aria-label={`Resumen de ${label}`}
+            className="border border-zinc-200 rounded-2xl p-4 grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 text-left text-sm"
+        >
+            <div className="flex flex-col gap-1">
+                <p className="font-semibold text-zinc-900">{label}</p>
+                <p className="text-zinc-500">{mealTime.hour ?? NO_DATA}</p>
+            </div>
+            {groups.length > 0 ? (
+                <ul className="flex flex-col gap-1 text-zinc-700">
+                    {groups.map((group) => (
+                        <li key={group} className="flex justify-between gap-2">
+                            <span>{PORTION_GROUP_LABELS[group]}</span>
+                            <span className="font-semibold text-zinc-900">{mealTime.portions[group]}</span>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-zinc-500">Sin porciones registradas</p>
+            )}
+        </li>
     )
 }
 
@@ -189,9 +411,7 @@ function NoteList({ title, notes }: { title: string; notes: string[] }) {
 
 function MealTime({ mealTime }: { mealTime: MyPlanMealTimeDto }) {
     const label = MEAL_TIME_LABELS[mealTime.time] ?? mealTime.time
-    const portions = Object.keys(PORTION_GROUP_LABELS).filter(
-        (group) => mealTime.portions[group as keyof MyPlanMealTimeDto['portions']] != null,
-    )
+    const portions = portionGroupsOf(mealTime)
 
     return (
         <section
@@ -209,8 +429,7 @@ function MealTime({ mealTime }: { mealTime: MyPlanMealTimeDto }) {
                     <ul className="list-disc pl-6">
                         {portions.map((group) => (
                             <li key={group}>
-                                {PORTION_GROUP_LABELS[group]}:{' '}
-                                {mealTime.portions[group as keyof MyPlanMealTimeDto['portions']]}
+                                {PORTION_GROUP_LABELS[group]}: {mealTime.portions[group]}
                             </li>
                         ))}
                     </ul>

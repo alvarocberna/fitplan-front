@@ -166,12 +166,19 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   presentes; campos de bioimpedancia condicionales (grasa y masa muscular obligatorias; grasa visceral y masa ósea
   opcionales: vacías no se envían al registrar y van como `null` al editar), payload de POST/PATCH, fecha futura y
   rangos bloqueados, modo edición con el tipo deshabilitado; `getMeasurement` devuelve `null` ante 404.
+- **`MyPlansList`** (lista de `/planes`): mensaje sin planes, un card por plan en orden, nombre/tipo/fecha/régimen,
+  los 4 macronutrientes con valor y unidad ("—" sin resumen), botones "Ver plan"/"Descargar plan" y la pestaña
+  decorativa solo en el primero.
 - **`PlansList`** (card "Mis planes nutricionales"): una fila por plan en el orden recibido, sin miniatura, con tipo,
-  fecha, régimen y macros (o "—"), el enlace "Ver plan" a `/panel/planes/[orderId]` y "Descargar plan" al `pdfUrl`; el
-  mensaje de "sin planes" con la lista vacía. **`PlanDetail`**: encabezado, secciones del plan personalizado
-  (requerimientos vs ingesta, tiempos de comida con porciones y notas, suplementación, recomendaciones deportivas; las
-  vacías se ocultan) y del estándar. **`NutritionalPlanSummary`**: bloque de resumen compartido con el detalle de consulta.
-- **`PlanPreviewCard`** (`src/shared/components/`, compartida por `/panel/planes/[orderId]` y `/ordenes/[id]`): fecha (opcional), miniatura (`<img>` lazy con `alt`), enlace "Descargar" (o `downloadLabel`) con el `href` del PDF, y el
+  fecha, régimen y macros (o "—"), el enlace "Ver plan" a `/planes/[orderId]` y "Descargar plan" al `pdfUrl`; el
+  mensaje de "sin planes" con la lista vacía. **`PlanDetail`**: encabezado (card del PDF con "Plan nutricional", "PDF" y
+  descarga; "Datos del plan" con objetivo, régimen y duración —"—" sin término—; "Macronutrientes"; sin card "Resumen"),
+  secciones del plan personalizado ("Resumen del plan": tiempo, hora y porciones por tiempo de comida; "Tiempos de comida"
+  oculta por ahora; suplementación,
+  recomendaciones deportivas; las vacías se ocultan) y del estándar (datos del encabezado desde su resumen).
+  **`planDurationLabel`** / **`formatDateOnly`** (`panel/format.ts`): meses completos, días bajo un mes, `null` sin
+  fechas, fechas DATE sin correr de día. **`NutritionalPlanSummary`**: bloque de resumen del detalle de consulta.
+- **`PlanPreviewCard`** (`src/shared/components/`, usada en `/ordenes/[id]`): fecha (opcional), miniatura (`<img>` lazy con `alt`), enlace "Descargar" (o `downloadLabel`) con el `href` del PDF, y el
   placeholder "Vista previa no disponible" cuando `thumbnailUrl` es `null` o falta (backend aún sin actualizar).
 - **`proxy` (CSP)**: `img-src` incluye el bucket de planes; `frame-src` y `connect-src` no.
 - **`NavbarSesion`** (sidebar, solo md+: `hidden md:flex fixed left-0 top-15`, debajo de la barra superior): los links a

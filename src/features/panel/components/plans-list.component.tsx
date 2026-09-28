@@ -13,7 +13,7 @@ interface PlansListProps {
 }
 
 // Tarjeta 3 del panel: planes pagados y listos del usuario (GET /me/plans, HU-PLN-04), del más nuevo
-// al más antiguo. Cada fila resume el plan y ofrece ver su detalle (/panel/planes/[orderId],
+// al más antiguo. Cada fila resume el plan y ofrece ver su detalle (/planes/[orderId],
 // HU-PLN-05) o descargar el PDF.
 export function PlansList({ plans }: PlansListProps) {
     return (
@@ -73,7 +73,7 @@ function PlanRow({ plan }: { plan: MyPlanSummaryDto }) {
 
             <div className="flex flex-row md:flex-col gap-2 shrink-0">
                 <Link
-                    href={`/panel/planes/${orderId}`}
+                    href={`/planes/${orderId}`}
                     aria-label={`Ver plan ${name}`}
                     className="btn primary-btn h-10! px-6 no-underline"
                 >

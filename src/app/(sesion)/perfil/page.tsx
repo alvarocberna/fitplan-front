@@ -7,7 +7,7 @@ export default async function PerfilPage() {
     const profile = await ProfileService.getProfile()
 
     return (
-        <div className="max-w-2xl flex flex-col mx-auto px-4">
+        <div className="w-[90%] flex flex-col mx-auto">
             <Card widthInner="80%" variant="solid">
                 <SubsectionHead>
                     <SubsectionTitle title="Mi perfil" />

@@ -10,7 +10,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ ord
     if (!plan) notFound()
 
     return (
-        <div className="max-w-3xl mx-auto px-4">
+        <div className="w-[90%] mx-auto">
             <PlanDetail plan={plan} />
         </div>
     )

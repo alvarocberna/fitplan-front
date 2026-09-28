@@ -47,6 +47,7 @@ export * from './profile/dtos/user-profile.dto';
 export * from './panel/components/panel-summary.component';
 export * from './panel/components/consultations-list.component';
 export * from './panel/components/plans-list.component';
+export * from './panel/components/my-plans-list.component';
 export * from './panel/components/consultation-detail.component';
 export * from './panel/components/plan-status-badge.component';
 export * from './panel/components/plan-detail.component';

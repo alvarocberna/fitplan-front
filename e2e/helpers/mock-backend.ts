@@ -88,7 +88,7 @@ export async function mockPlansList(plans: Array<Record<string, unknown>>) {
   await setMock('plans', { plans });
 }
 
-// me/plans/:orderId (detalle en /panel/planes/[orderId]). Responde `detail` solo para su `orderId`;
+// me/plans/:orderId (detalle en /planes/[orderId]). Responde `detail` solo para su `orderId`;
 // cualquier otro id (o sin llamar a esto) responde 404, como el backend real.
 // me/measurements (tarjeta "Mis mediciones" del panel). Sin llamar a esto el listado responde vacío.
 export async function mockMeasurementsList(measurements: Array<Record<string, unknown>>) {

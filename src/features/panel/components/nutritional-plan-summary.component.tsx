@@ -16,7 +16,8 @@ interface NutritionalPlanSummaryProps {
 }
 
 // Resumen de un plan nutricional (nombre, objetivo, régimen, calorías y macros), de solo lectura.
-// Lo comparten el detalle de una consulta (/panel/consultas/[id]) y el de un plan (/panel/planes/[id]).
+// Lo usa el detalle de una consulta (/panel/consultas/[id]); el detalle de un plan (/planes/[orderId]) muestra
+// estos datos en su propio encabezado.
 export function NutritionalPlanSummary({ planName, goal, dietRegimen, intake }: NutritionalPlanSummaryProps) {
     return (
         <div className="w-full flex flex-col gap-2 text-left text-zinc-700">

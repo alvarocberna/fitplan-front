@@ -7,7 +7,7 @@ import { MeasurementForm } from '@/features'
 
 export default function NewMeasurementPage() {
     return (
-        <div className="max-w-4xl mx-auto px-4 flex flex-col gap-4">
+        <div className="w-[90%] mx-auto flex flex-col gap-4">
             <Link href="/mediciones" className="self-start text-sm text-zinc-600 hover:text-zinc-900 underline">
                 ← Volver a mis mediciones
             </Link>

@@ -134,7 +134,7 @@ Vive en otro repo (`../nutricionista-virtual-back`). Su contrato está documenta
 | GET | `me/consultations` | `getMyConsultationsAction` | consultas del usuario con estado del plan (`/panel`, tarjeta 2) |
 | GET | `me/consultations/:id` | `getMyConsultationAction` | detalle de una consulta (`/panel/consultas/[id]`; 404 → página "Consulta no encontrada") |
 | GET | `me/plans` | `getMyPlansAction` | planes del usuario con PDF (nombre, tipo, fecha, resumen), del más nuevo al más antiguo (`/panel`, tarjeta 3) |
-| GET | `me/plans/:orderId` | `getMyPlanAction` | detalle de un plan (`/panel/planes/[orderId]`; 404 → página "Plan no encontrado") |
+| GET | `me/plans/:orderId` | `getMyPlanAction` | detalle de un plan (`/planes/[orderId]`; 404 → página "Plan no encontrado") |
 | GET | `me/measurements` | `getMyMeasurementsAction` | mediciones del usuario, más reciente primero (`/mediciones`) |
 | GET | `me/measurements/:id` | `getMyMeasurementAction` | detalle de una medición (`/mediciones/[id]` y su edición; 404 → "Medición no encontrada") |
 | POST / PATCH | `me/measurements`, `me/measurements/:id` | `recordMeasurementAction` / `updateMeasurementAction` | registrar (`/mediciones/nueva`) y corregir (`/mediciones/[id]/editar`) una medición. Bioimpedancia: grasa corporal y masa muscular obligatorias, grasa visceral y masa ósea opcionales, cada una en % o kg (un solo valor); el backend calcula la otra unidad y el IMC |

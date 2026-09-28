@@ -10,7 +10,7 @@ export default async function MeasurementDetailPage({ params }: { params: Promis
     if (!measurement) notFound()
 
     return (
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="w-[90%] mx-auto">
             <MeasurementDetail measurement={measurement} />
         </div>
     )

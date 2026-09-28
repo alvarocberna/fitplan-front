@@ -13,7 +13,7 @@ interface PlanPreviewCardProps {
 }
 
 // Tarjeta de un plan nutricional: miniatura de la página 1 y un botón que descarga el PDF completo.
-// Se usa en /panel/planes/[orderId] (detalle de un plan) y en /ordenes/[id] (el plan recién generado). El atributo
+// Se usa en /ordenes/[id] (el plan recién generado; el detalle /planes/[orderId] tiene su propia card). El atributo
 // `download` solo no alcanza para descargar (se ignora en cross-origin): es el Content-Disposition
 // de la URL firmada el que fuerza la descarga. Ambas URLs son firmadas y de corta duración.
 export function PlanPreviewCard({ pdfUrl, thumbnailUrl, creationDate, downloadLabel = 'Descargar' }: PlanPreviewCardProps) {

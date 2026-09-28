@@ -80,7 +80,8 @@ screens there is no sidebar: `TopbarSesion` also hosts those options (`compact` 
 share `SESION_NAV_ITEMS` / `SesionNavLink` (`sesion-nav-link.component.tsx`). These routes do
 **not** show `NavbarLanding` — `NavbarLandingGate` (root layout) hides it via `usesSesionLayout()`.
 Because `<main>` already provides `min-h-screen` and padding, pages inside the group must not add their
-own `min-h-screen` / large top padding (they use `py-4`).
+own `min-h-screen` / large top padding (they use `py-4`). Pages of the user sections (`/panel`, `/planes`, `/mediciones`,
+`/perfil` and their subroutes, including `not-found`) wrap their content in `w-[90%] mx-auto` (no `max-w-*`).
 
 Gating is by `src/proxy.ts`, which redirects to `/login` without a valid session cookie:
 `/consulta/*` (except the bare `/consulta`, empty and intentionally public), `/pago/*`, `/ordenes/*`
@@ -120,7 +121,7 @@ Key steps:
 - **Anamnesis** (`ChatAnamnesis`): each user turn calls `ConsultationService.sendAnamnesisTurn`, sending the full message history + current `AnamnesisDto` to the backend, which returns the next question plus an updated `AnamnesisDto` and an `isComplete` flag. Anamnesis state is local to the component until the user confirms with "Siguiente" — reloading mid-chat loses progress.
 - **Generate order**: builds a `CompleteConsultationDto` from context and calls `ConsultationService.createOrder`, creating an `orden` row backend-side with `estado_pago: 'PENDING'`. Requires a session with a **complete** profile — the backend resolves the `user` from the token and 400s if the profile isn't complete (shouldn't happen in practice, since the frontend already gates on this earlier, but it's enforced server-side too). The AI plan is **not** generated yet — that's deferred until payment confirms, to avoid spending compute on abandoned checkouts.
 - **Payment** (`/pago/[orderId]`): a simulated gateway (card fields are decorative/disabled). "Pagar" calls `ConsultationService.simulatePayment`, which triggers backend-side the same logic a real payment webhook would. This page is a stand-in for a future real-gateway checkout + webhook.
-- **Order status** (`/ordenes/[id]`): polls `ConsultationService.getOrderStatus` every 4s, reading `estado_pago` / `estado_generacion` / `plan_json`. Shows a delay notice past 45s while generating, renders a thumbnail of the plan's first page plus a "Descargar" button for the full PDF (`PlanPreviewCard`, the same card the plan detail `/panel/planes/[orderId]` uses; the backend generates the PDF and thumbnail and returns signed `pdfUrl`/`thumbnailUrl`) once `COMPLETED`, or a reassuring error state — the polling URL is meant to be revisited later.
+- **Order status** (`/ordenes/[id]`): polls `ConsultationService.getOrderStatus` every 4s, reading `estado_pago` / `estado_generacion` / `plan_json`. Shows a delay notice past 45s while generating, renders a thumbnail of the plan's first page plus a "Descargar" button for the full PDF (`PlanPreviewCard`; the plan detail `/planes/[orderId]` shows the same thumbnail in its own PDF card; the backend generates the PDF and thumbnail and returns signed `pdfUrl`/`thumbnailUrl`) once `COMPLETED`, or a reassuring error state — the polling URL is meant to be revisited later.
 
 Backend data model (separate repo, NestJS + PostgreSQL): a single `orden` entity holding the submitted consultation data, `estado_pago` (`PENDING|PAID`), `estado_generacion` (`no_iniciado|generando|completado|error`), and `plan_json`.
 
