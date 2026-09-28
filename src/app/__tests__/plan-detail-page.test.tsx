@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import PlanDetail from '@/app/planes/[slug]/page';
+import PlanDetail from '@/app/planes-estandar/[slug]/page';
 import { PlansService } from '@/features/plans/services/plans.service';
 import { PlanSelectionProvider } from '@/shared';
 
@@ -51,7 +51,7 @@ beforeEach(() => {
   getProduct.mockReset();
 });
 
-describe('PlanDetail (/planes/[slug])', () => {
+describe('PlanDetail (/planes-estandar/[slug])', () => {
   it('muestra título, descripción y los 4 campos; sin datos completos no consulta nada y no deja añadir al carro', async () => {
     renderPage();
 

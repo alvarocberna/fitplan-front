@@ -79,14 +79,14 @@ describe('StandardPlanDescription', () => {
     );
   });
 
-  it('"Ver más" enlaza a /planes/<code> con el code real una vez cargado', async () => {
+  it('"Ver más" enlaza a /planes-estandar/<code> con el code real una vez cargado', async () => {
     getPlanPreviews.mockResolvedValue(PREVIEWS);
 
     renderCarousel();
 
     await waitFor(() => expect(screen.getAllByText('Plan Gimnasio Volumen').length).toBeGreaterThan(0));
     const links = screen.getAllByRole('link', { name: 'Ver más' });
-    expect(links[0]).toHaveAttribute('href', '/planes/plan-gimnasio-volumen');
+    expect(links[0]).toHaveAttribute('href', '/planes-estandar/plan-gimnasio-volumen');
   });
 
   it('si la consulta falla, se queda en el catálogo estático (nunca queda vacío)', async () => {

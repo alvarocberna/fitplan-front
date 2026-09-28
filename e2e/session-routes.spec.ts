@@ -4,11 +4,11 @@ import { mockOrderStatusSequence } from './helpers/mock-backend';
 
 const FLOW_PATHS = ['/consulta/inicio', '/consulta/anamnesis', '/pago/order-e2e-123', '/ordenes/order-e2e-123'];
 
-// src/proxy.ts exige sesión válida en /consulta/*, /pago/*, /ordenes/*, /panel y /perfil.
+// src/proxy.ts exige sesión válida en /consulta/*, /pago/*, /ordenes/*, /panel, /planes, /mediciones y /perfil.
 test.describe('Session gating (sin sesión)', () => {
   test.use({ authenticated: false });
 
-  for (const path of [...FLOW_PATHS, '/panel', '/perfil']) {
+  for (const path of [...FLOW_PATHS, '/panel', '/planes', '/mediciones', '/perfil']) {
     test(`redirects ${path} to /login`, async ({ page }) => {
       await page.goto(path);
 
@@ -27,7 +27,7 @@ test.describe('Session gating (sin sesión)', () => {
 // "Nueva consulta"), sidebar de sesión acoplado por defecto (solo el ícono para desacoplarlo) y sin
 // el navbar de la landing.
 //
-// Los enlaces Home/Perfil/Cerrar sesión existen dos veces en el DOM: en el sidebar (md+) y en el menú
+// Los enlaces Home/Planes/Mediciones/Perfil/Cerrar sesión existen dos veces en el DOM: en el sidebar (md+) y en el menú
 // móvil de la barra superior (`md:hidden`). En el viewport de escritorio de Playwright el móvil está
 // oculto (los selectores por rol lo ignoran), pero igual se acota al sidebar / a la barra superior.
 const sidebarOf = (page: Page) =>
@@ -69,6 +69,8 @@ test.describe('Session layout (con sesión)', () => {
     await page.getByRole('button', { name: 'Desacoplar menú lateral' }).click();
     // exact: true, para que 'Home' no matchee por substring con otros links de la página
     await expect(sidebar.getByRole('link', { name: 'Home', exact: true })).toHaveAttribute('href', '/panel');
+    await expect(sidebar.getByRole('link', { name: 'Planes', exact: true })).toHaveAttribute('href', '/planes');
+    await expect(sidebar.getByRole('link', { name: 'Mediciones', exact: true })).toHaveAttribute('href', '/mediciones');
     await expect(sidebar.getByRole('link', { name: 'Perfil' })).toBeVisible();
     await expect(sidebar.getByRole('link', { name: 'Cerrar sesión' })).toBeVisible();
     // "Nueva consulta" ya no es un ítem del sidebar
@@ -91,6 +93,8 @@ test.describe('Session layout (con sesión)', () => {
     const userMenu = page.getByRole('navigation', { name: 'Menú de usuario' });
     await expect(userMenu.getByRole('link', { name: 'Perfil' })).toBeVisible();
     await expect(userMenu.getByRole('link', { name: 'Home', exact: true })).toHaveAttribute('href', '/panel');
+    await expect(userMenu.getByRole('link', { name: 'Planes', exact: true })).toHaveAttribute('href', '/planes');
+    await expect(userMenu.getByRole('link', { name: 'Mediciones', exact: true })).toHaveAttribute('href', '/mediciones');
     await expect(userMenu.getByRole('link', { name: 'Cerrar sesión' })).toBeVisible();
     await expect(topbarOf(page).getByRole('link', { name: 'Nueva consulta' })).toBeVisible();
   });

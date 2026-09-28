@@ -4,6 +4,8 @@ import Link from "next/link";
 import {
     UserIcon,
     Squares2X2Icon,
+    DocumentTextIcon,
+    ChartBarIcon,
 } from "@heroicons/react/24/outline";
 
 type NavIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -17,8 +19,10 @@ export interface SesionNavItem {
 // Opciones de navegación del área con sesión, compartidas por el sidebar (md+) y la barra superior
 // (móvil). "Cerrar sesión" no está aquí: no es una ruta, es el endpoint de logout.
 export const SESION_NAV_ITEMS: SesionNavItem[] = [
-    { href: "/perfil", label: "Perfil", icon: UserIcon },
     { href: "/panel", label: "Home", icon: Squares2X2Icon },
+    { href: "/planes", label: "Planes", icon: DocumentTextIcon },
+    { href: "/mediciones", label: "Mediciones", icon: ChartBarIcon },
+    { href: "/perfil", label: "Perfil", icon: UserIcon },
 ];
 
 interface SesionNavLinkProps extends SesionNavItem {

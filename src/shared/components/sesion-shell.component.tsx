@@ -10,7 +10,7 @@ import { Footer } from "./footer.component";
 import { isFocusRoute } from "@/shared/auth/sesion-routes";
 
 // Elección manual del usuario (acoplar/desacoplar) en la sección actual. `focus` indica de qué
-// sección es (flujo /consulta/* + /pago/* + /ordenes/* vs /panel + /perfil); `override` es null mientras el
+// sección es (flujo /consulta/* + /pago/* + /ordenes/* vs área de usuario: /panel, /planes, /mediciones, /perfil); `override` es null mientras el
 // usuario no haya tocado el botón. Al cambiar de sección la elección se descarta y vuelve a valer
 // el valor por defecto de la nueva; dentro de una misma sección se mantiene entre páginas porque el
 // layout no se vuelve a montar.
@@ -35,7 +35,7 @@ export function SesionShell({ children }: { children: React.ReactNode }) {
         setState(current);
     }
 
-    // por defecto: acoplado en el flujo de consulta/órdenes, desacoplado en /panel y /perfil
+    // por defecto: acoplado en el flujo de consulta/órdenes, desacoplado en el área de usuario
     const collapsed = current.override ?? focus;
 
     return (

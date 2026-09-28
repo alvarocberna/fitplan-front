@@ -17,7 +17,7 @@ const CONTROL_CLASS =
 
 // Los 4 datos con los que el sistema elige la versión del plan que corresponde al usuario: peso, talla,
 // sexo y edad. Leen y escriben directo en el estado global (usePlanSelection), así que lo que se
-// completa en el modal de "Seleccionar" es lo mismo que se ve y edita en /planes/[slug].
+// completa en el modal de "Seleccionar" es lo mismo que se ve y edita en /planes-estandar/[slug].
 export function PlanSelectionFields() {
     const { selection, setSelectionField } = usePlanSelection()
     const id = useId()

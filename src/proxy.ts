@@ -18,7 +18,7 @@ const plansS3Bucket =
 // antes de que la página se renderice. El login vive en /login (fuera de /consulta/*, así que no
 // necesita estar acá para no crear un loop de redirects). Cualquier otra ruta que empiece con
 // "/consulta/" queda protegida por defecto, incluidas las que se agreguen a futuro.
-// El resto del flujo (/pago/* y /ordenes/*) y el área de usuario (/panel, /perfil) exigen sesión
+// El resto del flujo (/pago/* y /ordenes/*) y el área de usuario (/panel, /planes, /mediciones, /perfil) exigen sesión
 // por completo: ver isSessionGatedPrefix / isSesionRoute en sesion-routes.ts.
 const PUBLIC_CONSULTA_PATHS = new Set(["/consulta"]);
 

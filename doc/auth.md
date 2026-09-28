@@ -199,10 +199,10 @@ mecanismos:
   punta.
 - **`PROTECTED_PATHS`** (hoy `SESION_PATHS` / `isSesionRoute()` en `src/shared/auth/sesion-routes.ts`):
   un set explícito de rutas *fuera* de los prefijos anteriores que también requieren
-  sesión — `/panel` y `/perfil` (área de usuario logueado, ver sección siguiente), **con sus
+  sesión — `/panel`, `/planes`, `/mediciones` y `/perfil` (área de usuario logueado, ver sección siguiente), **con sus
   subrutas** (p. ej. `/panel/consultas/[id]`, el detalle de una consulta): la comparación es por
   prefijo (`/panel` y `/panel/*`, sin falsos positivos tipo `/panelx`). Una ruta nueva fuera de
-  `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel/*` y `/perfil/*` queda pública salvo que se agregue
+  `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel/*`, `/planes/*`, `/mediciones/*` y `/perfil/*` queda pública salvo que se agregue
   explícitamente a este set.
 
 Si la ruta lo requiere, lee la cookie `session` con `request.cookies.get(...)` (no `cookies()` de
@@ -225,7 +225,7 @@ se prueba en e2e. Ver `doc/testing.md`.
 ## Área de usuario logueado — layout `(sesion)`
 
 Todas las rutas del route group `src/app/(sesion)/` (el paréntesis no agrega segmento a la URL)
-comparten `src/app/(sesion)/layout.tsx`: `/panel`, `/perfil`, `/consulta/*`, `/pago/[orderId]` y
+comparten `src/app/(sesion)/layout.tsx`: `/panel`, `/planes`, `/mediciones`, `/perfil`, `/consulta/*`, `/pago/[orderId]` y
 `/ordenes/[id]` (`/pago` vivía antes en `src/app/pago/` con el navbar público; se movió a
 `src/app/(sesion)/pago/` sin cambiar la URL).
 
@@ -239,11 +239,12 @@ el ancho actual del sidebar y cuyo padding superior (`pt-19 md:pt-23`) deja libr
 
 - **Barra superior (`TopbarSesion`)**: fija, 100% de ancho, `h-15` (60px). A la izquierda el logo de
   texto "Nuvi" (link a `/panel`); a la derecha el botón "Nueva consulta" (link a `/consulta/anamnesis`). En
-  móvil (<md) también aloja las opciones de navegación (Perfil, Home y Cerrar sesión, en variante
+  móvil (<md) también aloja las opciones de navegación (Home, Planes, Mediciones, Perfil y Cerrar sesión, en variante
   `compact`: ícono sobre la etiqueta), porque el sidebar no se renderiza en esa resolución.
 - **Sidebar (`NavbarSesion`, solo md+)**: `hidden md:flex`, fijo a la izquierda debajo de la barra
-  superior (`top-15`, alto `calc(100vh - 3.75rem)`). Sus opciones son Perfil (`/perfil`), Home (etiqueta
-  visible de `/panel`; el href sigue siendo `/panel`) y Cerrar sesión (`/api/cognito/logout`), más el
+  superior (`top-15`, alto `calc(100vh - 3.75rem)`). Sus opciones son, en orden, Home (etiqueta
+  visible de `/panel`; el href sigue siendo `/panel`), Planes (`/planes`), Mediciones (`/mediciones`),
+  Perfil (`/perfil`) y Cerrar sesión (`/api/cognito/logout`), más el
   botón de acoplar/desacoplar (16×32px con una flecha, centrado sobre el borde derecho del sidebar;
   al pasar el mouse se ilumina su borde y el borde derecho del sidebar con `var(--color-primary)`); ya no incluye "Nueva consulta" (ahora vive en la barra
   superior). La opción activa se marca con el texto en `var(--color-primary)` y un rectángulo de 5px
@@ -255,19 +256,19 @@ el ancho actual del sidebar y cuyo padding superior (`pt-19 md:pt-23`) deja libr
   click en cualquier parte del sidebar que no sea un link de navegación. El
   estado inicial depende de la sección: en `/consulta/*`, `/pago/*` y `/ordenes/*`
   (`isFocusRoute()`, "rutas de flujo") arranca **acoplado** para dejar espacio al contenido del
-  flujo; en `/panel` y `/perfil` arranca **desacoplado**. La elección manual del usuario
+  flujo; en `/panel`, `/planes`, `/mediciones` y `/perfil` arranca **desacoplado**. La elección manual del usuario
   (`SesionShell`, `useState`) persiste entre páginas de una misma sección mientras el layout no se
-  remonte, y se descarta al cambiar entre la sección panel/perfil y la de flujo (vuelve al valor
+  remonte, y se descarta al cambiar entre la sección de usuario (panel/planes/mediciones/perfil) y la de flujo (vuelve al valor
   por defecto de la nueva sección).
 - **Padding de las páginas**: como el `<main>` del layout ya aporta el padding, los wrappers de
   las páginas de `/consulta/*`, `/pago/[orderId]` y `/ordenes/[id]` (que no deben sumar su propio
   `min-h-screen` ni un padding superior grande) usan `py-4` (`/pago`, además,
   `w-full flex justify-center px-6`) en vez del antiguo `min-h-screen py-24` / `pt-40` /
   `min-h-screen items-center` (que compensaban el navbar público o centraban en pantalla completa).
-- **Gating**: `/panel` y `/perfil` están en `PROTECTED_PATHS` (ver arriba); `/consulta/*` (salvo
+- **Gating**: `/panel`, `/planes`, `/mediciones` y `/perfil` están en `PROTECTED_PATHS` (ver arriba); `/consulta/*` (salvo
   `/consulta`) y `/pago/*` + `/ordenes/*` se protegen por prefijo — sin sesión válida,
   `src/proxy.ts` redirige a `/login` antes de que el layout o la página se rendericen.
-  `isSesionRoute()` (`/panel`, `/perfil` y sus subrutas) e `isSessionGatedPrefix()` (`/pago`, `/ordenes`) son
+  `isSesionRoute()` (`/panel`, `/planes`, `/mediciones`, `/perfil` y sus subrutas) e `isSessionGatedPrefix()` (`/pago`, `/ordenes`) son
   lo que consulta el proxy; `isFocusRoute()` y `usesSesionLayout()` (que agrupa `isSesionRoute` +
   `isFocusRoute`) solo deciden presentación (navbar/sidebar), no seguridad.
 
@@ -294,6 +295,12 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
   encontrada"), registro y corrección de una medición (`MeasurementForm`, Client Component con
   react-hook-form que llama a `MeasurementsService` y, al guardar, navega al detalle). `/panel` suma la
   tarjeta 4, `MeasurementsList` (`MeasurementsService.getMeasurements()` → `GET /me/measurements`).
+- **`/planes`** (`src/app/(sesion)/planes/page.tsx`, Server Component): solo la card `PlansList`
+  (`PanelService.getPlans()` → `GET /me/plans`), la misma que muestra `/panel`. Los links de detalle siguen
+  apuntando a `/panel/planes/[orderId]`.
+- **`/mediciones`** (`src/app/(sesion)/mediciones/page.tsx`, Server Component): solo la card
+  `MeasurementsList` (`MeasurementsService.getMeasurements()` → `GET /me/measurements`), la misma que muestra
+  `/panel`. Registro y detalle siguen bajo `/panel/mediciones/*`.
 - **`/perfil`** (`src/app/(sesion)/perfil/page.tsx`, Server Component): llama
   `ProfileService.getProfile()` (`src/features/profile/services/profile.service.ts` →
   `getUserProfileAction` → `GET /me`) y renderiza `ProfileForm` (Client Component,

@@ -15,7 +15,7 @@ interface NavbarSesionProps {
     onToggle?: () => void;
 }
 
-// Sidebar para usuarios con sesión iniciada (/panel, /perfil, /consulta/*, /pago/*, /ordenes/*). Solo
+// Sidebar para usuarios con sesión iniciada (/panel, /planes, /mediciones, /perfil, /consulta/*, /pago/*, /ordenes/*). Solo
 // existe en md+: fija a la izquierda, debajo de TopbarSesion (h-15), desacoplado (w-56, con los
 // links) o acoplado (w-14, sin links). Se acopla/desacopla con el botón de flecha (16x32px) centrado
 // sobre su borde derecho, o haciendo click en cualquier parte del sidebar que no sea un link. En

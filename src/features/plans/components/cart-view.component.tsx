@@ -137,7 +137,7 @@ export function CartView({ isAuthenticated }: CartViewProps) {
                         </button>
 
                         <Link
-                            href="/planes"
+                            href="/planes-estandar"
                             className="text-center text-sm text-zinc-600 hover:text-zinc-900 transition-colors underline"
                         >
                             Seguir viendo planes

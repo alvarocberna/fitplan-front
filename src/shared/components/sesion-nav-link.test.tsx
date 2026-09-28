@@ -4,10 +4,12 @@ import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { SESION_NAV_ITEMS, SesionNavLink } from './sesion-nav-link.component';
 
 describe('SESION_NAV_ITEMS', () => {
-  it('lists Perfil and Home only ("Nueva consulta" lives in the topbar)', () => {
+  it('lists Home, Planes, Mediciones and Perfil, in that order ("Nueva consulta" lives in the topbar)', () => {
     expect(SESION_NAV_ITEMS.map(({ label, href }) => [label, href])).toEqual([
-      ['Perfil', '/perfil'],
       ['Home', '/panel'],
+      ['Planes', '/planes'],
+      ['Mediciones', '/mediciones'],
+      ['Perfil', '/perfil'],
     ]);
   });
 });

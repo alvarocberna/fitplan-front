@@ -6,20 +6,28 @@ const usePathnameMock = vi.fn();
 vi.mock('next/navigation', () => ({ usePathname: () => usePathnameMock() }));
 
 describe('NavbarSesion', () => {
-  it('renders links to /perfil, /panel ("Home") and the logout endpoint', () => {
+  it('renders links to /panel ("Home"), /planes, /mediciones, /perfil and the logout endpoint', () => {
     usePathnameMock.mockReturnValue('/panel');
     render(<NavbarSesion />);
 
-    expect(screen.getByRole('link', { name: 'Perfil' })).toHaveAttribute('href', '/perfil');
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/panel');
+    expect(screen.getByRole('link', { name: 'Planes' })).toHaveAttribute('href', '/planes');
+    expect(screen.getByRole('link', { name: 'Mediciones' })).toHaveAttribute('href', '/mediciones');
+    expect(screen.getByRole('link', { name: 'Perfil' })).toHaveAttribute('href', '/perfil');
     expect(screen.getByRole('link', { name: 'Cerrar sesión' })).toHaveAttribute('href', '/api/cognito/logout');
   });
 
-  it('lists the links in order: Perfil, Home, Cerrar sesión (no "Nueva consulta": lives in the topbar)', () => {
+  it('lists the links in order: Home, Planes, Mediciones, Perfil, Cerrar sesión (no "Nueva consulta": lives in the topbar)', () => {
     usePathnameMock.mockReturnValue('/panel');
     render(<NavbarSesion />);
 
-    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['Perfil', 'Home', 'Cerrar sesión']);
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual([
+      'Home',
+      'Planes',
+      'Mediciones',
+      'Perfil',
+      'Cerrar sesión',
+    ]);
     expect(screen.queryByRole('link', { name: 'Nueva consulta' })).not.toBeInTheDocument();
   });
 
@@ -63,6 +71,19 @@ describe('NavbarSesion', () => {
 
       expectActive('Perfil');
       expectInactive('Home');
+    });
+
+    it.each([
+      ['/planes', 'Planes'],
+      ['/mediciones', 'Mediciones'],
+    ])('highlights only the matching link when the current pathname is %s', (pathname, active) => {
+      usePathnameMock.mockReturnValue(pathname);
+      render(<NavbarSesion />);
+
+      expectActive(active);
+      for (const name of ['Home', 'Planes', 'Mediciones', 'Perfil'].filter((n) => n !== active)) {
+        expectInactive(name);
+      }
     });
 
     it('highlights nothing on /consulta/anamnesis ("Nueva consulta" is no longer a sidebar item)', () => {
@@ -176,7 +197,7 @@ describe('NavbarSesion', () => {
       usePathnameMock.mockReturnValue('/panel');
       render(<NavbarSesion collapsed={false} onToggle={vi.fn()} />);
 
-      for (const name of ['Home', 'Perfil', 'Cerrar sesión']) {
+      for (const name of ['Home', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
         expect(screen.getByRole('link', { name })).not.toHaveClass('hidden');
       }
     });
@@ -185,7 +206,7 @@ describe('NavbarSesion', () => {
       usePathnameMock.mockReturnValue('/panel');
       render(<NavbarSesion collapsed onToggle={vi.fn()} />);
 
-      for (const name of ['Home', 'Perfil', 'Cerrar sesión']) {
+      for (const name of ['Home', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
         expect(screen.getByRole('link', { name })).toHaveClass('hidden');
       }
     });
@@ -232,7 +253,7 @@ describe('NavbarSesion', () => {
         expect(onToggle).toHaveBeenCalledTimes(1);
       });
 
-      it.each(['Perfil', 'Home', 'Cerrar sesión'])('does NOT call onToggle when clicking the "%s" link', (name) => {
+      it.each(['Home', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión'])('does NOT call onToggle when clicking the "%s" link', (name) => {
         usePathnameMock.mockReturnValue('/panel');
         const onToggle = vi.fn();
         render(<NavbarSesion onToggle={onToggle} />);

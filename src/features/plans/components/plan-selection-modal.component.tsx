@@ -6,9 +6,9 @@ import { Modal, usePlanSelection, isPlanSelectionComplete, isPlanSlug } from '@/
 //features - plans
 import { PlanSelectionFields } from './plan-selection-fields.component'
 
-// Modal que abre el botón "Seleccionar" de un plan (en el carrusel del home y en /planes): pide peso,
+// Modal que abre el botón "Seleccionar" de un plan (en el carrusel del home y en /planes-estandar): pide peso,
 // talla, sexo y edad para elegir la versión del plan que mejor le corresponde al usuario. Al confirmar
-// lo lleva a /planes/<plan>, donde ve la vista previa de su versión. Se monta una sola vez en el layout
+// lo lleva a /planes-estandar/<plan>, donde ve la vista previa de su versión. Se monta una sola vez en el layout
 // raíz; el plan para el que se abrió vive en el estado global (selectionModalSlug).
 export function PlanSelectionModal() {
     const router = useRouter()
@@ -18,7 +18,7 @@ export function PlanSelectionModal() {
     const onConfirm = () => {
         if (!canConfirm || !selectionModalSlug || !isPlanSlug(selectionModalSlug)) return
         closeSelectionModal()
-        router.push(`/planes/${selectionModalSlug}`)
+        router.push(`/planes-estandar/${selectionModalSlug}`)
     }
 
     return (

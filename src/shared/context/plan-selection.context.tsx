@@ -60,7 +60,7 @@ function saveToStorage(data: PersistedState) {
 }
 
 //crea y posee el estado global de la selección de plan predefinido y del carro. Se monta en el layout
-//raíz porque lo comparten rutas públicas distintas (/, /planes, /planes/[slug], /carrito).
+//raíz porque lo comparten rutas públicas distintas (/, /planes-estandar, /planes-estandar/[slug], /carrito).
 export function PlanSelectionProvider({ children }: { children: ReactNode }) {
     const [selection, _setSelection] = useState<PlanSelection>(EMPTY_PLAN_SELECTION)
     const [cartItem, _setCartItem] = useState<CartItem | null>(null)

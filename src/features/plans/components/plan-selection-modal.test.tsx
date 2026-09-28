@@ -110,7 +110,7 @@ describe('PlanSelectionModal', () => {
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled();
   });
 
-  it('al confirmar guarda la selección en el estado global, cierra el modal y va a /planes/<plan>', async () => {
+  it('al confirmar guarda la selección en el estado global, cierra el modal y va a /planes-estandar/<plan>', async () => {
     const user = userEvent.setup();
     renderModal('plan-gimnasio-definicion');
     await user.click(screen.getByRole('button', { name: 'Seleccionar' }));
@@ -118,7 +118,7 @@ describe('PlanSelectionModal', () => {
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }));
 
-    expect(pushMock).toHaveBeenCalledWith('/planes/plan-gimnasio-definicion');
+    expect(pushMock).toHaveBeenCalledWith('/planes-estandar/plan-gimnasio-definicion');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(JSON.parse(localStorage.getItem('plan_selection')!).selection).toEqual({
       weightRange: '50-60',

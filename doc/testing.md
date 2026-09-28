@@ -41,7 +41,7 @@ resolubles para el CMS (`http://cms-backend.e2e.local`), de modo que cualquier r
 
 ### Cómo funcionan los e2e
 
-- **Sesión**: `src/proxy.ts` redirige a `/login` en `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel` y `/perfil` sin sesión. Los
+- **Sesión**: `src/proxy.ts` redirige a `/login` en `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel`, `/planes`, `/mediciones` y `/perfil` sin sesión. Los
   specs importan `test`/`expect` de `e2e/fixtures.ts` (no de `@playwright/test`): antes de cada test ese fixture instala la
   cookie `session` (un JWT HS256 firmado con `SESSION_SECRET`, fabricado en `e2e/helpers/session.ts` igual que lo emite
   `src/shared/auth/session.ts`). Para probar sin sesión: `test.use({ authenticated: false })`.
@@ -167,7 +167,8 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   placeholder "Vista previa no disponible" cuando `thumbnailUrl` es `null` o falta (backend aún sin actualizar).
 - **`proxy` (CSP)**: `img-src` incluye el bucket de planes; `frame-src` y `connect-src` no.
 - **`NavbarSesion`** (sidebar, solo md+: `hidden md:flex fixed left-0 top-15`, debajo de la barra superior): los links a
-  `/perfil` ("Perfil"), `/panel` (label visible "Home") y `/api/cognito/logout`, en ese orden — "Nueva consulta" ya **no** es un
+  `/panel` (label visible "Home"), `/planes` ("Planes"), `/mediciones` ("Mediciones"), `/perfil` ("Perfil") y
+  `/api/cognito/logout`, en ese orden — "Nueva consulta" ya **no** es un
   ítem del sidebar, vive en `TopbarSesion`. Qué link queda resaltado según `usePathname` (igualdad exacta con el `href`): el
   activo cambia el `color` del texto a `var(--color-primary)` (no el fondo) y renderiza el indicador
   `data-testid="nav-active-indicator"` (`absolute left-0 inset-y-0 w-[5px]`); los inactivos no lo tienen. Y el toggle del
@@ -193,7 +194,7 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   en el DOM (sidebar + menú móvil `md:hidden` de la barra superior): los tests acotan por contenedor (`within(sidebar)`, donde
   el sidebar es el `<nav>` que contiene el botón de acoplar; o `within(getByRole('navigation', { name: 'Menú de usuario' }))`)
   en vez de `getByRole('link', { name: 'Home' })` a secas, que falla por "múltiples elementos".
-- **`sesion-routes.ts`**: `isSesionRoute` (`/panel`, `/perfil` y sus subrutas como `/panel/consultas/abc`, sin falsos positivos
+- **`sesion-routes.ts`**: `isSesionRoute` (`/panel`, `/planes`, `/mediciones`, `/perfil` y sus subrutas como `/panel/consultas/abc`, sin falsos positivos
   tipo `/panelx`; la usa el proxy; `/pago/*` y `/ordenes/*` dan false), `isSessionGatedPrefix` (`/pago` y `/ordenes`, raíz y subrutas, sin falsos positivos tipo `/pagos`, `/pago-x`,
   `/ordenesx`; `/consulta` no entra), `isFocusRoute` (prefijos `/consulta`, `/pago` y `/ordenes` sin falsos positivos tipo
   `/consultas`) y `usesSesionLayout` (la unión de `isSesionRoute` e `isFocusRoute`).
@@ -211,8 +212,8 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 Unitarios: `plan-code` (código de versión, solo 18-30 es "joven", la talla no cambia la versión, `PLANS` coincide con los slugs
 del backend), `plan-selection.context` (hidratación, corrupción de `localStorage`, el carro admite un solo plan),
 `Modal` (portal, Escape, clic en el fondo, foco, scroll), `PlanSelectionModal` (los 4 campos con sus opciones, "Confirmar"
-deshabilitado hasta completar, navegación a `/planes/<slug>`), `/planes` (botón "Seleccionar", ya no "Añadir al carro"),
-`/planes/[slug]` (busca la versión al completar los datos, precio, miniatura o imagen estática, versión no disponible, añadir
+deshabilitado hasta completar, navegación a `/planes-estandar/<slug>`), `/planes-estandar` (botón "Seleccionar", ya no "Añadir al carro"),
+`/planes-estandar/[slug]` (busca la versión al completar los datos, precio, miniatura o imagen estática, versión no disponible, añadir
 al carro), `CartView` (sin sesión abre el modal de registro con `return_to`, con sesión crea la orden y va a
 `/pago/<id>?tipo=predefinido`, sesión expirada, errores), `/pago/[orderId]` (`?tipo=predefinido` → `/panel`, si no →
 `/ordenes/<id>`), `return-to` y el `callback` con `return_to`.

@@ -10,7 +10,7 @@ export default async function PanelPage() {
     ])
 
     return (
-        <div className="max-w-3xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-4">
             <div className="w-full flex flex-col gap-6">
                 <PanelSummary summary={summary} />
                 <ConsultationsList consultations={consultations} />

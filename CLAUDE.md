@@ -65,18 +65,18 @@ The Content-Security-Policy is nonce-based and generated per-request in `src/pro
 ### Session area: `(sesion)` route group and route gating
 
 Every route that needs a logged-in user lives under the route group `src/app/(sesion)/` (no URL
-segment): `/panel`, `/perfil`, `/consulta/*`, `/pago/[orderId]` and `/ordenes/[id]`. They share
+segment): `/panel`, `/planes`, `/mediciones`, `/perfil`, `/consulta/*`, `/pago/[orderId]` and `/ordenes/[id]`. They share
 `src/app/(sesion)/layout.tsx`, which renders `SesionShell` (`src/shared/components/sesion-shell.component.tsx`,
 a Client Component): `TopbarSesion` + the `NavbarSesion` sidebar + a `<main>` (`pt-19 md:pt-23`) whose
 left padding follows the sidebar width. `TopbarSesion` is a fixed 60px (`h-15`) full-width bar: the
 "Nuvi" text logo (→ `/panel`) on the left and the "Nueva consulta" button (→ `/consulta/anamnesis`) on the
-right. The sidebar (md+ only, below the top bar; options Perfil, Home = `/panel`, Cerrar sesión) starts
+right. The sidebar (md+ only, below the top bar; options Home = `/panel`, Planes = `/planes`, Mediciones = `/mediciones`, Perfil, Cerrar sesión) starts
 **docked** (narrow, `w-14`, no links) in the flow routes `/consulta/*`, `/pago/*`,
-`/ordenes/*`, and **undocked** (`w-56`, with links) in `/panel` and `/perfil`; the manual choice is kept
+`/ordenes/*`, and **undocked** (`w-56`, with links) in `/panel`, `/planes`, `/mediciones` and `/perfil`; the manual choice is kept
 while navigating inside the same section and discarded when switching between sections. It is toggled
 by a 16×32px arrow button centered on the sidebar's right border (hover lights up its border and the
 sidebar's right border with `--color-primary`) or by clicking anywhere on the sidebar except the nav links. On small
-screens there is no sidebar: `TopbarSesion` also hosts those three options (`compact` variant). Both
+screens there is no sidebar: `TopbarSesion` also hosts those options (`compact` variant). Both
 share `SESION_NAV_ITEMS` / `SesionNavLink` (`sesion-nav-link.component.tsx`). These routes do
 **not** show `NavbarLanding` — `NavbarLandingGate` (root layout) hides it via `usesSesionLayout()`.
 Because `<main>` already provides `min-h-screen` and padding, pages inside the group must not add their
@@ -84,7 +84,7 @@ own `min-h-screen` / large top padding (they use `py-4`).
 
 Gating is by `src/proxy.ts`, which redirects to `/login` without a valid session cookie:
 `/consulta/*` (except the bare `/consulta`, empty and intentionally public), `/pago/*`, `/ordenes/*`
-(via `isSessionGatedPrefix`), and `/panel`, `/perfil` and their subroutes, e.g. the consultation detail
+(via `isSessionGatedPrefix`), and `/panel`, `/planes`, `/mediciones`, `/perfil` and their subroutes, e.g. the consultation detail
 `/panel/consultas/[id]` (via `isSesionRoute`, prefix match). Route lists live in
 `src/shared/auth/sesion-routes.ts` — when adding a route to the session area, update that file **and**
 put the page under `(sesion)`; `isSesionRoute` (proxy) is deliberately separate from
@@ -129,12 +129,12 @@ Backend data model (separate repo, NestJS + PostgreSQL): a single `orden` entity
 Second way to buy, next to the paid consultation: 4 ready-made plans (`PLANS` in `src/shared/data/data.ts`:
 `plan-gimnasio-volumen`, `plan-gimnasio-definicion`, `plan-running`, `plan-deporte-cancha`), each in 28 hidden
 versions (7 weight ranges × 2 sexes × 2 age groups). The user never sees the versions: they fill weight, height, sex and
-age and the system picks theirs. Public routes: `/` (carousel), `/planes`, `/planes/[slug]`, `/carrito`. Full flow, tables and
+age and the system picks theirs. Public routes: `/` (carousel), `/planes-estandar`, `/planes-estandar/[slug]`, `/carrito`. Full flow, tables and
 S3 naming: `../doc/flows/purchase-flow-predefined-plan.md`.
 
-- **Selection**: "Seleccionar" (carousel + `/planes`) opens `PlanSelectionModal` ("Completa tu información para obtener el plan
+- **Selection**: "Seleccionar" (carousel + `/planes-estandar`) opens `PlanSelectionModal` ("Completa tu información para obtener el plan
   más adecuado"; mounted once in the root `layout.tsx`, rendered through a portal by `Modal` because the GSAP carousel's
-  `transform` would break a `position: fixed` inside it). "Confirmar" goes to `/planes/<slug>`, which shows the same 4 fields
+  `transform` would break a `position: fixed` inside it). "Confirmar" goes to `/planes-estandar/<slug>`, which shows the same 4 fields
   (`PlanSelectionFields`), the version's thumbnail and price, and "Añadir al carro".
 - **State**: `PlanSelectionProvider` / `usePlanSelection` (`src/shared/context/plan-selection.context.tsx`, root layout,
   persisted in `localStorage` under `plan_selection`): `selection` (weight range, height, sex, age range), `cartItem`
@@ -161,7 +161,7 @@ S3 naming: `../doc/flows/purchase-flow-predefined-plan.md`.
 
 ### Known inconsistency: README vs. code naming
 
-Routes were renamed from English to Spanish (`/consultation/...` → `/consulta/...`, `/orders/[id]` → `/ordenes/[id]`, `/payment/[orderId]` → `/pago/[orderId]`, `/articles` → `/articulos`, `/cart` → `/carrito`, `/plans` → `/planes`, `/testimonials` → `/testimonios`, etc.) so the routes now **match** `README.md`, which already documented Spanish route names from before an earlier English naming-convention refactor. What's still inconsistent between docs/README and code is naming *below* the route level: internal DTOs/services/functions keep the project's English convention (`PersonalInfoDto`, `ConsultationService` in `src/features/consultation`, ...) — only `src/app` folder names and the URLs they produce changed, `src/features/*` and `src/shared/*` did not. The backend (separate repo) exposes its own Spanish endpoint paths (`/consultations/chat`, `/consultations`, `/orders/:id/status`), unrelated to and unchanged by this frontend route rename. When in doubt, trust the code over any doc's naming for internal DTOs/functions — but for navigable routes, code and README now agree.
+Routes were renamed from English to Spanish (`/consultation/...` → `/consulta/...`, `/orders/[id]` → `/ordenes/[id]`, `/payment/[orderId]` → `/pago/[orderId]`, `/articles` → `/articulos`, `/cart` → `/carrito`, `/plans` → `/planes` (later `/planes-estandar`, to free `/planes` for the session page "Mis planes"), `/testimonials` → `/testimonios`, etc.) so the routes now **match** `README.md`, which already documented Spanish route names from before an earlier English naming-convention refactor. What's still inconsistent between docs/README and code is naming *below* the route level: internal DTOs/services/functions keep the project's English convention (`PersonalInfoDto`, `ConsultationService` in `src/features/consultation`, ...) — only `src/app` folder names and the URLs they produce changed, `src/features/*` and `src/shared/*` did not. The backend (separate repo) exposes its own Spanish endpoint paths (`/consultations/chat`, `/consultations`, `/orders/:id/status`), unrelated to and unchanged by this frontend route rename. When in doubt, trust the code over any doc's naming for internal DTOs/functions — but for navigable routes, code and README now agree.
 
 ## Documentation maintenance
 

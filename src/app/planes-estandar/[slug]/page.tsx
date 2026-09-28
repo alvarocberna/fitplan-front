@@ -83,7 +83,7 @@ export default function PlanDetail() {
           >
             Añadir al carro
           </button>
-          <Link href="/planes" className="mt-4 text-sm text-zinc-600 hover:text-zinc-900 underline">
+          <Link href="/planes-estandar" className="mt-4 text-sm text-zinc-600 hover:text-zinc-900 underline">
             Ver todos los planes
           </Link>
         </div>

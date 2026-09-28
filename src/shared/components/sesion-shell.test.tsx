@@ -10,7 +10,7 @@ const UNDOCK = 'Desacoplar menú lateral';
 
 // El sidebar (md+) es el <nav> que contiene el botón de acoplar/desacoplar. jsdom no aplica CSS, así
 // que además de él está en el DOM el menú móvil de la barra superior con los mismos enlaces
-// (Home/Perfil/Cerrar sesión): hay que acotar los selectores a uno de los dos.
+// (Home/Planes/Mediciones/Perfil/Cerrar sesión): hay que acotar los selectores a uno de los dos.
 function sidebar() {
   const nav = screen.getByRole('button', { name: /menú lateral/ }).closest('nav');
   if (!nav) throw new Error('sidebar <nav> not found');
@@ -45,7 +45,7 @@ describe('SesionShell', () => {
   });
 
   describe('default por ruta', () => {
-    it.each(['/panel', '/perfil'])('starts undocked (wide sidebar) on %s', (pathname) => {
+    it.each(['/panel', '/planes', '/mediciones', '/perfil'])('starts undocked (wide sidebar) on %s', (pathname) => {
       renderAt(pathname);
 
       expect(screen.getByRole('button', { name: DOCK })).toHaveAttribute('aria-expanded', 'true');
@@ -80,7 +80,7 @@ describe('SesionShell', () => {
       renderAt('/consulta/inicio');
 
       const mobileMenu = within(screen.getByRole('navigation', { name: 'Menú de usuario' }));
-      for (const name of ['Home', 'Perfil', 'Cerrar sesión']) {
+      for (const name of ['Home', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
         expect(mobileMenu.getByRole('link', { name })).not.toHaveClass('hidden');
       }
     });
@@ -154,7 +154,7 @@ describe('SesionShell', () => {
       ).toBeTruthy();
     });
 
-    it.each(['/panel', '/perfil'])('gives the footer wrapper the undocked padding (md:pl-56) on %s', (pathname) => {
+    it.each(['/panel', '/planes', '/mediciones', '/perfil'])('gives the footer wrapper the undocked padding (md:pl-56) on %s', (pathname) => {
       renderAt(pathname);
 
       expect(footerWrapper()).toHaveClass('md:pl-56');

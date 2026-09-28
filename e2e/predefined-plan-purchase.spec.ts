@@ -9,7 +9,7 @@ import {
 
 const CODE = 'plan-gimnasio-volumen-50-60-m-joven';
 
-// completa los 4 campos del modal o de /planes/[slug] (mismas etiquetas en ambos)
+// completa los 4 campos del modal o de /planes-estandar/[slug] (mismas etiquetas en ambos)
 async function fillSelection(page: import('@playwright/test').Page) {
   await page.getByLabel('Peso').selectOption('50-60');
   await page.getByLabel('Talla (cm)').fill('175');
@@ -20,7 +20,7 @@ async function fillSelection(page: import('@playwright/test').Page) {
 test.describe('Planes predefinidos - selección y carro', () => {
   test('"Seleccionar" abre el modal, "Confirmar" lleva al plan con los datos ya cargados y muestra su precio', async ({ page }) => {
     await mockPredefinedProduct({ price: 14990 });
-    await page.goto('/planes');
+    await page.goto('/planes-estandar');
 
     await page.getByRole('button', { name: 'Seleccionar' }).first().click();
     const dialog = page.getByRole('dialog', { name: 'Completa tu información para obtener el plan más adecuado' });
@@ -30,7 +30,7 @@ test.describe('Planes predefinidos - selección y carro', () => {
     await fillSelection(page);
     await dialog.getByRole('button', { name: 'Confirmar' }).click();
 
-    await expect(page).toHaveURL(/\/planes\/plan-gimnasio-volumen$/);
+    await expect(page).toHaveURL(/\/planes-estandar\/plan-gimnasio-volumen$/);
     // el estado global conserva lo que se completó en el modal
     await expect(page.getByLabel('Peso')).toHaveValue('50-60');
     await expect(page.getByLabel('Talla (cm)')).toHaveValue('175');
@@ -44,7 +44,7 @@ test.describe('Planes predefinidos - selección y carro', () => {
 
   test('una versión no disponible se avisa y no permite añadir al carro', async ({ page }) => {
     await mockPredefinedProduct({ unavailableCodes: [CODE] });
-    await page.goto('/planes/plan-gimnasio-volumen');
+    await page.goto('/planes-estandar/plan-gimnasio-volumen');
 
     await fillSelection(page);
 
@@ -54,7 +54,7 @@ test.describe('Planes predefinidos - selección y carro', () => {
 
   test('añadir al carro lleva a /carrito con el plan y su precio real', async ({ page }) => {
     await mockPredefinedProduct({ price: 14990 });
-    await page.goto('/planes/plan-gimnasio-volumen');
+    await page.goto('/planes-estandar/plan-gimnasio-volumen');
     await fillSelection(page);
     await expect(page.getByText('$14.990')).toBeVisible();
 
@@ -82,7 +82,7 @@ test.describe('Planes predefinidos - pago con sesión', () => {
         summary: null,
       },
     ]);
-    await page.goto('/planes/plan-gimnasio-volumen');
+    await page.goto('/planes-estandar/plan-gimnasio-volumen');
     await fillSelection(page);
     await expect(page.getByText('$14.990')).toBeVisible();
     await page.getByRole('button', { name: 'Añadir al carro' }).click();
@@ -106,7 +106,7 @@ test.describe('Planes predefinidos - pago con sesión', () => {
   test('si el backend rechaza la orden muestra un error y se queda en el carro', async ({ page }) => {
     await mockPredefinedProduct();
     await mockCreatePredefinedOrder({ fail: true });
-    await page.goto('/planes/plan-gimnasio-volumen');
+    await page.goto('/planes-estandar/plan-gimnasio-volumen');
     await fillSelection(page);
     await page.getByRole('button', { name: 'Añadir al carro' }).click();
 
@@ -123,7 +123,7 @@ test.describe('Planes predefinidos - pago sin sesión', () => {
   test('"Pagar" pide registrarse en un modal (con vuelta al carro) y no crea la orden', async ({ page }) => {
     await mockPredefinedProduct();
     await mockCreatePredefinedOrder();
-    await page.goto('/planes/plan-gimnasio-volumen');
+    await page.goto('/planes-estandar/plan-gimnasio-volumen');
     await fillSelection(page);
     await page.getByRole('button', { name: 'Añadir al carro' }).click();
     await expect(page).toHaveURL(/\/carrito$/);

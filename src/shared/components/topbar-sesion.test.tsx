@@ -52,13 +52,19 @@ describe('TopbarSesion', () => {
       expect(mobileNav()).toHaveClass('flex', 'md:hidden');
     });
 
-    it('lists Perfil, Home and Cerrar sesión, in that order, with the right hrefs', () => {
+    it('lists Home, Planes, Mediciones, Perfil and Cerrar sesión, in that order, with the right hrefs', () => {
       usePathnameMock.mockReturnValue('/panel');
       render(<TopbarSesion />);
 
       const links = within(mobileNav()).getAllByRole('link');
-      expect(links.map((link) => link.textContent)).toEqual(['Perfil', 'Home', 'Cerrar sesión']);
-      expect(links.map((link) => link.getAttribute('href'))).toEqual(['/perfil', '/panel', '/api/cognito/logout']);
+      expect(links.map((link) => link.textContent)).toEqual(['Home', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']);
+      expect(links.map((link) => link.getAttribute('href'))).toEqual([
+        '/panel',
+        '/planes',
+        '/mediciones',
+        '/perfil',
+        '/api/cognito/logout',
+      ]);
     });
 
     it('highlights the link matching the pathname with the primary color (Home on /panel)', () => {
@@ -77,6 +83,18 @@ describe('TopbarSesion', () => {
 
       const nav = within(mobileNav());
       expect(nav.getByRole('link', { name: 'Perfil' })).toHaveStyle({ color: 'var(--color-primary)' });
+      expect(nav.getByRole('link', { name: 'Home' })).not.toHaveStyle({ color: 'var(--color-primary)' });
+    });
+
+    it.each([
+      ['/planes', 'Planes'],
+      ['/mediciones', 'Mediciones'],
+    ])('highlights the matching link on %s', (pathname, name) => {
+      usePathnameMock.mockReturnValue(pathname);
+      render(<TopbarSesion />);
+
+      const nav = within(mobileNav());
+      expect(nav.getByRole('link', { name })).toHaveStyle({ color: 'var(--color-primary)' });
       expect(nav.getByRole('link', { name: 'Home' })).not.toHaveStyle({ color: 'var(--color-primary)' });
     });
 
