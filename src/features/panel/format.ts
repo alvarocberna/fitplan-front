@@ -32,3 +32,29 @@ const BMI_CLASSIFICATION_LABELS: Record<string, string> = {
 export function bmiClassificationLabel(classification: string): string {
     return BMI_CLASSIFICATION_LABELS[classification] ?? classification
 }
+
+// Tiempo de comida (PlanMealTimeSlot del backend) -> texto.
+export const MEAL_TIME_LABELS: Record<string, string> = {
+    BREAKFAST: 'Desayuno',
+    LUNCH: 'Almuerzo',
+    AFTERNOON_TEA: 'Once',
+    DINNER: 'Cena',
+    SNACK: 'Colación',
+}
+
+// Grupo de alimentos (columna de plan_meal_time en el backend) -> texto, en el orden en que se muestran.
+export const PORTION_GROUP_LABELS: Record<string, string> = {
+    cereal: 'Cereales',
+    freeConsumptionVegetable: 'Verduras de libre consumo',
+    generalConsumptionVegetable: 'Verduras de consumo general',
+    fruit: 'Frutas',
+    highFatProtein: 'Proteínas altas en grasa',
+    lowFatProtein: 'Proteínas bajas en grasa',
+    highFatDairy: 'Lácteos altos en grasa',
+    mediumFatDairy: 'Lácteos medios en grasa',
+    lowFatDairy: 'Lácteos bajos en grasa',
+    highProteinDairy: 'Lácteos altos en proteína',
+    lipidRich: 'Alimentos ricos en lípidos',
+    oil: 'Aceites',
+    sugar: 'Azúcares',
+}

@@ -5,7 +5,7 @@ import { runAction, type ActionResult } from '@/shared/api/action-result'
 import { getValidAccessToken } from '@/shared/auth/tokens'
 import { CompleteConsultationDto } from '../dtos/consultation.dto'
 import { InputChatDto, OutputChatDto } from '../dtos/anamnesis-chat.dto'
-import { OrderStatusDto, OrderSummaryDto } from '../dtos/order.dto'
+import { OrderStatusDto } from '../dtos/order.dto'
 
 export type { ActionResult }
 
@@ -33,12 +33,5 @@ export async function getOrderStatusAction(orderId: string): Promise<ActionResul
   return runAction(async () => {
     const accessToken = await getValidAccessToken()
     return apiFetch<OrderStatusDto>(`orders/${orderId}/status`, 'GET', undefined, accessToken)
-  })
-}
-
-export async function getOrdersAction(): Promise<ActionResult<OrderSummaryDto[]>> {
-  return runAction(async () => {
-    const accessToken = await getValidAccessToken()
-    return apiFetch<OrderSummaryDto[]>('me/plans', 'GET', undefined, accessToken)
   })
 }

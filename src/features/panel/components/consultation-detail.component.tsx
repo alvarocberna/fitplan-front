@@ -6,7 +6,7 @@ import { Card, SubsectionHead, SubsectionTitle, SubsectionBody } from '@/shared'
 import { ConsultationDetailDto, ConsultationMeasurementDto } from '../dtos/consultation-detail.dto'
 import { NO_DATA, formatDate, bmiClassificationLabel } from '../format'
 import { PlanStatusBadge } from './plan-status-badge.component'
-import { IntakeSummary } from './intake-summary.component'
+import { NutritionalPlanSummary } from './nutritional-plan-summary.component'
 
 interface ConsultationDetailProps {
     consultation: ConsultationDetailDto
@@ -146,20 +146,13 @@ function PlanSection({
 
     if (plan) {
         return (
-            <div className="w-full flex flex-col gap-2 text-left text-zinc-700">
-                <p>
-                    <span className="text-zinc-500">Plan: </span>
-                    {plan.planName}
-                </p>
-                <p>
-                    <span className="text-zinc-500">Objetivo: </span>
-                    {plan.goal}
-                </p>
-                <p>
-                    <span className="text-zinc-500">Régimen: </span>
-                    {plan.dietRegimen}
-                </p>
-                <IntakeSummary plan={plan} />
+            <div className="w-full flex flex-col gap-2">
+                <NutritionalPlanSummary
+                    planName={plan.planName}
+                    goal={plan.goal}
+                    dietRegimen={plan.dietRegimen}
+                    intake={plan}
+                />
                 {plan.pdfUrl ? (
                     // el backend firma la URL como attachment (Content-Disposition), que es lo que
                     // realmente fuerza la descarga: `download` solo se ignora en cross-origin

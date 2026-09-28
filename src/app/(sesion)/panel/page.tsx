@@ -1,11 +1,12 @@
 //features
-import { PanelSummary, ConsultationsList, PlansList, PanelService, ConsultationService } from '@/features'
+import { PanelSummary, ConsultationsList, PlansList, MeasurementsList, PanelService, MeasurementsService } from '@/features'
 
 export default async function PanelPage() {
-    const [summary, consultations, orders] = await Promise.all([
+    const [summary, consultations, plans, measurements] = await Promise.all([
         PanelService.getSummary(),
         PanelService.getConsultations(),
-        ConsultationService.getOrders(),
+        PanelService.getPlans(),
+        MeasurementsService.getMeasurements(),
     ])
 
     return (
@@ -13,7 +14,8 @@ export default async function PanelPage() {
             <div className="w-full flex flex-col gap-6">
                 <PanelSummary summary={summary} />
                 <ConsultationsList consultations={consultations} />
-                <PlansList orders={orders} />
+                <PlansList plans={plans} />
+                <MeasurementsList measurements={measurements} />
             </div>
         </div>
     )

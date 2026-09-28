@@ -2,7 +2,7 @@ import { test, expect } from './fixtures';
 import {
   getBackendCalls,
   mockCreatePredefinedOrder,
-  mockOrdersList,
+  mockPlansList,
   mockPredefinedProduct,
   mockSimulatePayment,
 } from './helpers/mock-backend';
@@ -71,12 +71,15 @@ test.describe('Planes predefinidos - pago con sesión', () => {
     await mockPredefinedProduct({ price: 14990 });
     await mockCreatePredefinedOrder({ orderId: 'order-predef-1' });
     await mockSimulatePayment();
-    await mockOrdersList([
+    await mockPlansList([
       {
         orderId: 'order-predef-1',
-        creationDate: '2026-09-21T12:00:00.000Z',
+        type: 'PREDEFINED',
+        name: `Plan ${CODE}`,
+        purchasedAt: '2026-09-21T12:00:00.000Z',
         pdfUrl: 'https://bucket.example/plan.pdf?sig=abc',
         thumbnailUrl: null,
+        summary: null,
       },
     ]);
     await page.goto('/planes/plan-gimnasio-volumen');
@@ -90,7 +93,7 @@ test.describe('Planes predefinidos - pago con sesión', () => {
     await page.getByRole('button', { name: 'Pagar' }).click();
 
     await expect(page).toHaveURL(/\/panel$/);
-    await expect(page.getByRole('link', { name: 'Descargar' }).first()).toHaveAttribute('href', /plan\.pdf/);
+    await expect(page.getByRole('link', { name: `Descargar plan Plan ${CODE}` })).toHaveAttribute('href', /plan\.pdf/);
 
     const calls = await getBackendCalls();
     // la orden se creó con la sesión y solo con el code (en la ruta): el precio no viaja desde el navegador

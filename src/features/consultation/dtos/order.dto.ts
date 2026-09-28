@@ -27,15 +27,3 @@ export interface OrderStatusDto {
     // plan o si el plan no tiene miniatura (falló su rasterización, que es best-effort en el backend).
     thumbnailUrl: string | null
 }
-
-// Ítem del listado de órdenes con plan generado del usuario autenticado (GET /me/plans).
-export interface OrderSummaryDto {
-    orderId: string
-    creationDate: string
-    // URL firmada (corta duración) para DESCARGAR el PDF: el backend la firma con
-    // Content-Disposition: attachment, por lo que no sirve para incrustarla en un <iframe>.
-    pdfUrl: string
-    // URL firmada (corta duración) de la miniatura WebP de la página 1 del plan; null si el plan no
-    // tiene miniatura (generado antes de esta función, o falló su rasterización).
-    thumbnailUrl: string | null
-}

@@ -8,13 +8,15 @@ interface PlanPreviewCardProps {
     thumbnailUrl: string | null
     // Fecha de generación (ISO). Opcional: /ordenes/[id] no la conoce y muestra la tarjeta sin subtítulo.
     creationDate?: string
+    // Texto del botón de descarga (por defecto "Descargar"; el detalle del plan usa "Descargar plan").
+    downloadLabel?: string
 }
 
 // Tarjeta de un plan nutricional: miniatura de la página 1 y un botón que descarga el PDF completo.
-// Se usa en /panel (una por plan) y en /ordenes/[id] (el plan recién generado). El atributo
+// Se usa en /panel/planes/[orderId] (detalle de un plan) y en /ordenes/[id] (el plan recién generado). El atributo
 // `download` solo no alcanza para descargar (se ignora en cross-origin): es el Content-Disposition
 // de la URL firmada el que fuerza la descarga. Ambas URLs son firmadas y de corta duración.
-export function PlanPreviewCard({ pdfUrl, thumbnailUrl, creationDate }: PlanPreviewCardProps) {
+export function PlanPreviewCard({ pdfUrl, thumbnailUrl, creationDate, downloadLabel = 'Descargar' }: PlanPreviewCardProps) {
     const fecha = creationDate
         ? new Date(creationDate).toLocaleDateString('es-ES', {
               day: '2-digit',
@@ -60,7 +62,7 @@ export function PlanPreviewCard({ pdfUrl, thumbnailUrl, creationDate }: PlanPrev
                 // dentro de una grilla resolvería al alto de toda la tarjeta y aplastaría la miniatura.
                 className="btn primary-btn h-10! w-full max-w-[260px] no-underline"
             >
-                Descargar
+                {downloadLabel}
             </a>
         </div>
     )

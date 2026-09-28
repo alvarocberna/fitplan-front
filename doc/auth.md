@@ -163,7 +163,13 @@ ese barrel y necesite código `server-only` va a pisar el mismo problema.
   completa el perfil obligatorio (género, deportista) que gatea el wizard de `/consulta/*`.
 - `src/features/panel/services/panel.actions.ts` — `getPanelSummaryAction` (`GET /me/summary`) y
   `getMyConsultationsAction` (`GET /me/consultations`), usadas por `/panel`, y
-  `getMyConsultationAction` (`GET /me/consultations/:id`), usada por `/panel/consultas/[id]`.
+  `getMyConsultationAction` (`GET /me/consultations/:id`), usada por `/panel/consultas/[id]`,
+  `getMyPlansAction` (`GET /me/plans`, `/panel`) y `getMyPlanAction` (`GET /me/plans/:orderId`,
+  `/panel/planes/[orderId]`).
+- `src/features/measurements/services/measurements.actions.ts` — `getMyMeasurementsAction`
+  (`GET /me/measurements`, `/panel`), `getMyMeasurementAction` (`GET /me/measurements/:id`),
+  `recordMeasurementAction` (`POST /me/measurements`) y `updateMeasurementAction`
+  (`PATCH /me/measurements/:id`), usadas por `/panel/mediciones/*` vía `MeasurementsService`.
 - `src/shared/api/action-result.ts` — `ActionResult<T>`/`runAction()` compartido por todos los
   archivos de arriba. Las acciones **no lanzan** errores (siguen la guía oficial de Next para
   Server Functions: *"avoid using try/catch blocks and throw errors. Instead, model expected
@@ -267,22 +273,27 @@ el ancho actual del sidebar y cuyo padding superior (`pt-19 md:pt-23`) deja libr
 
 Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc/flow.md`):
 
-- **`/panel`** (`src/app/(sesion)/panel/page.tsx`, Server Component): llama en paralelo
-  `PanelService.getSummary()` (`src/features/panel/services/panel.service.ts`, que invoca el
-  Server Action `getPanelSummaryAction` (`panel.actions.ts`) — obtiene el access token con
-  `getValidAccessToken()` y llama `GET /me/summary` vía `apiFetch`) y
-  `ConsultationService.getOrders()` (`getOrdersAction` → `GET ordenes`, con el mismo access token).
-  Renderiza `PanelSummary` (`panel-summary.component.tsx`) con dos cards: `firstName`/
-  `paternalLastName`/`age`/`goal` del usuario y, si existe, `calorieIntake`/`proteinIntake`/
-  `carbohydrateIntake`/`lipidIntake` del último plan nutricional generado
-  (`PanelSummaryDto.nutritionalPlan`), o placeholders si el usuario todavía no tiene consulta/plan;
-  y "Mis planes nutricionales", con la lista de `OrderSummaryDto[]` (una por orden con plan
-  generado, ya ordenadas del más nuevo al más antiguo por el backend), en una grilla de `PlanPreviewCard`
-  (`src/shared/components/plan-preview-card.component.tsx`): cada una con su fecha, la miniatura de la
-  página 1 del plan (`thumbnailUrl`, URL firmada de S3; placeholder si es `null`) y un botón "Descargar" hacia su
-  `pdfUrl` (URL firmada con `Content-Disposition: attachment`, por lo que descarga el PDF completo en vez de
-  abrirlo). Ya no incrusta el PDF en un `<iframe>` (ni acá ni en `/ordenes/[id]`, que usa la misma tarjeta;
-  `PdfViewer` se eliminó).
+- **`/panel`** (`src/app/(sesion)/panel/page.tsx`, Server Component): llama en paralelo, vía
+  `PanelService` (`src/features/panel/services/panel.service.ts` → Server Actions de `panel.actions.ts`,
+  que obtienen el access token con `getValidAccessToken()` y llaman al backend vía `apiFetch`),
+  `getSummary()` (`GET /me/summary`), `getConsultations()` (`GET /me/consultations`) y `getPlans()`
+  (`GET /me/plans`). Renderiza tres cards: `PanelSummary` (resumen del usuario, plan vigente y última
+  medición), `ConsultationsList` (cada consulta abre `/panel/consultas/[id]`) y `PlansList` ("Mis planes
+  nutricionales"): una fila por plan (`MyPlanSummaryDto`, ya ordenados del más nuevo al más antiguo por el
+  backend) con nombre, tipo (Personalizado/Estándar), fecha de compra, régimen y macros, y dos botones:
+  "Ver plan" (→ `/panel/planes/[orderId]`) y "Descargar plan" (`pdfUrl`, URL firmada con
+  `Content-Disposition: attachment`, por lo que descarga el PDF completo en vez de abrirlo).
+- **`/panel/planes/[orderId]`** (Server Component): `PanelService.getPlan(orderId)` (`GET /me/plans/:orderId`;
+  `null` ante 404 → `notFound()` → "Plan no encontrado"). Renderiza `PlanDetail`: encabezado con
+  `PlanPreviewCard` (miniatura + "Descargar plan") y el detalle guardado en la base — personalizado:
+  resumen (`NutritionalPlanSummary`, el mismo bloque del detalle de consulta), requerimientos vs ingesta,
+  tiempos de comida, suplementación y recomendaciones deportivas; estándar: descripción y resumen del
+  producto. Ninguna vista incrusta el PDF en un `<iframe>` (`PdfViewer` se eliminó).
+- **`/panel/mediciones/[id]`**, **`/panel/mediciones/nueva`** y **`/panel/mediciones/[id]/editar`**: detalle
+  (`MeasurementDetail`: valores registrados por sección y resultados guardados; 404 → "Medición no
+  encontrada"), registro y corrección de una medición (`MeasurementForm`, Client Component con
+  react-hook-form que llama a `MeasurementsService` y, al guardar, navega al detalle). `/panel` suma la
+  tarjeta 4, `MeasurementsList` (`MeasurementsService.getMeasurements()` → `GET /me/measurements`).
 - **`/perfil`** (`src/app/(sesion)/perfil/page.tsx`, Server Component): llama
   `ProfileService.getProfile()` (`src/features/profile/services/profile.service.ts` →
   `getUserProfileAction` → `GET /me`) y renderiza `ProfileForm` (Client Component,

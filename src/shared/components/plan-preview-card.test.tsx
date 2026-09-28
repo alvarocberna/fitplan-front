@@ -48,4 +48,10 @@ describe('PlanPreviewCard', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
     expect(screen.getByText('Vista previa no disponible')).toBeInTheDocument();
   });
+
+  it('uses a custom label for the download button when given', () => {
+    render(<PlanPreviewCard pdfUrl={pdfUrl} thumbnailUrl={thumbnailUrl} downloadLabel="Descargar plan" />);
+
+    expect(screen.getByRole('link', { name: 'Descargar plan nutricional' })).toHaveTextContent('Descargar plan');
+  });
 });

@@ -83,9 +83,26 @@ export async function mockCreatePredefinedOrder(options: { orderId?: string; fai
   });
 }
 
-// ordenes (listado de planes del panel). Sin llamar a esto el listado responde vacío.
-export async function mockOrdersList(orders: Array<Record<string, unknown>>) {
-  await setMock('orders', { orders });
+// me/plans (tarjeta "Mis planes nutricionales" del panel). Sin llamar a esto el listado responde vacío.
+export async function mockPlansList(plans: Array<Record<string, unknown>>) {
+  await setMock('plans', { plans });
+}
+
+// me/plans/:orderId (detalle en /panel/planes/[orderId]). Responde `detail` solo para su `orderId`;
+// cualquier otro id (o sin llamar a esto) responde 404, como el backend real.
+// me/measurements (tarjeta "Mis mediciones" del panel). Sin llamar a esto el listado responde vacío.
+export async function mockMeasurementsList(measurements: Array<Record<string, unknown>>) {
+  await setMock('measurements', { measurements });
+}
+
+// me/measurements/:id (GET y PATCH) y POST me/measurements: responden este detalle (GET/PATCH solo
+// para su `measurementId`; cualquier otro id responde 404, como el backend real).
+export async function mockMeasurementDetail(detail: Record<string, unknown> & { measurementId: string }) {
+  await setMock('measurementDetail', { detail });
+}
+
+export async function mockPlanDetail(detail: Record<string, unknown> & { orderId: string }) {
+  await setMock('planDetail', { detail });
 }
 
 // me/consultations (tarjeta "Mis consultas" del panel). Sin llamar a esto el listado responde vacío.

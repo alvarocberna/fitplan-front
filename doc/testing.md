@@ -151,11 +151,18 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 - **`ProfileForm`**: prellenado de los campos editables desde el perfil (con el correo deshabilitado y de solo lectura),
   envío que convierte la fecha a ISO y llama a `ProfileService.updateProfile`, toast de éxito/error, y las validaciones de
   campo requerido.
-- **`PanelSummary`**: placeholders cuando faltan nombre/edad/objetivo, el mensaje de "sin plan" cuando `nutritionalPlan` es
-  `null`, el grid de macros cuando sí hay un plan, el mensaje de "sin planes" cuando la lista de `orders` viene vacía, y que
-  se renderice un `PlanPreviewCard` por orden en el orden recibido (la card "Mis planes nutricionales"): miniatura,
-  enlace "Descargar" al `pdfUrl` y ningún `<iframe>`.
-- **`PlanPreviewCard`** (`src/shared/components/`, compartida por `/panel` y `/ordenes/[id]`): fecha (opcional), miniatura (`<img>` lazy con `alt`), enlace "Descargar" con el `href` del PDF, y el
+- **`PanelSummary`**: placeholders cuando faltan nombre/edad/objetivo y datos de la última medición, y el llamado a
+  iniciar una consulta cuando no hay consulta ni medición.
+- **`MeasurementsList`**, **`MeasurementDetail`**, **`MeasurementForm`** y **`MeasurementsService`**
+  (`src/features/measurements/`): filas con tipo/origen/valores y link al detalle; secciones crudas y resultados
+  presentes; campos de bioimpedancia condicionales, payload de POST/PATCH, fecha futura y rangos bloqueados, modo
+  edición con el tipo deshabilitado; `getMeasurement` devuelve `null` ante 404.
+- **`PlansList`** (card "Mis planes nutricionales"): una fila por plan en el orden recibido, sin miniatura, con tipo,
+  fecha, régimen y macros (o "—"), el enlace "Ver plan" a `/panel/planes/[orderId]` y "Descargar plan" al `pdfUrl`; el
+  mensaje de "sin planes" con la lista vacía. **`PlanDetail`**: encabezado, secciones del plan personalizado
+  (requerimientos vs ingesta, tiempos de comida con porciones y notas, suplementación, recomendaciones deportivas; las
+  vacías se ocultan) y del estándar. **`NutritionalPlanSummary`**: bloque de resumen compartido con el detalle de consulta.
+- **`PlanPreviewCard`** (`src/shared/components/`, compartida por `/panel/planes/[orderId]` y `/ordenes/[id]`): fecha (opcional), miniatura (`<img>` lazy con `alt`), enlace "Descargar" (o `downloadLabel`) con el `href` del PDF, y el
   placeholder "Vista previa no disponible" cuando `thumbnailUrl` es `null` o falta (backend aún sin actualizar).
 - **`proxy` (CSP)**: `img-src` incluye el bucket de planes; `frame-src` y `connect-src` no.
 - **`NavbarSesion`** (sidebar, solo md+: `hidden md:flex fixed left-0 top-15`, debajo de la barra superior): los links a

@@ -49,10 +49,21 @@ export * from './panel/components/consultations-list.component';
 export * from './panel/components/plans-list.component';
 export * from './panel/components/consultation-detail.component';
 export * from './panel/components/plan-status-badge.component';
+export * from './panel/components/plan-detail.component';
+export * from './panel/components/plan-type-badge.component';
+export * from './panel/components/nutritional-plan-summary.component';
 export * from './panel/services/panel.service';
 export * from './panel/dtos/panel-summary.dto';
 export * from './panel/dtos/consultation-summary.dto';
 export * from './panel/dtos/consultation-detail.dto';
+export * from './panel/dtos/my-plan.dto';
+
+//MEASUREMENTS
+export * from './measurements/components/measurements-list.component';
+export * from './measurements/components/measurement-detail.component';
+export * from './measurements/components/measurement-form.component';
+export * from './measurements/services/measurements.service';
+export * from './measurements/dtos/measurement.dto';
 
 //ARTICLES
 export * from './articles/components/article-section.component';

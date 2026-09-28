@@ -4,12 +4,11 @@ import {
     simulatePaymentAction,
     sendAnamnesisTurnAction,
     getOrderStatusAction,
-    getOrdersAction,
     type ActionResult,
 } from './consultation.actions'
 import { CompleteConsultationDto } from "../dtos/consultation.dto";
 import { InputChatDto, OutputChatDto } from "../dtos/anamnesis-chat.dto";
-import { OrderStatusDto, OrderSummaryDto } from "../dtos/order.dto";
+import { OrderStatusDto } from "../dtos/order.dto";
 
 function unwrap<T>(result: ActionResult<T>): T {
     if (!result.ok) throw new Error(result.message)
@@ -35,11 +34,6 @@ export class ConsultationService{
 
     public static async getOrderStatus(orderId: string): Promise<OrderStatusDto> {
         return unwrap(await getOrderStatusAction(orderId))
-    }
-
-    //listado de órdenes con plan generado del usuario autenticado, del más nuevo al más antiguo (panel)
-    public static async getOrders(): Promise<OrderSummaryDto[]> {
-        return unwrap(await getOrdersAction())
     }
 
 }

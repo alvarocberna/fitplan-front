@@ -1,16 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PanelService } from './panel.service';
-import { getPanelSummaryAction, getMyConsultationsAction, getMyConsultationAction } from './panel.actions';
+import {
+  getPanelSummaryAction,
+  getMyConsultationsAction,
+  getMyConsultationAction,
+  getMyPlansAction,
+  getMyPlanAction,
+} from './panel.actions';
 
 vi.mock('./panel.actions', () => ({
   getPanelSummaryAction: vi.fn(),
   getMyConsultationsAction: vi.fn(),
   getMyConsultationAction: vi.fn(),
+  getMyPlansAction: vi.fn(),
+  getMyPlanAction: vi.fn(),
 }));
 
 const mockedGetPanelSummaryAction = vi.mocked(getPanelSummaryAction);
 const mockedGetMyConsultationsAction = vi.mocked(getMyConsultationsAction);
 const mockedGetMyConsultationAction = vi.mocked(getMyConsultationAction);
+const mockedGetMyPlansAction = vi.mocked(getMyPlansAction);
+const mockedGetMyPlanAction = vi.mocked(getMyPlanAction);
 
 const summary = {
   firstName: 'Ana',
@@ -40,6 +50,8 @@ beforeEach(() => {
   mockedGetPanelSummaryAction.mockReset();
   mockedGetMyConsultationsAction.mockReset();
   mockedGetMyConsultationAction.mockReset();
+  mockedGetMyPlansAction.mockReset();
+  mockedGetMyPlanAction.mockReset();
 });
 
 describe('PanelService', () => {
@@ -89,5 +101,39 @@ describe('PanelService', () => {
     mockedGetMyConsultationsAction.mockResolvedValue({ ok: false, message: 'No se pudieron obtener las consultas' });
 
     await expect(PanelService.getConsultations()).rejects.toThrow('No se pudieron obtener las consultas');
+  });
+
+  it('getPlans returns the unwrapped list on success', async () => {
+    const plans = [{ orderId: 'order-1' }] as any;
+    mockedGetMyPlansAction.mockResolvedValue({ ok: true, data: plans });
+
+    await expect(PanelService.getPlans()).resolves.toBe(plans);
+    expect(mockedGetMyPlansAction).toHaveBeenCalledWith();
+  });
+
+  it('getPlans throws with the backend message when the action fails', async () => {
+    mockedGetMyPlansAction.mockResolvedValue({ ok: false, message: 'No se pudieron obtener los planes' });
+
+    await expect(PanelService.getPlans()).rejects.toThrow('No se pudieron obtener los planes');
+  });
+
+  it('getPlan returns the detail on success', async () => {
+    const detail = { orderId: 'order-1' } as any;
+    mockedGetMyPlanAction.mockResolvedValue({ ok: true, data: detail });
+
+    await expect(PanelService.getPlan('order-1')).resolves.toBe(detail);
+    expect(mockedGetMyPlanAction).toHaveBeenCalledWith('order-1');
+  });
+
+  it('getPlan returns null when the backend answers 404 (missing, not yours or not ready)', async () => {
+    mockedGetMyPlanAction.mockResolvedValue({ ok: false, message: 'Plan no encontrado', status: 404 });
+
+    await expect(PanelService.getPlan('order-x')).resolves.toBeNull();
+  });
+
+  it('getPlan throws on any other error', async () => {
+    mockedGetMyPlanAction.mockResolvedValue({ ok: false, message: 'Error HTTP 500', status: 500 });
+
+    await expect(PanelService.getPlan('order-1')).rejects.toThrow('Error HTTP 500');
   });
 });

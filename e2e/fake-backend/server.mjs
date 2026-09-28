@@ -173,7 +173,42 @@ const server = http.createServer(async (req, res) => {
 
     if (path === '/me/plans' && method === 'GET') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
-      return send(res, 200, mocks.orders?.orders ?? [])
+      return send(res, 200, mocks.plans?.plans ?? [])
+    }
+
+    // ---- mediciones (tarjeta 4 del panel, detalle, registrar y corregir) ----
+    if (path === '/me/measurements' && method === 'GET') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      return send(res, 200, mocks.measurements?.measurements ?? [])
+    }
+
+    if (path === '/me/measurements' && method === 'POST') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      const detail = mocks.measurementDetail?.detail
+      if (!detail) return send(res, 501, { message: 'POST me/measurements sin mock' })
+      return send(res, 201, detail)
+    }
+
+    if (/^\/me\/measurements\/[^/]+$/.test(path) && (method === 'GET' || method === 'PATCH')) {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      const measurementId = decodeURIComponent(path.split('/').pop())
+      const detail = mocks.measurementDetail?.detail
+      // como el backend real: inexistente o ajena -> 404
+      if (!detail || detail.measurementId !== measurementId) {
+        return send(res, 404, { message: 'Medición no encontrada' })
+      }
+      return send(res, 200, detail)
+    }
+
+    if (/^\/me\/plans\/[^/]+$/.test(path) && method === 'GET') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      const orderId = decodeURIComponent(path.split('/').pop())
+      const detail = mocks.planDetail?.detail
+      // como el backend real: inexistente, ajeno o no listo -> 404
+      if (!detail || detail.orderId !== orderId) {
+        return send(res, 404, { message: 'Plan no encontrado' })
+      }
+      return send(res, 200, detail)
     }
 
     if (path === '/me/consultations' && method === 'GET') {

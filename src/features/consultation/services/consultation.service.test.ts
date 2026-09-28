@@ -5,7 +5,6 @@ import {
   simulatePaymentAction,
   sendAnamnesisTurnAction,
   getOrderStatusAction,
-  getOrdersAction,
 } from './consultation.actions';
 import type { CompleteConsultationDto } from '../dtos/consultation.dto';
 import type { InputChatDto } from '../dtos/anamnesis-chat.dto';
@@ -15,21 +14,18 @@ vi.mock('./consultation.actions', () => ({
   simulatePaymentAction: vi.fn(),
   sendAnamnesisTurnAction: vi.fn(),
   getOrderStatusAction: vi.fn(),
-  getOrdersAction: vi.fn(),
 }));
 
 const mockedCreateOrderAction = vi.mocked(createOrderAction);
 const mockedSimulatePaymentAction = vi.mocked(simulatePaymentAction);
 const mockedSendAnamnesisTurnAction = vi.mocked(sendAnamnesisTurnAction);
 const mockedGetOrderStatusAction = vi.mocked(getOrderStatusAction);
-const mockedGetOrdersAction = vi.mocked(getOrdersAction);
 
 beforeEach(() => {
   mockedCreateOrderAction.mockReset();
   mockedSimulatePaymentAction.mockReset();
   mockedSendAnamnesisTurnAction.mockReset();
   mockedGetOrderStatusAction.mockReset();
-  mockedGetOrdersAction.mockReset();
 });
 
 describe('ConsultationService', () => {
@@ -72,22 +68,5 @@ describe('ConsultationService', () => {
     await ConsultationService.getOrderStatus('order-456');
 
     expect(mockedGetOrderStatusAction).toHaveBeenCalledWith('order-456');
-  });
-
-  it('getOrders performs a GET against the orders list endpoint', async () => {
-    const orders = [
-      {
-        orderId: 'order-1',
-        creationDate: '2026-01-01',
-        pdfUrl: 'https://signed.example',
-        thumbnailUrl: 'https://signed.example/thumb',
-      },
-    ];
-    mockedGetOrdersAction.mockResolvedValue({ ok: true, data: orders });
-
-    const result = await ConsultationService.getOrders();
-
-    expect(mockedGetOrdersAction).toHaveBeenCalled();
-    expect(result).toEqual(orders);
   });
 });
