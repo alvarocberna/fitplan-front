@@ -123,7 +123,7 @@ export function MeasurementForm({ measurement }: MeasurementFormProps) {
                       level: data.level as RecordMeasurementDto['level'],
                   })
             toast.success(isEdit ? 'Medición actualizada' : 'Medición registrada')
-            router.push(`/panel/mediciones/${saved.measurementId}`)
+            router.push(`/mediciones/${saved.measurementId}`)
             router.refresh()
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'No se pudo guardar la medición')

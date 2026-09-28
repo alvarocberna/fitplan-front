@@ -6,6 +6,7 @@ import {
   getMyConsultationAction,
   getMyPlansAction,
   getMyPlanAction,
+  getMyLatestPlanProjectionAction,
 } from './panel.actions';
 
 vi.mock('./panel.actions', () => ({
@@ -14,6 +15,7 @@ vi.mock('./panel.actions', () => ({
   getMyConsultationAction: vi.fn(),
   getMyPlansAction: vi.fn(),
   getMyPlanAction: vi.fn(),
+  getMyLatestPlanProjectionAction: vi.fn(),
 }));
 
 const mockedGetPanelSummaryAction = vi.mocked(getPanelSummaryAction);
@@ -21,6 +23,7 @@ const mockedGetMyConsultationsAction = vi.mocked(getMyConsultationsAction);
 const mockedGetMyConsultationAction = vi.mocked(getMyConsultationAction);
 const mockedGetMyPlansAction = vi.mocked(getMyPlansAction);
 const mockedGetMyPlanAction = vi.mocked(getMyPlanAction);
+const mockedGetMyLatestPlanProjectionAction = vi.mocked(getMyLatestPlanProjectionAction);
 
 const summary = {
   firstName: 'Ana',
@@ -52,6 +55,7 @@ beforeEach(() => {
   mockedGetMyConsultationAction.mockReset();
   mockedGetMyPlansAction.mockReset();
   mockedGetMyPlanAction.mockReset();
+  mockedGetMyLatestPlanProjectionAction.mockReset();
 });
 
 describe('PanelService', () => {
@@ -135,5 +139,30 @@ describe('PanelService', () => {
     mockedGetMyPlanAction.mockResolvedValue({ ok: false, message: 'Error HTTP 500', status: 500 });
 
     await expect(PanelService.getPlan('order-1')).rejects.toThrow('Error HTTP 500');
+  });
+
+  it('getLatestPlanProjection returns the period and projection on success', async () => {
+    const latest = {
+      orderId: 'order-1',
+      planName: 'Plan personalizado',
+      startDate: '2026-09-27',
+      endDate: '2026-12-27',
+      projection: null,
+    };
+    mockedGetMyLatestPlanProjectionAction.mockResolvedValue({ ok: true, data: latest });
+
+    await expect(PanelService.getLatestPlanProjection()).resolves.toBe(latest);
+  });
+
+  it('getLatestPlanProjection returns null when the backend answers 404 (no dated plan)', async () => {
+    mockedGetMyLatestPlanProjectionAction.mockResolvedValue({ ok: false, message: 'Sin plan', status: 404 });
+
+    await expect(PanelService.getLatestPlanProjection()).resolves.toBeNull();
+  });
+
+  it('getLatestPlanProjection throws on any other error', async () => {
+    mockedGetMyLatestPlanProjectionAction.mockResolvedValue({ ok: false, message: 'Error HTTP 500', status: 500 });
+
+    await expect(PanelService.getLatestPlanProjection()).rejects.toThrow('Error HTTP 500');
   });
 });

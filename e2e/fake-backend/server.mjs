@@ -176,7 +176,16 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, mocks.plans?.plans ?? [])
     }
 
-    // ---- mediciones (tarjeta 4 del panel, detalle, registrar y corregir) ----
+    // antes de /me/plans/:orderId (aunque esa regex no captura dos segmentos)
+    if (path === '/me/plans/latest/projection' && method === 'GET') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      const latest = mocks.latestPlanProjection?.latest
+      // como el backend real: sin plan con período -> 404
+      if (!latest) return send(res, 404, { message: 'No hay un plan con período definido' })
+      return send(res, 200, latest)
+    }
+
+    // ---- mediciones (/mediciones: lista, detalle, registrar y corregir) ----
     if (path === '/me/measurements' && method === 'GET') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       return send(res, 200, mocks.measurements?.measurements ?? [])

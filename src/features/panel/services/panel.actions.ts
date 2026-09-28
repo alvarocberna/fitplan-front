@@ -6,7 +6,7 @@ import { getValidAccessToken } from '@/shared/auth/tokens'
 import { PanelSummaryDto } from '../dtos/panel-summary.dto'
 import { ConsultationSummaryDto } from '../dtos/consultation-summary.dto'
 import { ConsultationDetailDto } from '../dtos/consultation-detail.dto'
-import { MyPlanDetailDto, MyPlanSummaryDto } from '../dtos/my-plan.dto'
+import { MyLatestPlanProjectionDto, MyPlanDetailDto, MyPlanSummaryDto } from '../dtos/my-plan.dto'
 
 export type { ActionResult }
 
@@ -47,5 +47,12 @@ export async function getMyPlanAction(orderId: string): Promise<ActionResult<MyP
     return runAction(async () => {
         const accessToken = await getValidAccessToken()
         return apiFetch<MyPlanDetailDto>(`me/plans/${encodeURIComponent(orderId)}`, 'GET', undefined, accessToken)
+    })
+}
+
+export async function getMyLatestPlanProjectionAction(): Promise<ActionResult<MyLatestPlanProjectionDto>> {
+    return runAction(async () => {
+        const accessToken = await getValidAccessToken()
+        return apiFetch<MyLatestPlanProjectionDto>('me/plans/latest/projection', 'GET', undefined, accessToken)
     })
 }

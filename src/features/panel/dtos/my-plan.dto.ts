@@ -101,6 +101,29 @@ export interface MyPredefinedPlanDetailDto {
     summary: MyPlanSummaryInfoDto | null;
 }
 
+// Valores que el plan proyecta alcanzar al final de su período. bf*/mm* solo vienen si la proyección
+// se hizo sobre una bioimpedancia.
+export interface MyPlanProjectionValuesDto {
+    projectedStartDate: string; // YYYY-MM-DD
+    projectedEndDate: string; // YYYY-MM-DD
+    weight: number;
+    bmi: number | null;
+    bfKg: number | null;
+    bfPercentage: number | null;
+    mmKg: number | null;
+    mmPercentage: number | null;
+}
+
+// Respuesta de GET /me/plans/latest/projection (CU-PLN-07): período del último plan con fecha de
+// término y su proyección (null si no tiene). El backend responde 404 si no hay plan con período.
+export interface MyLatestPlanProjectionDto {
+    orderId: string;
+    planName: string;
+    startDate: string; // YYYY-MM-DD
+    endDate: string; // YYYY-MM-DD
+    projection: MyPlanProjectionValuesDto | null;
+}
+
 // Respuesta de GET /me/plans/:orderId: `generated` o `predefined` según `type` (el otro en null).
 export interface MyPlanDetailDto extends Omit<MyPlanSummaryDto, 'summary'> {
     generated: MyGeneratedPlanDetailDto | null;

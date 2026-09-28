@@ -15,7 +15,9 @@ const selfReported: MeasurementSummaryDto = {
   height: 172,
   bmi: null,
   bmiClassification: null,
+  bfKg: 12.6,
   bfPercentage: 18,
+  mmKg: null,
   mmPercentage: null,
 };
 
@@ -41,7 +43,7 @@ describe('MeasurementsList', () => {
   it('offers to register a measurement', () => {
     render(<MeasurementsList measurements={[]} />);
 
-    expect(screen.getByRole('link', { name: 'Registrar medición' })).toHaveAttribute('href', '/panel/mediciones/nueva');
+    expect(screen.getByRole('link', { name: 'Registrar medición' })).toHaveAttribute('href', '/mediciones/nueva');
   });
 
   it('shows an empty state when there are no measurements', () => {
@@ -71,6 +73,6 @@ describe('MeasurementsList', () => {
   it('each row links to its detail', () => {
     render(<MeasurementsList measurements={[selfReported]} />);
 
-    expect(screen.getByRole('link', { name: 'Ver medición N°2' })).toHaveAttribute('href', '/panel/mediciones/m-2');
+    expect(screen.getByRole('link', { name: 'Ver medición N°2' })).toHaveAttribute('href', '/mediciones/m-2');
   });
 });

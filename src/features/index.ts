@@ -60,6 +60,7 @@ export * from './panel/dtos/my-plan.dto';
 
 //MEASUREMENTS
 export * from './measurements/components/measurements-list.component';
+export * from './measurements/components/measurements-chart.component';
 export * from './measurements/components/measurement-detail.component';
 export * from './measurements/components/measurement-form.component';
 export * from './measurements/services/measurements.service';

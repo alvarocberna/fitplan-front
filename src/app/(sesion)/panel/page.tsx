@@ -1,12 +1,11 @@
 //features
-import { PanelSummary, ConsultationsList, PlansList, MeasurementsList, PanelService, MeasurementsService } from '@/features'
+import { PanelSummary, ConsultationsList, PlansList, PanelService } from '@/features'
 
 export default async function PanelPage() {
-    const [summary, consultations, plans, measurements] = await Promise.all([
+    const [summary, consultations, plans] = await Promise.all([
         PanelService.getSummary(),
         PanelService.getConsultations(),
         PanelService.getPlans(),
-        MeasurementsService.getMeasurements(),
     ])
 
     return (
@@ -15,7 +14,6 @@ export default async function PanelPage() {
                 <PanelSummary summary={summary} />
                 <ConsultationsList consultations={consultations} />
                 <PlansList plans={plans} />
-                <MeasurementsList measurements={measurements} />
             </div>
         </div>
     )

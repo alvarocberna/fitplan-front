@@ -95,6 +95,12 @@ export async function mockMeasurementsList(measurements: Array<Record<string, un
   await setMock('measurements', { measurements });
 }
 
+// me/plans/latest/projection (gráfico de evolución, modo "Plan actual"). Sin llamar a esto responde
+// 404 (sin plan con período), como el backend real.
+export async function mockLatestPlanProjection(latest: Record<string, unknown>) {
+  await setMock('latestPlanProjection', { latest });
+}
+
 // me/measurements/:id (GET y PATCH) y POST me/measurements: responden este detalle (GET/PATCH solo
 // para su `measurementId`; cualquier otro id responde 404, como el backend real).
 export async function mockMeasurementDetail(detail: Record<string, unknown> & { measurementId: string }) {

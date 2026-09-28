@@ -153,6 +153,14 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   campo requerido.
 - **`PanelSummary`**: placeholders cuando faltan nombre/edad/objetivo y datos de la última medición, y el llamado a
   iniciar una consulta cuando no hay consulta ni medición.
+- **`MeasurementsChart`** y **`chart-series.ts`**: filtro por período del plan (bordes incluidos), series por métrica
+  sin cortar en los `null`, metas punteadas desde el último valor medido (solo las métricas proyectadas), modo por
+  defecto según haya plan, casillas que quitan/reponen mediciones y mensajes vacíos. `@nivo/line` se mockea con un
+  stub que lista series y puntos (nivo necesita medidas reales del DOM).
+- **`MeasurementDetail`** y **`measurement-detail-data.ts`**: posición en la escala de IMC (con recorte), barras en kg
+  solo de los componentes presentes, torta sin grasa visceral y con "Resto" (omitido si la suma llega a 100), card de
+  composición oculta en las básicas y "Otras mediciones" sin peso/talla/IMC/componentes. `@nivo/bar` y `@nivo/pie` se
+  mockean con stubs que listan los datos.
 - **`MeasurementsList`**, **`MeasurementDetail`**, **`MeasurementForm`** y **`MeasurementsService`**
   (`src/features/measurements/`): filas con tipo/origen/valores y link al detalle; secciones crudas y resultados
   presentes; campos de bioimpedancia condicionales (grasa y masa muscular obligatorias; grasa visceral y masa ósea

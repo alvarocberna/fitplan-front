@@ -11,9 +11,9 @@ interface MeasurementsListProps {
     measurements: MeasurementSummaryDto[]
 }
 
-// Tarjeta 4 del panel: mediciones del historial clínico (GET /me/measurements, HU-CLI-03), de
+// Card de /mediciones: mediciones del historial clínico (GET /me/measurements, HU-CLI-03), de
 // consulta y registradas por el usuario, más reciente primero. Cada fila abre su detalle
-// (/panel/mediciones/[id], HU-CLI-04). El gráfico de evolución queda pendiente.
+// (/mediciones/[id], HU-CLI-04). El gráfico de evolución es MeasurementsChart.
 export function MeasurementsList({ measurements }: MeasurementsListProps) {
     return (
         <Card widthInner="80%" variant="solid">
@@ -23,7 +23,7 @@ export function MeasurementsList({ measurements }: MeasurementsListProps) {
             <SubsectionBody>
                 <div className="w-full flex flex-col gap-4">
                     <Link
-                        href="/panel/mediciones/nueva"
+                        href="/mediciones/nueva"
                         // w-auto!/h-10!: .primary-btn fija width/height al 100% sin @layer
                         className="btn primary-btn h-10! w-auto! self-end px-6 no-underline"
                     >
@@ -64,7 +64,7 @@ function MeasurementRow({ measurement }: { measurement: MeasurementSummaryDto })
         >
             {/* "stretched link": toda la fila es clickeable sin anidar enlaces */}
             <Link
-                href={`/panel/mediciones/${measurementId}`}
+                href={`/mediciones/${measurementId}`}
                 aria-label={`Ver medición N°${measurementNumber}`}
                 className="absolute inset-0 rounded-2xl"
             />

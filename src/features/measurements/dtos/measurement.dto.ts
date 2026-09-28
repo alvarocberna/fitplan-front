@@ -35,8 +35,8 @@ export type UpdateMeasurementDto = Partial<
     boneMass?: MeasurementValueDto | null;
 };
 
-// Ítem de GET /me/measurements. bmi/bfPercentage/mmPercentage son los resultados guardados (null si
-// no se ingresaron o calcularon).
+// Ítem de GET /me/measurements. bmi/bf*/mm* son los resultados guardados (null si no se ingresaron
+// o calcularon; grasa y músculo solo existen en las bioimpedancias).
 export interface MeasurementSummaryDto {
     measurementId: string;
     measurementNumber: number;
@@ -49,7 +49,9 @@ export interface MeasurementSummaryDto {
     height: number | null;
     bmi: number | null;
     bmiClassification: string | null;
+    bfKg: number | null;
     bfPercentage: number | null;
+    mmKg: number | null;
     mmPercentage: number | null;
 }
 

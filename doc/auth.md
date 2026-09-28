@@ -169,7 +169,7 @@ ese barrel y necesite código `server-only` va a pisar el mismo problema.
 - `src/features/measurements/services/measurements.actions.ts` — `getMyMeasurementsAction`
   (`GET /me/measurements`, `/panel`), `getMyMeasurementAction` (`GET /me/measurements/:id`),
   `recordMeasurementAction` (`POST /me/measurements`) y `updateMeasurementAction`
-  (`PATCH /me/measurements/:id`), usadas por `/panel/mediciones/*` vía `MeasurementsService`.
+  (`PATCH /me/measurements/:id`), usadas por `/mediciones/*` vía `MeasurementsService`.
 - `src/shared/api/action-result.ts` — `ActionResult<T>`/`runAction()` compartido por todos los
   archivos de arriba. Las acciones **no lanzan** errores (siguen la guía oficial de Next para
   Server Functions: *"avoid using try/catch blocks and throw errors. Instead, model expected
@@ -290,17 +290,25 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
   resumen (`NutritionalPlanSummary`, el mismo bloque del detalle de consulta), requerimientos vs ingesta,
   tiempos de comida, suplementación y recomendaciones deportivas; estándar: descripción y resumen del
   producto. Ninguna vista incrusta el PDF en un `<iframe>` (`PdfViewer` se eliminó).
-- **`/panel/mediciones/[id]`**, **`/panel/mediciones/nueva`** y **`/panel/mediciones/[id]/editar`**: detalle
-  (`MeasurementDetail`: valores registrados por sección y resultados guardados; 404 → "Medición no
-  encontrada"), registro y corrección de una medición (`MeasurementForm`, Client Component con
-  react-hook-form que llama a `MeasurementsService` y, al guardar, navega al detalle). `/panel` suma la
-  tarjeta 4, `MeasurementsList` (`MeasurementsService.getMeasurements()` → `GET /me/measurements`).
+- **`/mediciones/[id]`**, **`/mediciones/nueva`** y **`/mediciones/[id]/editar`**: detalle
+  (`MeasurementDetail`, datos y resultados juntos por tema: card "Peso e IMC" con la escala del IMC por rangos
+  OMS (`BmiScale`), card "Composición corporal" solo si hay componentes (barras en kg con `@nivo/bar` y torta
+  en % del peso con `@nivo/pie`, sin grasa visceral y con "Resto"; `BodyCompositionCharts`) y card "Otras
+  mediciones" (pliegues, perímetros, diámetros, talla sentado, envergadura e índices) solo si hay; la lógica
+  vive en `features/measurements/measurement-detail-data.ts`; 404 → "Medición no encontrada"), registro y corrección de una medición (`MeasurementForm`, Client Component con
+  react-hook-form que llama a `MeasurementsService` y, al guardar, navega al detalle). Registro y edición
+  van dentro de una `Card` sólida. Todas vuelven a `/mediciones`. `/panel` no muestra mediciones.
 - **`/planes`** (`src/app/(sesion)/planes/page.tsx`, Server Component): solo la card `PlansList`
   (`PanelService.getPlans()` → `GET /me/plans`), la misma que muestra `/panel`. Los links de detalle siguen
   apuntando a `/panel/planes/[orderId]`.
-- **`/mediciones`** (`src/app/(sesion)/mediciones/page.tsx`, Server Component): solo la card
-  `MeasurementsList` (`MeasurementsService.getMeasurements()` → `GET /me/measurements`), la misma que muestra
-  `/panel`. Registro y detalle siguen bajo `/panel/mediciones/*`.
+- **`/mediciones`** (`src/app/(sesion)/mediciones/page.tsx`, Server Component): la card `MeasurementsChart`
+  (gráfico de evolución, Client Component con `@nivo/line`) y la card `MeasurementsList`
+  (`MeasurementsService.getMeasurements()` → `GET /me/measurements`); es la única página que las muestra. El
+  gráfico recibe además `PanelService.getLatestPlanProjection()` (→ `GET /me/plans/latest/projection`, `null`
+  ante 404) y tiene dos modos: "Plan actual" (mediciones dentro del período del último plan + la proyección
+  como meta punteada; deshabilitado sin plan) y "Todas las mediciones" (una casilla por medición para
+  quitarla o reponerla). Grafica peso, IMC, grasa (kg) y masa muscular (kg); las series se arman en
+  `features/measurements/chart-series.ts`. Registro, detalle y edición cuelgan de `/mediciones/*`.
 - **`/perfil`** (`src/app/(sesion)/perfil/page.tsx`, Server Component): llama
   `ProfileService.getProfile()` (`src/features/profile/services/profile.service.ts` →
   `getUserProfileAction` → `GET /me`) y renderiza `ProfileForm` (Client Component,

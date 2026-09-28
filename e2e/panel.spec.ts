@@ -3,6 +3,7 @@ import {
   getBackendCalls,
   mockConsultationDetail,
   mockConsultationsList,
+  mockLatestPlanProjection,
   mockMeasurementDetail,
   mockMeasurementsList,
   mockPlanDetail,
@@ -51,8 +52,12 @@ test.describe('Panel', () => {
     await expect(page.getByText('Mis planes nutricionales')).toBeVisible();
     await expect(page.getByText('Todavía no tienes consultas nutricionales.')).toBeVisible();
 
+    // las mediciones (lista y gráfico) viven en /mediciones, no en el panel
+    await expect(page.getByText('Mis mediciones')).not.toBeVisible();
+
     const calls = await getBackendCalls();
     expect(calls.find((c) => c.path === '/me/consultations')).toMatchObject({ method: 'GET', authorized: true });
+    expect(calls.find((c) => c.path === '/me/measurements')).toBeUndefined();
   });
 
   test('marca solo la consulta por pagar y permite retomar su pago', async ({ page }) => {
@@ -200,7 +205,7 @@ test.describe('Panel - mis planes', () => {
   });
 });
 
-test.describe('Panel - mis mediciones', () => {
+test.describe('Mediciones', () => {
   const DETAIL = {
     measurementId: 'm-1',
     measurementNumber: 1,
@@ -228,40 +233,89 @@ test.describe('Panel - mis mediciones', () => {
         height: 172,
         bmi: null,
         bmiClassification: null,
+        bfKg: null,
         bfPercentage: null,
+        mmKg: null,
         mmPercentage: null,
       },
     ]);
     await mockMeasurementDetail(DETAIL);
-    await page.goto('/panel');
+    await page.goto('/mediciones');
 
     const row = page.getByRole('listitem', { name: 'Medición N°1' });
     await expect(row.getByText('Básica · Registro propio')).toBeVisible();
     await page.getByRole('link', { name: 'Ver medición N°1' }).click();
 
-    await expect(page).toHaveURL(/\/panel\/mediciones\/m-1$/);
+    await expect(page).toHaveURL(/\/mediciones\/m-1$/);
     await expect(page.getByRole('heading', { name: 'Medición N°1' })).toBeVisible();
     await expect(page.getByText('Los resultados interpretados estarán disponibles próximamente.')).toBeVisible();
   });
 
+  test('el gráfico de evolución abre en el plan actual y en "Todas" permite quitar mediciones', async ({ page }) => {
+    const summary = {
+      measurementNumber: 1,
+      level: 'BASIC',
+      origin: 'SELF_REPORTED',
+      consultationId: null,
+      consultationNumber: null,
+      height: 172,
+      bmiClassification: null,
+      bfKg: null,
+      bfPercentage: null,
+      mmKg: null,
+      mmPercentage: null,
+    };
+    await mockMeasurementsList([
+      { ...summary, measurementId: 'm-2', measurementNumber: 2, measuredAt: '2026-09-28T12:00:00.000Z', weight: 78, bmi: 26.37 },
+      { ...summary, measurementId: 'm-1', measuredAt: '2026-09-01T12:00:00.000Z', weight: 80, bmi: 27.04 },
+    ]);
+    await mockLatestPlanProjection({
+      orderId: 'order-1',
+      planName: 'Plan de prueba',
+      startDate: '2026-09-27',
+      endDate: '2026-12-27',
+      projection: {
+        projectedStartDate: '2026-09-27',
+        projectedEndDate: '2026-12-27',
+        weight: 72,
+        bmi: 24.34,
+        bfKg: null,
+        bfPercentage: null,
+        mmKg: null,
+        mmPercentage: null,
+      },
+    });
+    await page.goto('/mediciones');
+
+    await expect(page.getByRole('button', { name: 'Plan actual' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByText(/Plan de prueba/)).toBeVisible();
+    await expect(page.getByText('Meta del plan')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Todas las mediciones' }).click();
+    await expect(page.getByRole('checkbox')).toHaveCount(2);
+    await page.getByRole('checkbox', { name: 'Incluir medición N°1' }).uncheck();
+    await page.getByRole('checkbox', { name: 'Incluir medición N°2' }).uncheck();
+    await expect(page.getByText('Selecciona al menos una medición.')).toBeVisible();
+  });
+
   test('registra una medición desde el formulario y abre su detalle', async ({ page }) => {
     await mockMeasurementDetail(DETAIL);
-    await page.goto('/panel');
+    await page.goto('/mediciones');
 
     await page.getByRole('link', { name: 'Registrar medición' }).click();
-    await expect(page).toHaveURL(/\/panel\/mediciones\/nueva$/);
+    await expect(page).toHaveURL(/\/mediciones\/nueva$/);
     await page.getByLabel('Peso (kg)').fill('70');
     await page.getByLabel('Talla (cm)').fill('172');
     await page.getByRole('button', { name: 'Registrar medición' }).click();
 
-    await expect(page).toHaveURL(/\/panel\/mediciones\/m-1$/);
+    await expect(page).toHaveURL(/\/mediciones\/m-1$/);
     const calls = await getBackendCalls();
     const post = calls.find((c) => c.path === '/me/measurements' && c.method === 'POST');
     expect(post).toMatchObject({ authorized: true, body: { level: 'BASIC', weight: 70, height: 172 } });
   });
 
   test('una medición inexistente o ajena muestra "Medición no encontrada"', async ({ page }) => {
-    await page.goto('/panel/mediciones/no-existe');
+    await page.goto('/mediciones/no-existe');
 
     await expect(page.getByRole('heading', { name: 'Medición no encontrada' })).toBeVisible();
   });

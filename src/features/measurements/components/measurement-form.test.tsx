@@ -57,7 +57,7 @@ describe('MeasurementForm', () => {
       weight: 70,
       height: 172,
     });
-    expect(pushMock).toHaveBeenCalledWith('/panel/mediciones/m-new');
+    expect(pushMock).toHaveBeenCalledWith('/mediciones/m-new');
     expect(refreshMock).toHaveBeenCalled();
   });
 
@@ -149,7 +149,7 @@ describe('MeasurementForm', () => {
       visceralFat: null,
       boneMass: null,
     });
-    expect(pushMock).toHaveBeenCalledWith('/panel/mediciones/m-1');
+    expect(pushMock).toHaveBeenCalledWith('/mediciones/m-1');
   });
 
   it('shows the backend error in a toast', async () => {

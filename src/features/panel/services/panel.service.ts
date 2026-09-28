@@ -5,12 +5,13 @@ import {
     getMyConsultationAction,
     getMyPlansAction,
     getMyPlanAction,
+    getMyLatestPlanProjectionAction,
     type ActionResult,
 } from './panel.actions'
 import { PanelSummaryDto } from '../dtos/panel-summary.dto'
 import { ConsultationSummaryDto } from '../dtos/consultation-summary.dto'
 import { ConsultationDetailDto } from '../dtos/consultation-detail.dto'
-import { MyPlanDetailDto, MyPlanSummaryDto } from '../dtos/my-plan.dto'
+import { MyLatestPlanProjectionDto, MyPlanDetailDto, MyPlanSummaryDto } from '../dtos/my-plan.dto'
 
 function unwrap<T>(result: ActionResult<T>): T {
     if (!result.ok) throw new Error(result.message)
@@ -42,6 +43,13 @@ export class PanelService {
     // null si el plan no existe, no es del usuario o no está listo (el backend responde 404).
     public static async getPlan(orderId: string): Promise<MyPlanDetailDto | null> {
         const result = await getMyPlanAction(orderId)
+        if (!result.ok && result.status === 404) return null
+        return unwrap(result)
+    }
+
+    // período y proyección del último plan con fecha de término; null si no hay (el backend responde 404).
+    public static async getLatestPlanProjection(): Promise<MyLatestPlanProjectionDto | null> {
+        const result = await getMyLatestPlanProjectionAction()
         if (!result.ok && result.status === 404) return null
         return unwrap(result)
     }
