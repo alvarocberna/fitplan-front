@@ -74,11 +74,11 @@ export function PlanDetail({ plan }: PlanDetailProps) {
                                 className={`pl-4 ${DIVIDER}`}
                             />
                         </dl>
-                    </InfoCard>
 
-                    <InfoCard label="Macronutrientes" title="Macronutrientes">
-                        {/* sin gap horizontal, igual que "Datos del plan": el separador va al medio del padding */}
-                        <dl className="grid grid-cols-2 sm:grid-cols-4 gap-y-4">
+                        <hr className="my-2 border-zinc-200" />
+
+                        {/* macronutrientes: sin gap horizontal, igual que arriba; el separador va al medio del padding */}
+                        <dl aria-label="Macronutrientes" className="grid grid-cols-2 sm:grid-cols-4 gap-y-4">
                             {INTAKE_FIELDS.map(({ key, label, unit }, index) => (
                                 <MacroStat
                                     key={key}
@@ -159,10 +159,9 @@ function planOverviewOf({ generated, predefined }: MyPlanDetailDto): PlanOvervie
 
 // Card compacta del encabezado: mismo aspecto que Card variant="solid", sin el padding ni el margen
 // pensados para las secciones de ancho completo.
-function InfoCard({ label, title, children }: { label: string; title?: string; children: React.ReactNode }) {
+function InfoCard({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <section aria-label={label} className="w-full bg-white border border-white rounded-[12px] shadow-lg p-5 flex flex-col gap-3">
-            {title && <h2 className="text-sm font-semibold text-zinc-700">{title}</h2>}
             {children}
         </section>
     )

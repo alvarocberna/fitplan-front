@@ -154,7 +154,7 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 - **`PanelSummary`**: placeholders cuando faltan nombre/edad/objetivo y datos de la última medición, y el llamado a
   iniciar una consulta cuando no hay consulta ni medición.
 - **`MeasurementsChart`** y **`chart-series.ts`**: filtro por período del plan (bordes incluidos), series por métrica
-  sin cortar en los `null`, metas punteadas desde el último valor medido (solo las métricas proyectadas), modo por
+  sin cortar en los `null`, series meta desde el último valor medido (solo las métricas proyectadas), modo por
   defecto según haya plan, casillas que quitan/reponen mediciones y mensajes vacíos. `@nivo/line` se mockea con un
   stub que lista series y puntos (nivo necesita medidas reales del DOM).
 - **`MeasurementDetail`** y **`measurement-detail-data.ts`**: posición en la escala de IMC (con recorte), barras en kg
@@ -162,7 +162,8 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   composición oculta en las básicas y "Otras mediciones" sin peso/talla/IMC/componentes. `@nivo/bar` y `@nivo/pie` se
   mockean con stubs que listan los datos.
 - **`MeasurementsList`**, **`MeasurementDetail`**, **`MeasurementForm`** y **`MeasurementsService`**
-  (`src/features/measurements/`): filas con tipo/origen/valores y link al detalle; secciones crudas y resultados
+  (`src/features/measurements/`): título + "Registrar medición" fuera de los cards, un card por medición con fecha, tipo y peso/IMC/% grasa ("—" sin
+  dato) y link al detalle; secciones crudas y resultados
   presentes; campos de bioimpedancia condicionales (grasa y masa muscular obligatorias; grasa visceral y masa ósea
   opcionales: vacías no se envían al registrar y van como `null` al editar), payload de POST/PATCH, fecha futura y
   rangos bloqueados, modo edición con el tipo deshabilitado; `getMeasurement` devuelve `null` ante 404.
@@ -172,7 +173,8 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 - **`PlansList`** (card "Mis planes nutricionales"): una fila por plan en el orden recibido, sin miniatura, con tipo,
   fecha, régimen y macros (o "—"), el enlace "Ver plan" a `/planes/[orderId]` y "Descargar plan" al `pdfUrl`; el
   mensaje de "sin planes" con la lista vacía. **`PlanDetail`**: encabezado (card del PDF con "Plan nutricional", "PDF" y
-  descarga; "Datos del plan" con objetivo, régimen y duración —"—" sin término—; "Macronutrientes"; sin card "Resumen"),
+  descarga; "Datos del plan" con objetivo, régimen y duración —"—" sin término— y, en la misma card, los macronutrientes
+  sin título propio; sin card "Resumen"),
   secciones del plan personalizado ("Resumen del plan": tiempo, hora y porciones por tiempo de comida; "Tiempos de comida"
   oculta por ahora; suplementación,
   recomendaciones deportivas; las vacías se ocultan) y del estándar (datos del encabezado desde su resumen).

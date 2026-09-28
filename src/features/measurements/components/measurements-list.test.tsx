@@ -35,8 +35,10 @@ const fromConsultation: MeasurementSummaryDto = {
   bfPercentage: null,
 };
 
-function paragraph(container: HTMLElement, text: string) {
-  return within(container).getByText((_, element) => element?.tagName === 'P' && element.textContent === text);
+// Valor (<dd>) de la métrica con esa etiqueta; la etiqueta va en un <span> dentro del <dt>.
+function metric(row: HTMLElement, label: string): string | null {
+  const term = within(row).getByText((_, element) => element?.tagName === 'DT' && element.textContent === label);
+  return within(term.parentElement as HTMLElement).getByRole('definition').textContent;
 }
 
 describe('MeasurementsList', () => {
@@ -54,20 +56,33 @@ describe('MeasurementsList', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders one row per measurement in the given order, with date, type, origin and values', () => {
+  it('renders the title next to "Registrar medición", outside the measurement cards', () => {
+    render(<MeasurementsList measurements={[selfReported]} />);
+
+    expect(screen.getByRole('heading', { name: 'Mis mediciones' })).toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'Medición N°2' })).not.toContainElement(
+      screen.getByRole('heading', { name: 'Mis mediciones' }),
+    );
+  });
+
+  it('renders one card per measurement in the given order, with date, type and weight, BMI and body fat', () => {
     render(<MeasurementsList measurements={[selfReported, fromConsultation]} />);
 
     const rows = screen.getAllByRole('listitem');
-    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual(['Medición N°2', 'Medición N°1']);
 
     const first = screen.getByRole('listitem', { name: 'Medición N°2' });
     expect(within(first).getByText('10/05/2026')).toBeInTheDocument();
-    expect(paragraph(first, 'Bioimpedancia · Registro propio')).toBeInTheDocument();
-    expect(paragraph(first, 'Peso: 70 kg · IMC: — · % grasa: 18 %')).toBeInTheDocument();
+    expect(within(first).getByText('Bioimpedancia')).toBeInTheDocument();
+    expect(metric(first, 'Peso')).toBe('70 kg');
+    expect(metric(first, 'IMC')).toBe('—');
+    expect(metric(first, '% grasa corporal')).toBe('18 %');
 
     const second = screen.getByRole('listitem', { name: 'Medición N°1' });
-    expect(paragraph(second, 'Básica · Consulta N°3')).toBeInTheDocument();
-    expect(paragraph(second, 'Peso: 72 kg · IMC: 24.3 · % grasa: —')).toBeInTheDocument();
+    expect(within(second).getByText('Básica')).toBeInTheDocument();
+    expect(metric(second, 'Peso')).toBe('72 kg');
+    expect(metric(second, 'IMC')).toBe('24.3');
+    expect(metric(second, '% grasa corporal')).toBe('—');
   });
 
   it('each row links to its detail', () => {

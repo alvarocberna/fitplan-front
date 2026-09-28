@@ -1,6 +1,7 @@
 // Colores de las métricas de medición, compartidos por todos los gráficos (evolución, barras y torta
 // del detalle) para que cada una se vea igual en todos.
 
+export const WEIGHT_COLOR = '#2563eb' // azul
 export const BMI_COLOR = '#16a34a' // verde, contrasta con el amarillo y el rojo de los componentes
 
 export const BODY_FAT_COLOR = '#eab308' // amarillo

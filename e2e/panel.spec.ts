@@ -243,7 +243,7 @@ test.describe('Mediciones', () => {
     await page.goto('/mediciones');
 
     const row = page.getByRole('listitem', { name: 'Medición N°1' });
-    await expect(row.getByText('Básica · Registro propio')).toBeVisible();
+    await expect(row.getByText('Básica', { exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Ver medición N°1' }).click();
 
     await expect(page).toHaveURL(/\/mediciones\/m-1$/);
@@ -288,8 +288,8 @@ test.describe('Mediciones', () => {
     await page.goto('/mediciones');
 
     await expect(page.getByRole('button', { name: 'Plan actual' })).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByText(/Plan de prueba/)).toBeVisible();
-    await expect(page.getByText('Meta del plan')).toBeVisible();
+    await expect(page.getByText('27/09/2026 al 27/12/2026')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Resumen actual' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Todas las mediciones' }).click();
     await expect(page.getByRole('checkbox')).toHaveCount(2);

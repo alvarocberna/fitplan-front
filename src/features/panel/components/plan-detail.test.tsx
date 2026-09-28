@@ -107,11 +107,14 @@ describe('PlanDetail', () => {
     expect(stat('Datos del plan', 'Objetivo')).toBe('definicion');
     expect(stat('Datos del plan', 'Régimen')).toBe('Hipocalórico');
     expect(stat('Datos del plan', 'Duración')).toBe('3 meses | 01/02/2026 – 01/05/2026');
-    expect(stat('Macronutrientes', 'Calorías')).toBe('2000 | kcal');
-    expect(stat('Macronutrientes', 'Proteínas')).toBe('150 | g');
-    expect(stat('Macronutrientes', 'Carbohidratos')).toBe('200 | g');
-    expect(stat('Macronutrientes', 'Lípidos')).toBe('60 | g');
+    expect(stat('Datos del plan', 'Calorías')).toBe('2000 | kcal');
+    expect(stat('Datos del plan', 'Proteínas')).toBe('150 | g');
+    expect(stat('Datos del plan', 'Carbohidratos')).toBe('200 | g');
+    expect(stat('Datos del plan', 'Lípidos')).toBe('60 | g');
     expect(screen.queryByText('Resumen')).not.toBeInTheDocument();
+    // los macronutrientes van en la misma card que objetivo, régimen y duración, sin título propio
+    expect(screen.queryByRole('region', { name: 'Macronutrientes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Macronutrientes' })).not.toBeInTheDocument();
   });
 
   it('shows "—" as duration when the plan has no end date', () => {
@@ -187,7 +190,7 @@ describe('PlanDetail', () => {
     expect(screen.getByText('Plan para corredores')).toBeInTheDocument();
     expect(stat('Datos del plan', 'Régimen')).toBe('—');
     expect(stat('Datos del plan', 'Duración')).toBe('—');
-    expect(stat('Macronutrientes', 'Calorías')).toBe('—');
+    expect(stat('Datos del plan', 'Calorías')).toBe('—');
     expect(screen.getByText('Vista previa no disponible')).toBeInTheDocument();
     expect(screen.queryByText('Tiempos de comida')).not.toBeInTheDocument();
   });
@@ -213,6 +216,6 @@ describe('PlanDetail', () => {
     );
 
     expect(stat('Datos del plan', 'Objetivo')).toBe('Rendimiento');
-    expect(stat('Macronutrientes', 'Carbohidratos')).toBe('330 | g');
+    expect(stat('Datos del plan', 'Carbohidratos')).toBe('330 | g');
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildChartSeries, measurementsInPlanRange, parseDateOnly } from './chart-series';
+import { buildChartSeries, latestMetricValues, measurementsInPlanRange, parseDateOnly, yScaleTicks } from './chart-series';
 import type { MeasurementSummaryDto } from './dtos/measurement.dto';
 import type { MyPlanProjectionValuesDto } from '../panel/dtos/my-plan.dto';
 
@@ -76,14 +76,14 @@ describe('buildChartSeries', () => {
     expect(series.find(({ id }) => id === 'mmKg')?.data.map(({ y }) => y)).toEqual([32]);
   });
 
-  it('con proyección agrega series meta punteadas desde el último valor medido hasta el término del plan', () => {
+  it('con proyección agrega series meta desde el último valor medido hasta el término del plan', () => {
     const series = buildChartSeries(
       [measurement({ measuredAt: '2026-09-28T12:00:00.000Z', level: 'BIOIMPEDANCE', bfKg: 17.6, mmKg: 32 })],
       projection,
     );
 
     const weightGoal = series.find(({ id }) => id === 'weight-meta');
-    expect(weightGoal?.dashed).toBe(true);
+    expect(weightGoal?.goal).toBe(true);
     expect(weightGoal?.data.map(({ y }) => y)).toEqual([80, 74]);
     expect(weightGoal?.data[1].x).toEqual(parseDateOnly('2026-12-27'));
     expect(series.find(({ id }) => id === 'bfKg-meta')?.data.map(({ y }) => y)).toEqual([17.6, 11.6]);
@@ -105,6 +105,40 @@ describe('buildChartSeries', () => {
   it('sin mediciones pero con proyección, la meta es un único punto', () => {
     const series = buildChartSeries([], projection);
 
-    expect(series.every(({ dashed, data }) => dashed && data.length === 1)).toBe(true);
+    expect(series.every(({ goal, data }) => goal && data.length === 1)).toBe(true);
+  });
+});
+
+describe('yScaleTicks', () => {
+  const series = (values: number[]) => buildChartSeries(values.map((weight, i) => measurement({ measuredAt: `2026-09-${10 + i}T12:00:00.000Z`, weight, bmi: null })));
+
+  it('redondea la escala a múltiplos de 10 y marca una línea cada 10 unidades', () => {
+    expect(yScaleTicks(series([74, 80]))).toEqual({ min: 70, max: 80, ticks: [70, 80] });
+    expect(yScaleTicks(series([23.5, 81]))).toEqual({ min: 20, max: 90, ticks: [20, 30, 40, 50, 60, 70, 80, 90] });
+  });
+
+  it('amplía un paso si todos los valores caen en el mismo múltiplo, y devuelve null sin datos', () => {
+    expect(yScaleTicks(series([80, 80]))).toEqual({ min: 80, max: 90, ticks: [80, 90] });
+    expect(yScaleTicks([])).toBeNull();
+  });
+});
+
+describe('latestMetricValues', () => {
+  it('toma el último valor registrado de cada métrica, aunque venga de mediciones distintas', () => {
+    const latest = latestMetricValues([
+      measurement({ measuredAt: '2026-09-20T12:00:00.000Z', level: 'BIOIMPEDANCE', weight: 82, bmi: 27.7, bfKg: 18, mmKg: 31 }),
+      measurement({ measuredAt: '2026-09-28T12:00:00.000Z', weight: 80, bmi: 27.04 }),
+    ]);
+
+    expect(latest.map(({ metric, value }) => [metric, value])).toEqual([
+      ['weight', 80],
+      ['bmi', 27.04],
+      ['bfKg', 18],
+      ['mmKg', 31],
+    ]);
+  });
+
+  it('sin mediciones, todos los valores son null', () => {
+    expect(latestMetricValues([]).every(({ value }) => value === null)).toBe(true);
   });
 });

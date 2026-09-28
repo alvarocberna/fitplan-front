@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MeasurementsChart } from './measurements-chart.component';
 import type { MeasurementSummaryDto } from '../dtos/measurement.dto';
@@ -136,5 +136,33 @@ describe('MeasurementsChart', () => {
     expect(lineProps.last.pointColor).toEqual({ from: 'series.color' });
     expect(lineProps.last.pointSize).toBeGreaterThan(0);
     expect(lineProps.last.layers).toContain('points');
+  });
+
+  it('en "Plan actual" muestra el rango del plan con un ícono de calendario en vez del nombre visible', () => {
+    render(<MeasurementsChart measurements={measurements} latestPlan={latestPlan} />);
+
+    const range = screen.getByText('27/09/2026 al 27/12/2026');
+    // el nombre del plan solo queda para lectores de pantalla
+    expect(range.parentElement?.querySelector('.sr-only')?.textContent).toBe('Período del plan Plan personalizado:');
+    expect(range.parentElement?.querySelector('svg')).not.toBeNull();
+  });
+
+  it('dibuja una línea horizontal cada 10 unidades, con la escala redondeada a esos múltiplos', () => {
+    render(<MeasurementsChart measurements={measurements} latestPlan={null} />);
+
+    // valores entre 17.6 (grasa) y 80 (peso): escala 10-80
+    expect(lineProps.last.gridYValues).toEqual([10, 20, 30, 40, 50, 60, 70, 80]);
+    expect(lineProps.last.yScale).toMatchObject({ min: 10, max: 80 });
+    expect((lineProps.last.axisLeft as { tickValues: number[] }).tickValues).toEqual([10, 20, 30, 40, 50, 60, 70, 80]);
+  });
+
+  it('"Resumen actual" muestra el último valor de peso, IMC, grasa y masa muscular', () => {
+    render(<MeasurementsChart measurements={measurements} latestPlan={null} />);
+
+    const summary = screen.getByRole('region', { name: 'Resumen actual' });
+    const rows = within(summary)
+      .getAllByRole('term')
+      .map((term) => `${term.textContent}: ${term.nextElementSibling?.textContent}`);
+    expect(rows).toEqual(['Peso: 80 kg', 'IMC: 26.73', 'Grasa corporal: 17.6 kg', 'Masa muscular: 32 kg']);
   });
 });

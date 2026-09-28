@@ -288,8 +288,8 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
   `null` ante 404 → `notFound()` → "Plan no encontrado"; contenido al 90 % del ancho disponible). Renderiza `PlanDetail`:
   encabezado en dos columnas (apiladas en móvil) — a la izquierda (60 %) título, fecha de compra, una card
   "Datos del plan" (objetivo, régimen y duración, calculada con `planDurationLabel` de `panel/format.ts`
-  desde `startDate`/`endDate`; "—" en los estándar o sin término) y una card "Macronutrientes" (calorías,
-  proteínas, carbohidratos y lípidos); a la derecha (40 %) la card del PDF (miniatura, "Plan nutricional",
+  desde `startDate`/`endDate`; "—" en los estándar o sin término) y, en la misma card tras una línea
+  horizontal, los macronutrientes sin título propio (calorías, proteínas, carbohidratos y lípidos); a la derecha (40 %) la card del PDF (miniatura, "Plan nutricional",
   "PDF" y "Descargar plan"). Debajo, el detalle guardado en la base — personalizado: "Resumen del plan"
   (una sub-card por tiempo de comida, en una columna: tiempo y hora | porciones con valor), suplementación y
   recomendaciones deportivas (la card "Tiempos de comida" con el detalle está oculta por ahora); estándar: descripción (sus datos
@@ -309,13 +309,19 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
   compartido con el detalle); "Ver plan" y "Descargar plan" — y el primero (el último plan) lleva una pestaña
   del color primario a la izquierda. "Ver plan" (en `/planes` y en `/panel`) abre `/planes/[orderId]`, cuyo
   "Volver" regresa a `/planes`.
-- **`/mediciones`** (`src/app/(sesion)/mediciones/page.tsx`, Server Component): la card `MeasurementsChart`
-  (gráfico de evolución, Client Component con `@nivo/line`) y la card `MeasurementsList`
+- **`/mediciones`** (`src/app/(sesion)/mediciones/page.tsx`, Server Component): el título "Evolución de tus mediciones" (fuera de la card)
+  y la card `MeasurementsChart` (gráfico de evolución, Client Component con `@nivo/line`, contenido al 96 %) y `MeasurementsList` (un card con el título "Mis mediciones" y "Registrar medición", y
+  debajo, sin card contenedor, un card por medición: calendario; fecha y tipo; peso, IMC y % de grasa, cada uno
+  con su ícono en el color de su línea del gráfico)
   (`MeasurementsService.getMeasurements()` → `GET /me/measurements`); es la única página que las muestra. El
   gráfico recibe además `PanelService.getLatestPlanProjection()` (→ `GET /me/plans/latest/projection`, `null`
   ante 404) y tiene dos modos: "Plan actual" (mediciones dentro del período del último plan + la proyección
-  como meta punteada; deshabilitado sin plan) y "Todas las mediciones" (una casilla por medición para
-  quitarla o reponerla). Grafica peso, IMC, grasa (kg) y masa muscular (kg); las series se arman en
+  como meta, en trazo continuo del mismo color; el rango del plan, con un ícono de calendario, va a la izquierda
+  de los botones de modo; deshabilitado sin plan) y "Todas las mediciones" (una casilla por medición para
+  quitarla o reponerla). Grafica peso, IMC, grasa (kg) y masa muscular (kg), con una línea horizontal cada 10
+  unidades (`yScaleTicks`). En una columna paralela (debajo en móvil), "Resumen actual": el último valor
+  registrado de cada métrica (`latestMetricValues`), en un recuadro con el mismo fondo que el círculo del
+  calendario; la columna izquierda lleva el rango del plan + los modos, el gráfico y las casillas; las series se arman en
   `features/measurements/chart-series.ts`. Registro, detalle y edición cuelgan de `/mediciones/*`.
 - **`/perfil`** (`src/app/(sesion)/perfil/page.tsx`, Server Component): llama
   `ProfileService.getProfile()` (`src/features/profile/services/profile.service.ts` →

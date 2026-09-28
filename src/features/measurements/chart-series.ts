@@ -3,7 +3,7 @@
 
 import { MeasurementSummaryDto } from './dtos/measurement.dto'
 import type { MyLatestPlanProjectionDto, MyPlanProjectionValuesDto } from '../panel/dtos/my-plan.dto'
-import { BMI_COLOR, BODY_FAT_COLOR, MUSCLE_MASS_COLOR } from './colors'
+import { BMI_COLOR, BODY_FAT_COLOR, MUSCLE_MASS_COLOR, WEIGHT_COLOR } from './colors'
 
 export type ChartMetric = 'weight' | 'bmi' | 'bfKg' | 'mmKg'
 
@@ -16,7 +16,7 @@ export const CHART_METRICS: {
     color: string
     projectionKey: keyof Pick<MyPlanProjectionValuesDto, 'weight' | 'bmi' | 'bfKg' | 'mmKg'>
 }[] = [
-    { metric: 'weight', label: 'Peso', unit: 'kg', color: '#2563eb', projectionKey: 'weight' },
+    { metric: 'weight', label: 'Peso', unit: 'kg', color: WEIGHT_COLOR, projectionKey: 'weight' },
     { metric: 'bmi', label: 'IMC', unit: '', color: BMI_COLOR, projectionKey: 'bmi' },
     { metric: 'bfKg', label: 'Grasa corporal', unit: 'kg', color: BODY_FAT_COLOR, projectionKey: 'bfKg' },
     { metric: 'mmKg', label: 'Masa muscular', unit: 'kg', color: MUSCLE_MASS_COLOR, projectionKey: 'mmKg' },
@@ -34,8 +34,8 @@ export interface ChartSeries {
     label: string
     unit: string
     color: string
-    // true en las series meta: se dibujan punteadas.
-    dashed: boolean
+    // true en las series meta (tramo del último valor medido a la proyección del plan).
+    goal: boolean
     data: ChartPoint[]
 }
 
@@ -84,15 +84,52 @@ export function buildChartSeries(
 
         const series: ChartSeries[] = []
         if (measured.length > 0) {
-            series.push({ ...base, id: metric, dashed: false, data: measured })
+            series.push({ ...base, id: metric, goal: false, data: measured })
         }
 
         const target = projection?.[projectionKey]
         if (projection && target != null) {
             const last = measured.at(-1)
             const goal = { x: parseDateOnly(projection.projectedEndDate), y: target }
-            series.push({ ...base, id: `${metric}-meta`, dashed: true, data: last ? [last, goal] : [goal] })
+            series.push({ ...base, id: `${metric}-meta`, goal: true, data: last ? [last, goal] : [goal] })
         }
         return series
     })
+}
+
+// Escala Y del gráfico en múltiplos de `step` (10 por defecto): mínimo y máximo redondeados hacia afuera y
+// los valores intermedios, que son las líneas horizontales de la grilla y las marcas del eje. Si todos
+// los valores caen en el mismo múltiplo, se amplía un paso para que la escala no quede plana.
+export function yScaleTicks(series: ChartSeries[], step = 10): { min: number; max: number; ticks: number[] } | null {
+    const values = series.flatMap(({ data }) => data.map(({ y }) => y))
+    if (values.length === 0) return null
+    const min = Math.floor(Math.min(...values) / step) * step
+    let max = Math.ceil(Math.max(...values) / step) * step
+    if (max === min) max = min + step
+    const ticks: number[] = []
+    for (let tick = min; tick <= max; tick += step) ticks.push(tick)
+    return { min, max, ticks }
+}
+
+export interface LatestMetricValue {
+    metric: ChartMetric
+    label: string
+    unit: string
+    color: string
+    value: number | null
+}
+
+// "Resumen actual": el último valor registrado de cada métrica (de la medición más reciente que lo tiene;
+// grasa y músculo solo existen en las bioimpedancias), o null si ninguna medición lo tiene.
+export function latestMetricValues(measurements: MeasurementSummaryDto[]): LatestMetricValue[] {
+    const newestFirst = [...measurements].sort(
+        (a, b) => new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime(),
+    )
+    return CHART_METRICS.map(({ metric, label, unit, color }) => ({
+        metric,
+        label,
+        unit,
+        color,
+        value: newestFirst.find((measurement) => measurement[metric] != null)?.[metric] ?? null,
+    }))
 }
