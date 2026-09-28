@@ -137,7 +137,7 @@ Vive en otro repo (`../nutricionista-virtual-back`). Su contrato está documenta
 | GET | `me/plans/:orderId` | `getMyPlanAction` | detalle de un plan (`/panel/planes/[orderId]`; 404 → página "Plan no encontrado") |
 | GET | `me/measurements` | `getMyMeasurementsAction` | mediciones del usuario, más reciente primero (`/panel`, tarjeta 4) |
 | GET | `me/measurements/:id` | `getMyMeasurementAction` | detalle de una medición (`/panel/mediciones/[id]` y su edición; 404 → "Medición no encontrada") |
-| POST / PATCH | `me/measurements`, `me/measurements/:id` | `recordMeasurementAction` / `updateMeasurementAction` | registrar (`/panel/mediciones/nueva`) y corregir (`/panel/mediciones/[id]/editar`) una medición |
+| POST / PATCH | `me/measurements`, `me/measurements/:id` | `recordMeasurementAction` / `updateMeasurementAction` | registrar (`/panel/mediciones/nueva`) y corregir (`/panel/mediciones/[id]/editar`) una medición. Bioimpedancia: grasa corporal y masa muscular obligatorias, grasa visceral y masa ósea opcionales, cada una en % o kg (un solo valor); el backend calcula la otra unidad y el IMC |
 | POST | `consultations/chat` | `sendAnamnesisTurnAction` | turno de chat de anamnesis |
 | POST | `consultations` | `createOrderAction` | crea la consulta y su orden (`paymentStatus: 'PENDING'`) |
 | GET | `orders/:id/status` | `getOrderStatusAction` | polling de estado de pago/generación, `planJson`, `pdfUrl`, `thumbnailUrl` |

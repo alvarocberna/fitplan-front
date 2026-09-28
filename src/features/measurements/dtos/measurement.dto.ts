@@ -6,13 +6,15 @@ export type RecordableLevel = 'BASIC' | 'BIOIMPEDANCE';
 export type MeasurementOrigin = 'CONSULTATION' | 'SELF_REPORTED';
 export type MeasurementValueUnit = 'PERCENTAGE' | 'KG';
 
-// Grasa corporal o masa muscular de una bioimpedancia, en % o en kg.
+// Componente de una bioimpedancia (grasa corporal, masa muscular, grasa visceral o masa ósea), en % o
+// en kg, nunca ambos: el backend calcula el otro.
 export interface MeasurementValueDto {
     value: number;
     unit: MeasurementValueUnit;
 }
 
-// Body de POST /me/measurements.
+// Body de POST /me/measurements. En una bioimpedancia bodyFat y muscleMass son obligatorios;
+// visceralFat y boneMass, opcionales.
 export interface RecordMeasurementDto {
     level: RecordableLevel;
     measuredAt?: string; // ISO; por defecto, ahora
@@ -20,10 +22,18 @@ export interface RecordMeasurementDto {
     height: number;
     bodyFat?: MeasurementValueDto;
     muscleMass?: MeasurementValueDto;
+    visceralFat?: MeasurementValueDto;
+    boneMass?: MeasurementValueDto;
 }
 
-// Body de PATCH /me/measurements/:id: solo lo que cambia (sin `level`).
-export type UpdateMeasurementDto = Partial<Omit<RecordMeasurementDto, 'level'>>;
+// Body de PATCH /me/measurements/:id: solo lo que cambia (sin `level`). null en visceralFat/boneMass
+// quita el componente guardado.
+export type UpdateMeasurementDto = Partial<
+    Omit<RecordMeasurementDto, 'level' | 'visceralFat' | 'boneMass'>
+> & {
+    visceralFat?: MeasurementValueDto | null;
+    boneMass?: MeasurementValueDto | null;
+};
 
 // Ítem de GET /me/measurements. bmi/bfPercentage/mmPercentage son los resultados guardados (null si
 // no se ingresaron o calcularon).

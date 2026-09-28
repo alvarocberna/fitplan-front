@@ -31,7 +31,13 @@ interface MeasurementFormValues {
     bodyFatUnit: MeasurementValueUnit
     muscleMassValue: string
     muscleMassUnit: MeasurementValueUnit
+    visceralFatValue: string
+    visceralFatUnit: MeasurementValueUnit
+    boneMassValue: string
+    boneMassUnit: MeasurementValueUnit
 }
+
+type ComponentName = 'bodyFat' | 'muscleMass' | 'visceralFat' | 'boneMass'
 
 // yyyy-MM-ddTHH:mm en hora local, el formato de <input type="datetime-local">.
 function toLocalInput(date: Date): string {
@@ -39,8 +45,12 @@ function toLocalInput(date: Date): string {
     return local.toISOString().slice(0, 16)
 }
 
-// Valor guardado de grasa o masa muscular (en la unidad en que se registró) para precargar el form.
-function storedValue(measurement: MeasurementDetailDto | undefined, prefix: 'BODY_FAT' | 'MUSCLE_MASS') {
+// Valor guardado de un componente para precargar el form: el % (fuente de verdad en el backend) o,
+// si no hay, los kg.
+function storedValue(
+    measurement: MeasurementDetailDto | undefined,
+    prefix: 'BODY_FAT' | 'MUSCLE_MASS' | 'VISCERAL_FAT' | 'BONE_MASS',
+) {
     const percentage = measurement?.results.find((r) => r.indicator === `${prefix}_PERCENTAGE`)
     if (percentage) return { value: String(percentage.value), unit: 'PERCENTAGE' as const }
     const kg = measurement?.results.find((r) => r.indicator === `${prefix}_KG`)
@@ -49,13 +59,16 @@ function storedValue(measurement: MeasurementDetailDto | undefined, prefix: 'BOD
 }
 
 // Registra o corrige una medición (HU-CLI-05 / HU-CLI-06). Básica: peso y talla; bioimpedancia:
-// además grasa corporal y masa muscular, cada una en % o kg. La fecha no puede ser futura. El
+// además grasa corporal y masa muscular (obligatorias) y grasa visceral y masa ósea (opcionales),
+// cada una en % o kg: el backend calcula la otra unidad y el IMC. La fecha no puede ser futura. El
 // backend repite todas las validaciones.
 export function MeasurementForm({ measurement }: MeasurementFormProps) {
     const router = useRouter()
     const isEdit = Boolean(measurement)
     const bodyFat = storedValue(measurement, 'BODY_FAT')
     const muscleMass = storedValue(measurement, 'MUSCLE_MASS')
+    const visceralFat = storedValue(measurement, 'VISCERAL_FAT')
+    const boneMass = storedValue(measurement, 'BONE_MASS')
 
     const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<MeasurementFormValues>({
         defaultValues: {
@@ -67,25 +80,46 @@ export function MeasurementForm({ measurement }: MeasurementFormProps) {
             bodyFatUnit: bodyFat.unit,
             muscleMassValue: muscleMass.value,
             muscleMassUnit: muscleMass.unit,
+            visceralFatValue: visceralFat.value,
+            visceralFatUnit: visceralFat.unit,
+            boneMassValue: boneMass.value,
+            boneMassUnit: boneMass.unit,
         },
     })
     const isBioimpedance = watch('level') === 'BIOIMPEDANCE'
 
     const onSubmit: SubmitHandler<MeasurementFormValues> = async (data) => {
+        const component = (name: ComponentName): MeasurementValueDto | undefined =>
+            data[`${name}Value`] === ''
+                ? undefined
+                : { value: Number(data[`${name}Value`]), unit: data[`${name}Unit`] }
         const values = {
             measuredAt: new Date(data.measuredAt).toISOString(),
             weight: Number(data.weight),
             height: Number(data.height),
-            ...(isBioimpedance && {
-                bodyFat: { value: Number(data.bodyFatValue), unit: data.bodyFatUnit } satisfies MeasurementValueDto,
-                muscleMass: { value: Number(data.muscleMassValue), unit: data.muscleMassUnit } satisfies MeasurementValueDto,
-            }),
         }
+        const bioimpedance = isBioimpedance
+            ? {
+                  bodyFat: component('bodyFat'),
+                  muscleMass: component('muscleMass'),
+                  visceralFat: component('visceralFat'),
+                  boneMass: component('boneMass'),
+              }
+            : {}
         try {
             const saved = measurement
-                ? await MeasurementsService.updateMeasurement(measurement.measurementId, values)
+                ? await MeasurementsService.updateMeasurement(measurement.measurementId, {
+                      ...values,
+                      ...bioimpedance,
+                      // al editar, un opcional vacío quita el valor guardado
+                      ...(isBioimpedance && {
+                          visceralFat: component('visceralFat') ?? null,
+                          boneMass: component('boneMass') ?? null,
+                      }),
+                  })
                 : await MeasurementsService.recordMeasurement({
                       ...values,
+                      ...bioimpedance,
                       level: data.level as RecordMeasurementDto['level'],
                   })
             toast.success(isEdit ? 'Medición actualizada' : 'Medición registrada')
@@ -145,6 +179,12 @@ export function MeasurementForm({ measurement }: MeasurementFormProps) {
 
                     <ValueWithUnit label="Masa muscular" name="muscleMass" register={register} />
                     {errors.muscleMassValue && <span className="text-red-400 text-sm">{errors.muscleMassValue.message}</span>}
+
+                    <ValueWithUnit label="Grasa visceral" name="visceralFat" register={register} required={false} />
+                    {errors.visceralFatValue && <span className="text-red-400 text-sm">{errors.visceralFatValue.message}</span>}
+
+                    <ValueWithUnit label="Masa ósea" name="boneMass" register={register} required={false} />
+                    {errors.boneMassValue && <span className="text-red-400 text-sm">{errors.boneMassValue.message}</span>}
                 </>
             )}
 
@@ -196,27 +236,31 @@ function SelectField({
     )
 }
 
-// Valor numérico + unidad (% o kg) de grasa corporal o masa muscular.
+// Valor numérico + unidad (% o kg) de un componente de la bioimpedancia. Un solo input por
+// componente: no se puede ingresar kg y % a la vez. Si no es obligatorio, puede quedar vacío.
 function ValueWithUnit({
     label,
     name,
     register,
+    required = true,
 }: {
     label: string
-    name: 'bodyFat' | 'muscleMass'
+    name: ComponentName
     register: UseFormRegister<MeasurementFormValues>
+    required?: boolean
 }) {
     return (
         <div className="w-full flex gap-3 items-end">
             <div className="flex-1">
                 <InputOutlined
-                    label={label}
+                    label={required ? label : `${label} (opcional)`}
                     name={`${name}Value`}
                     type="number"
                     register={register}
                     rules={{
-                        required: 'Campo requerido',
-                        validate: (value: string) => Number(value) > 0 || `${label} debe ser mayor que 0`,
+                        required: required && 'Campo requerido',
+                        validate: (value: string) =>
+                            (!required && value === '') || Number(value) > 0 || `${label} debe ser mayor que 0`,
                     }}
                 />
             </div>

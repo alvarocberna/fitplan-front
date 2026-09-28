@@ -155,8 +155,9 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   iniciar una consulta cuando no hay consulta ni medición.
 - **`MeasurementsList`**, **`MeasurementDetail`**, **`MeasurementForm`** y **`MeasurementsService`**
   (`src/features/measurements/`): filas con tipo/origen/valores y link al detalle; secciones crudas y resultados
-  presentes; campos de bioimpedancia condicionales, payload de POST/PATCH, fecha futura y rangos bloqueados, modo
-  edición con el tipo deshabilitado; `getMeasurement` devuelve `null` ante 404.
+  presentes; campos de bioimpedancia condicionales (grasa y masa muscular obligatorias; grasa visceral y masa ósea
+  opcionales: vacías no se envían al registrar y van como `null` al editar), payload de POST/PATCH, fecha futura y
+  rangos bloqueados, modo edición con el tipo deshabilitado; `getMeasurement` devuelve `null` ante 404.
 - **`PlansList`** (card "Mis planes nutricionales"): una fila por plan en el orden recibido, sin miniatura, con tipo,
   fecha, régimen y macros (o "—"), el enlace "Ver plan" a `/panel/planes/[orderId]` y "Descargar plan" al `pdfUrl`; el
   mensaje de "sin planes" con la lista vacía. **`PlanDetail`**: encabezado, secciones del plan personalizado

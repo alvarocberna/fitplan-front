@@ -81,6 +81,32 @@ describe('MeasurementForm', () => {
       bodyFat: { value: 18, unit: 'PERCENTAGE' },
       muscleMass: { value: 32, unit: 'KG' },
     });
+    // grasa visceral y masa ósea vacías: no se envían
+    expect(mockedRecord.mock.calls[0][0].visceralFat).toBeUndefined();
+    expect(mockedRecord.mock.calls[0][0].boneMass).toBeUndefined();
+  });
+
+  it('sends the optional visceral fat and bone mass when filled, each in its own unit', async () => {
+    mockedRecord.mockResolvedValue(stored);
+    const user = userEvent.setup();
+    render(<MeasurementForm />);
+
+    await user.selectOptions(screen.getByLabelText('Tipo de medición'), 'BIOIMPEDANCE');
+    await user.type(screen.getByLabelText('Peso (kg)'), '70');
+    await user.type(screen.getByLabelText('Talla (cm)'), '172');
+    await user.type(screen.getByLabelText('Grasa corporal'), '18');
+    await user.type(screen.getByLabelText('Masa muscular'), '40');
+    await user.type(screen.getByLabelText('Grasa visceral (opcional)'), '2.1');
+    await user.type(screen.getByLabelText('Masa ósea (opcional)'), '4');
+    const [, , visceralUnit] = screen.getAllByLabelText('Unidad');
+    await user.selectOptions(visceralUnit, 'KG');
+    await user.click(screen.getByRole('button', { name: 'Registrar medición' }));
+
+    await waitFor(() => expect(mockedRecord).toHaveBeenCalled());
+    expect(mockedRecord.mock.calls[0][0]).toMatchObject({
+      visceralFat: { value: 2.1, unit: 'KG' },
+      boneMass: { value: 4, unit: 'PERCENTAGE' },
+    });
   });
 
   it('blocks a future date and out-of-range values without calling the backend', async () => {
@@ -119,6 +145,9 @@ describe('MeasurementForm', () => {
       height: 172,
       bodyFat: { value: 18, unit: 'PERCENTAGE' },
       muscleMass: { value: 32, unit: 'KG' },
+      // opcionales vacíos al editar: null quita lo guardado
+      visceralFat: null,
+      boneMass: null,
     });
     expect(pushMock).toHaveBeenCalledWith('/panel/mediciones/m-1');
   });
