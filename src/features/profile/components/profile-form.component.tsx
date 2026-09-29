@@ -63,7 +63,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             <InputOutlined label="Fecha de nacimiento" name="dateOfBirth" type="date" register={register} rules={{ required: 'Campo requerido' }} />
             {errors.dateOfBirth && <span className="text-red-400 text-sm">{errors.dateOfBirth.message}</span>}
 
-            <div className='w-50 h-10 mx-auto mt-10'>
+            {/* botón alineado a la derecha */}
+            <div className='w-50 h-10 ml-auto mt-10'>
                 <input className='primary-btn' type='submit' value='Guardar cambios' disabled={isSubmitting} />
             </div>
 

@@ -33,6 +33,8 @@ test.describe('Order status & plan', () => {
     await expect(page.getByText('¡Tu plan nutricional está listo!')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole('img', { name: /Vista previa de tu plan nutricional/ })).toBeVisible();
     await expect(page.getByRole('link', { name: /Descargar/ })).toHaveAttribute('href', PDF_URL);
+    // solo en /ordenes/[id] la card del PDF ofrece volver al inicio del área de sesión
+    await expect(page.getByRole('link', { name: 'Ir a inicio' })).toHaveAttribute('href', '/inicio');
     // ya no se incrusta el PDF: solo miniatura + descarga
     await expect(page.locator('iframe')).toHaveCount(0);
   });

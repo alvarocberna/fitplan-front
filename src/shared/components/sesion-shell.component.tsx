@@ -10,7 +10,7 @@ import { Footer } from "./footer.component";
 import { isFocusRoute } from "@/shared/auth/sesion-routes";
 
 // Elección manual del usuario (acoplar/desacoplar) en la sección actual. `focus` indica de qué
-// sección es (flujo /consulta/* + /pago/* + /ordenes/* vs área de usuario: /panel, /planes, /mediciones, /perfil); `override` es null mientras el
+// sección es (flujo /consulta/* + /pago/* + /ordenes/* vs área de usuario: /inicio, /planes, /mediciones, /perfil); `override` es null mientras el
 // usuario no haya tocado el botón. Al cambiar de sección la elección se descarta y vuelve a valer
 // el valor por defecto de la nueva; dentro de una misma sección se mantiene entre páginas porque el
 // layout no se vuelve a montar.

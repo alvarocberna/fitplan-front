@@ -1,21 +1,26 @@
+//icons
+import { faUser } from '@fortawesome/free-solid-svg-icons'
 //shared
-import { Card, SubsectionHead, SubsectionTitle, SubsectionBody } from '@/shared'
+import { Card, SubsectionHead, SubsectionBody } from '@/shared'
 //features
-import { ProfileForm, ProfileService } from '@/features'
+import { IconSectionTitle, ProfileForm, ProfileService } from '@/features'
 
 export default async function PerfilPage() {
     const profile = await ProfileService.getProfile()
 
     return (
         <div className="w-[90%] flex flex-col mx-auto">
-            <Card widthInner="80%" variant="solid">
-                <SubsectionHead>
-                    <SubsectionTitle title="Mi perfil" />
-                </SubsectionHead>
-                <SubsectionBody>
-                    <ProfileForm profile={profile} />
-                </SubsectionBody>
-            </Card>
+            {/* la card ocupa la mitad del ancho (todo en móvil), alineada a la izquierda */}
+            <div className="w-full md:w-1/2">
+                <Card widthInner="96%" variant="solid">
+                    <SubsectionHead>
+                        <IconSectionTitle icon={faUser} title="Mi perfil" />
+                    </SubsectionHead>
+                    <SubsectionBody>
+                        <ProfileForm profile={profile} />
+                    </SubsectionBody>
+                </Card>
+            </div>
         </div>
     )
 }

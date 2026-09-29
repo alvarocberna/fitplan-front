@@ -150,7 +150,7 @@ describe('FormMeasurements', () => {
     expect(stored.personalInfo).toEqual(VALID_PERSONAL_INFO);
   });
 
-  it('exit discards the consultation and goes to the panel', async () => {
+  it('exit discards the consultation and goes to /inicio', async () => {
     seedContext(VALID_PERSONAL_INFO, LOSE_WEIGHT_ANAMNESIS);
     evaluateGoalFeasibility.mockResolvedValue({ feasible: false, goal: 'definicion', message: NOT_FEASIBLE_MESSAGE });
     const user = userEvent.setup();
@@ -160,7 +160,7 @@ describe('FormMeasurements', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Salir' }));
 
-    expect(pushMock).toHaveBeenCalledWith('/panel');
+    expect(pushMock).toHaveBeenCalledWith('/inicio');
     const stored = JSON.parse(localStorage.getItem('consulta_context')!);
     expect(stored.anamnesis).toBeNull();
     expect(stored.measurements).toBeNull();

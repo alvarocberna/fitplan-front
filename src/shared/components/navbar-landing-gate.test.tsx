@@ -16,7 +16,7 @@ describe('NavbarLandingGate', () => {
     '/consulta/anamnesis',
     '/pago/abc-123',
     '/ordenes/abc-123',
-    '/panel',
+    '/inicio',
     '/perfil',
     '/dev',
     '/dev/algo',

@@ -9,7 +9,7 @@ const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7;
 
 // Fabrica la cookie `session` que en producción emite /api/cognito/callback (ver
 // src/shared/auth/session.ts): un JWT HS256 firmado con SESSION_SECRET. Sin ella, src/proxy.ts
-// redirige a /login en /consulta/*, /pago/*, /ordenes/*, /panel y /perfil. `accessTokenExpiresAt`
+// redirige a /login en /consulta/*, /pago/*, /ordenes/*, /inicio y /perfil. `accessTokenExpiresAt`
 // va lejos en el futuro para que getValidAccessToken() nunca intente refrescar contra Cognito.
 export async function createSessionCookieValue(): Promise<string> {
   const secret = process.env.SESSION_SECRET;

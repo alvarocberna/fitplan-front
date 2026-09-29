@@ -1,7 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { buildChartSeries, latestMetricValues, measurementsInPlanRange, parseDateOnly, yScaleTicks } from './chart-series';
+import {
+  buildChartSeries,
+  buildTimeAxis,
+  chartTicks,
+  latestMetricValues,
+  measurementsInPlanRange,
+  parseDateOnly,
+  yScaleTicks,
+} from './chart-series';
 import type { MeasurementSummaryDto } from './dtos/measurement.dto';
-import type { MyPlanProjectionValuesDto } from '../panel/dtos/my-plan.dto';
+import type { MyPlanProjectionValuesDto } from '../dashboard/dtos/my-plan.dto';
 
 // mediodía UTC: el día local es el mismo en cualquier zona horaria razonable
 function measurement(overrides: Partial<MeasurementSummaryDto>): MeasurementSummaryDto {
@@ -85,7 +93,9 @@ describe('buildChartSeries', () => {
     const weightGoal = series.find(({ id }) => id === 'weight-meta');
     expect(weightGoal?.goal).toBe(true);
     expect(weightGoal?.data.map(({ y }) => y)).toEqual([80, 74]);
-    expect(weightGoal?.data[1].x).toEqual(parseDateOnly('2026-12-27'));
+    expect(weightGoal?.data[1].date).toEqual(parseDateOnly('2026-12-27'));
+    // una sola medición: queda al inicio y la meta (discontinua) ocupa todo el ancho
+    expect(weightGoal?.data.map(({ x }) => x)).toEqual([0, 100]);
     expect(series.find(({ id }) => id === 'bfKg-meta')?.data.map(({ y }) => y)).toEqual([17.6, 11.6]);
     expect(series.find(({ id }) => id === 'mmKg-meta')?.data.map(({ y }) => y)).toEqual([32, 32]);
   });
@@ -106,6 +116,71 @@ describe('buildChartSeries', () => {
     const series = buildChartSeries([], projection);
 
     expect(series.every(({ goal, data }) => goal && data.length === 1)).toBe(true);
+  });
+});
+
+describe('buildTimeAxis', () => {
+  const day = (value: string) => parseDateOnly(value);
+
+  it('con proyección, las mediciones ocupan de 0 a 70 (proporcionales en el tiempo) y la proyección de 70 a 100', () => {
+    const toX = buildTimeAxis([day('2026-09-01'), day('2026-09-08'), day('2026-09-15')], day('2026-12-15'));
+
+    expect(toX(day('2026-09-01'))).toBe(0);
+    // precisión de enteros: un cambio de horario (DST) en el medio corre la posición unas décimas
+    expect(toX(day('2026-09-08'))).toBeCloseTo(35, 0);
+    expect(toX(day('2026-09-15'))).toBe(70);
+    // la mitad del tramo de proyección cae en la mitad del 30 %
+    expect(toX(day('2026-10-30'))).toBeCloseTo(85, 0);
+    expect(toX(day('2026-12-15'))).toBe(100);
+  });
+
+  it('sin proyección, las mediciones usan todo el ancho', () => {
+    const toX = buildTimeAxis([day('2026-09-01'), day('2026-09-15')], null);
+
+    expect(toX(day('2026-09-01'))).toBe(0);
+    expect(toX(day('2026-09-15'))).toBe(100);
+  });
+
+  it('con una sola fecha medida y proyección, la medición va al inicio y la proyección ocupa todo el ancho', () => {
+    const toX = buildTimeAxis([day('2026-09-01')], day('2026-12-01'));
+
+    expect(toX(day('2026-09-01'))).toBe(0);
+    // 45 de los 91 días del tramo
+    expect(toX(day('2026-10-16'))).toBeCloseTo((45 / 91) * 100, 0);
+    expect(toX(day('2026-12-01'))).toBe(100);
+  });
+
+  it('con una sola fecha medida y sin proyección, la medición queda al centro', () => {
+    expect(buildTimeAxis([day('2026-09-01')], null)(day('2026-09-01'))).toBe(50);
+  });
+
+  it('sin mediciones, la proyección queda en el borde derecho', () => {
+    expect(buildTimeAxis([], day('2026-12-01'))(day('2026-12-01'))).toBe(100);
+  });
+});
+
+describe('chartTicks', () => {
+  it('marca cada día medido y la fecha proyectada, con su posición', () => {
+    const series = buildChartSeries(
+      [
+        measurement({ measuredAt: '2026-09-01T12:00:00.000Z' }),
+        measurement({ measuredAt: '2026-09-15T12:00:00.000Z' }),
+      ],
+      { ...projection, projectedEndDate: '2026-12-15' },
+    );
+
+    expect(chartTicks(series).map(({ x }) => Math.round(x))).toEqual([0, 70, 100]);
+  });
+
+  it('con más de 5 días medidos deja 5 marcas repartidas (más la proyectada)', () => {
+    const measurements = Array.from({ length: 9 }, (_, index) =>
+      measurement({ measuredAt: `2026-09-${String(index + 1).padStart(2, '0')}T12:00:00.000Z` }),
+    );
+    const ticks = chartTicks(buildChartSeries(measurements, { ...projection, projectedEndDate: '2026-12-15' }));
+
+    expect(ticks).toHaveLength(6);
+    expect(ticks[0].x).toBe(0);
+    expect(ticks.at(-1)?.x).toBe(100);
   });
 });
 

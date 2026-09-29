@@ -54,13 +54,13 @@ test('shows the not-feasible message and "Nueva consulta" restarts the anamnesis
   expect(stored.personalInfo.firstName).toBe('Ana');
 });
 
-test('"Salir" discards the consultation and goes to the panel', async ({ page }) => {
+test('"Salir" discards the consultation and goes to /inicio', async ({ page }) => {
   await mockGoalFeasibility({ feasible: false, goal: 'definicion', message: NOT_FEASIBLE_MESSAGE });
 
   await submitPhysicalAssessment(page);
   await page.getByRole('button', { name: 'Salir' }).click();
 
-  await expect(page).toHaveURL(/\/panel$/);
+  await expect(page).toHaveURL(/\/inicio$/);
 });
 
 test('a feasible goal continues to generate the order', async ({ page }) => {

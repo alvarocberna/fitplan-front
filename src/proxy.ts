@@ -8,7 +8,7 @@ const apiCMSUrl =
 const s3Bucket = "https://web-core-storage.s3.us-east-1.amazonaws.com";
 // Bucket privado donde el backend almacena los PDFs de los planes nutricionales y sus miniaturas
 // (ver StorageService en nutricionista-virtual-back). Se accede solo con URLs firmadas: las
-// miniaturas <img> de /panel y /ordenes/[id] (img-src). Las descargas del PDF son navegaciones de
+// miniaturas <img> de /inicio y /ordenes/[id] (img-src). Las descargas del PDF son navegaciones de
 // un <a>, no las restringe el CSP, y el PDF ya no se incrusta en un <iframe> (no va en frame-src).
 const plansS3Bucket =
   "https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com";
@@ -18,7 +18,7 @@ const plansS3Bucket =
 // antes de que la página se renderice. El login vive en /login (fuera de /consulta/*, así que no
 // necesita estar acá para no crear un loop de redirects). Cualquier otra ruta que empiece con
 // "/consulta/" queda protegida por defecto, incluidas las que se agreguen a futuro.
-// El resto del flujo (/pago/* y /ordenes/*) y el área de usuario (/panel, /planes, /mediciones, /perfil) exigen sesión
+// El resto del flujo (/pago/* y /ordenes/*) y el área de usuario (/inicio, /planes, /mediciones, /perfil) exigen sesión
 // por completo: ver isSessionGatedPrefix / isSesionRoute en sesion-routes.ts.
 const PUBLIC_CONSULTA_PATHS = new Set(["/consulta"]);
 

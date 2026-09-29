@@ -5,7 +5,10 @@ import { ConsultationProvider } from '@/shared';
 import { ConsultationService } from '@/features';
 import type { OrderStatusDto } from '@/features';
 
-vi.mock('next/navigation', () => ({ useParams: () => ({ id: 'order-1' }) }));
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ id: 'order-1' }),
+  usePathname: () => '/ordenes/order-1',
+}));
 vi.mock('@/features', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features')>();
   return { ...actual, ConsultationService: { getOrderStatus: vi.fn() } };
@@ -98,6 +101,8 @@ describe('OrderPage', () => {
     expect(screen.getByAltText('Vista previa de tu plan nutricional')).toHaveAttribute('src', thumbnailUrl);
     expect(screen.getByRole('link', { name: /Descargar/ })).toHaveAttribute('href', pdfUrl);
     expect(document.querySelector('iframe')).toBeNull();
+    // PlanFileCard en /ordenes/[id] ofrece volver al inicio del área de sesión
+    expect(screen.getByRole('link', { name: 'Ir a inicio' })).toHaveAttribute('href', '/inicio');
 
     await tick(8000);
     expect(getOrderStatus).toHaveBeenCalledTimes(1);

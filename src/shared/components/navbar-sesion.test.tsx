@@ -6,23 +6,23 @@ const usePathnameMock = vi.fn();
 vi.mock('next/navigation', () => ({ usePathname: () => usePathnameMock() }));
 
 describe('NavbarSesion', () => {
-  it('renders links to /panel ("Home"), /planes, /mediciones, /perfil and the logout endpoint', () => {
-    usePathnameMock.mockReturnValue('/panel');
+  it('renders links to /inicio ("Inicio"), /planes, /mediciones, /perfil and the logout endpoint', () => {
+    usePathnameMock.mockReturnValue('/inicio');
     render(<NavbarSesion />);
 
-    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/panel');
+    expect(screen.getByRole('link', { name: 'Inicio' })).toHaveAttribute('href', '/inicio');
     expect(screen.getByRole('link', { name: 'Planes' })).toHaveAttribute('href', '/planes');
     expect(screen.getByRole('link', { name: 'Mediciones' })).toHaveAttribute('href', '/mediciones');
     expect(screen.getByRole('link', { name: 'Perfil' })).toHaveAttribute('href', '/perfil');
     expect(screen.getByRole('link', { name: 'Cerrar sesión' })).toHaveAttribute('href', '/api/cognito/logout');
   });
 
-  it('lists the links in order: Home, Planes, Mediciones, Perfil, Cerrar sesión (no "Nueva consulta": lives in the topbar)', () => {
-    usePathnameMock.mockReturnValue('/panel');
+  it('lists the links in order: Inicio, Planes, Mediciones, Perfil, Cerrar sesión (no "Nueva consulta": lives in the topbar)', () => {
+    usePathnameMock.mockReturnValue('/inicio');
     render(<NavbarSesion />);
 
     expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual([
-      'Home',
+      'Inicio',
       'Planes',
       'Mediciones',
       'Perfil',
@@ -32,7 +32,7 @@ describe('NavbarSesion', () => {
   });
 
   it('is md+ only: hidden by default and flex from md, docked under the topbar (top-15)', () => {
-    usePathnameMock.mockReturnValue('/panel');
+    usePathnameMock.mockReturnValue('/inicio');
     const { container } = render(<NavbarSesion />);
 
     const nav = container.querySelector('nav');
@@ -57,11 +57,11 @@ describe('NavbarSesion', () => {
       expect(within(link).queryByTestId('nav-active-indicator')).not.toBeInTheDocument();
     };
 
-    it('highlights "Home" as active when the current pathname is /panel', () => {
-      usePathnameMock.mockReturnValue('/panel');
+    it('highlights "Inicio" as active when the current pathname is /inicio', () => {
+      usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion />);
 
-      expectActive('Home');
+      expectActive('Inicio');
       expectInactive('Perfil');
     });
 
@@ -70,7 +70,7 @@ describe('NavbarSesion', () => {
       render(<NavbarSesion />);
 
       expectActive('Perfil');
-      expectInactive('Home');
+      expectInactive('Inicio');
     });
 
     it.each([
@@ -81,7 +81,7 @@ describe('NavbarSesion', () => {
       render(<NavbarSesion />);
 
       expectActive(active);
-      for (const name of ['Home', 'Planes', 'Mediciones', 'Perfil'].filter((n) => n !== active)) {
+      for (const name of ['Inicio', 'Planes', 'Mediciones', 'Perfil'].filter((n) => n !== active)) {
         expectInactive(name);
       }
     });
@@ -90,7 +90,7 @@ describe('NavbarSesion', () => {
       usePathnameMock.mockReturnValue('/consulta/anamnesis');
       render(<NavbarSesion />);
 
-      expectInactive('Home');
+      expectInactive('Inicio');
       expectInactive('Perfil');
       expect(screen.queryByTestId('nav-active-indicator')).not.toBeInTheDocument();
     });
@@ -99,7 +99,7 @@ describe('NavbarSesion', () => {
       usePathnameMock.mockReturnValue('/otra-ruta');
       render(<NavbarSesion />);
 
-      expectInactive('Home');
+      expectInactive('Inicio');
       expectInactive('Perfil');
       expect(screen.queryByTestId('nav-active-indicator')).not.toBeInTheDocument();
     });
@@ -123,21 +123,21 @@ describe('NavbarSesion', () => {
 
   describe('toggle del sidebar', () => {
     it('does not render the toggle button when onToggle is not provided', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion />);
 
       expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
 
     it('renders the toggle button when onToggle is provided', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion onToggle={vi.fn()} />);
 
       expect(screen.getByRole('button')).toBeInTheDocument();
     });
 
     it('calls onToggle when the toggle button is clicked', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       const onToggle = vi.fn();
       render(<NavbarSesion collapsed={false} onToggle={onToggle} />);
 
@@ -147,7 +147,7 @@ describe('NavbarSesion', () => {
     });
 
     it('offers to dock the sidebar (aria-expanded=true) when it is not collapsed', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion collapsed={false} onToggle={vi.fn()} />);
 
       const button = screen.getByRole('button', { name: 'Acoplar menú lateral' });
@@ -156,7 +156,7 @@ describe('NavbarSesion', () => {
     });
 
     it('offers to undock the sidebar (aria-expanded=false) when it is collapsed', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion collapsed onToggle={vi.fn()} />);
 
       const button = screen.getByRole('button', { name: 'Desacoplar menú lateral' });
@@ -165,7 +165,7 @@ describe('NavbarSesion', () => {
     });
 
     it('renders the toggle as a small 16x32px button over the right border (no md-only classes)', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion onToggle={vi.fn()} />);
 
       const button = screen.getByRole('button', { name: 'Acoplar menú lateral' });
@@ -174,7 +174,7 @@ describe('NavbarSesion', () => {
     });
 
     it('draws an icon inside the toggle in both states (chevron left / chevron right)', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       const { rerender } = render(<NavbarSesion collapsed={false} onToggle={vi.fn()} />);
       const openIcon = screen.getByRole('button', { name: 'Acoplar menú lateral' }).querySelector('svg');
       expect(openIcon).toBeInTheDocument();
@@ -187,32 +187,32 @@ describe('NavbarSesion', () => {
     });
 
     it('defaults to not collapsed when only onToggle is passed', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion onToggle={vi.fn()} />);
 
       expect(screen.getByRole('button', { name: 'Acoplar menú lateral' })).toBeInTheDocument();
     });
 
     it('does not hide the links when not collapsed', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion collapsed={false} onToggle={vi.fn()} />);
 
-      for (const name of ['Home', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
+      for (const name of ['Inicio', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
         expect(screen.getByRole('link', { name })).not.toHaveClass('hidden');
       }
     });
 
     it('hides every link (hidden) when collapsed, leaving only the toggle', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion collapsed onToggle={vi.fn()} />);
 
-      for (const name of ['Home', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
+      for (const name of ['Inicio', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
         expect(screen.getByRole('link', { name })).toHaveClass('hidden');
       }
     });
 
     it('narrows the sidebar (w-14) when collapsed and widens it (w-56) otherwise', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       const { container, rerender } = render(<NavbarSesion collapsed onToggle={vi.fn()} />);
       expect(container.querySelector('nav')).toHaveClass('w-14');
       expect(container.querySelector('nav')).not.toHaveClass('w-56');
@@ -224,7 +224,7 @@ describe('NavbarSesion', () => {
 
     describe('click (burbujea al <nav>)', () => {
       it('calls onToggle once when clicking the nav outside of any link', () => {
-        usePathnameMock.mockReturnValue('/panel');
+        usePathnameMock.mockReturnValue('/inicio');
         const onToggle = vi.fn();
         const { container } = render(<NavbarSesion onToggle={onToggle} />);
 
@@ -234,7 +234,7 @@ describe('NavbarSesion', () => {
       });
 
       it('calls onToggle exactly once when clicking the button (bubbles to the nav, no double toggle)', () => {
-        usePathnameMock.mockReturnValue('/panel');
+        usePathnameMock.mockReturnValue('/inicio');
         const onToggle = vi.fn();
         render(<NavbarSesion onToggle={onToggle} />);
 
@@ -244,7 +244,7 @@ describe('NavbarSesion', () => {
       });
 
       it('calls onToggle exactly once when clicking the icon inside the button', () => {
-        usePathnameMock.mockReturnValue('/panel');
+        usePathnameMock.mockReturnValue('/inicio');
         const onToggle = vi.fn();
         render(<NavbarSesion onToggle={onToggle} />);
 
@@ -253,8 +253,8 @@ describe('NavbarSesion', () => {
         expect(onToggle).toHaveBeenCalledTimes(1);
       });
 
-      it.each(['Home', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión'])('does NOT call onToggle when clicking the "%s" link', (name) => {
-        usePathnameMock.mockReturnValue('/panel');
+      it.each(['Inicio', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión'])('does NOT call onToggle when clicking the "%s" link', (name) => {
+        usePathnameMock.mockReturnValue('/inicio');
         const onToggle = vi.fn();
         render(<NavbarSesion onToggle={onToggle} />);
 
@@ -267,7 +267,7 @@ describe('NavbarSesion', () => {
       });
 
       it('does NOT call onToggle when clicking the text inside a link (target nested in the <a>)', () => {
-        usePathnameMock.mockReturnValue('/panel');
+        usePathnameMock.mockReturnValue('/inicio');
         const onToggle = vi.fn();
         render(<NavbarSesion onToggle={onToggle} />);
 
@@ -281,7 +281,7 @@ describe('NavbarSesion', () => {
       });
 
       it('has cursor-pointer on the nav only when onToggle is provided', () => {
-        usePathnameMock.mockReturnValue('/panel');
+        usePathnameMock.mockReturnValue('/inicio');
         const { container, rerender } = render(<NavbarSesion onToggle={vi.fn()} />);
         expect(container.querySelector('nav')).toHaveClass('cursor-pointer');
 
@@ -290,7 +290,7 @@ describe('NavbarSesion', () => {
       });
 
       it('without onToggle, clicking the nav does not throw and there is no cursor-pointer', () => {
-        usePathnameMock.mockReturnValue('/panel');
+        usePathnameMock.mockReturnValue('/inicio');
         const { container } = render(<NavbarSesion />);
         const nav = container.querySelector('nav')!;
 
@@ -301,7 +301,7 @@ describe('NavbarSesion', () => {
 
     describe('resaltado del borde al pasar el mouse / foco sobre el botón', () => {
       const renderToggle = () => {
-        usePathnameMock.mockReturnValue('/panel');
+        usePathnameMock.mockReturnValue('/inicio');
         const { container } = render(<NavbarSesion onToggle={vi.fn()} />);
         return {
           nav: container.querySelector('nav') as HTMLElement,

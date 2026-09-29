@@ -3,7 +3,7 @@
 //react
 import { useMemo, useState } from 'react'
 //nivo
-import { ResponsiveLine } from '@nivo/line'
+import { ResponsiveLine, type LineCustomSvgLayerProps } from '@nivo/line'
 //icons
 import { CalendarDaysIcon, PresentationChartLineIcon } from '@heroicons/react/24/outline'
 //shared
@@ -13,16 +13,18 @@ import { MeasurementSummaryDto } from '../dtos/measurement.dto'
 import { levelLabel, originLabel } from '../labels'
 import {
     buildChartSeries,
+    chartTicks,
     latestMetricValues,
     measurementsInPlanRange,
     parseDateOnly,
     yScaleTicks,
+    type ChartPoint,
     type ChartSeries,
 } from '../chart-series'
-//features - panel
-import type { MyLatestPlanProjectionDto } from '../../panel/dtos/my-plan.dto'
-import { formatDate } from '../../panel/format'
-import { CardTitle } from '../../panel/components/card-title.component'
+//features - dashboard
+import type { MyLatestPlanProjectionDto } from '../../dashboard/dtos/my-plan.dto'
+import { formatDate } from '../../dashboard/format'
+import { CardTitle } from '../../dashboard/components/card-title.component'
 
 type ChartMode = 'plan' | 'all'
 
@@ -30,14 +32,15 @@ interface MeasurementsChartProps {
     measurements: MeasurementSummaryDto[]
     // Último plan con período (GET /me/plans/latest/projection); null si no hay.
     latestPlan: MyLatestPlanProjectionDto | null
-    // Título interno (con ícono), p. ej. "Evolución" en /panel; /mediciones pone su propio título fuera de la card.
+    // Título interno (con ícono), p. ej. "Evolución" en /inicio; /mediciones pone su propio título fuera de la card.
     title?: string
 }
 
 // Tarjeta del gráfico de evolución (peso, IMC, grasa y masa muscular en kg), sin título (lo pone la
 // página). Dos modos:
 // - "Plan actual": solo las mediciones dentro del período del último plan, más la proyección del plan
-//   como meta (tramo hasta la fecha de término). El rango del plan va a la izquierda de los botones.
+//   como meta (tramo hasta la fecha de término). Las mediciones ocupan el 70 % del ancho y la proyección,
+//   con línea discontinua, el 30 % restante (ver buildTimeAxis). El rango del plan va a la izquierda de los botones.
 // - "Todas": todas las mediciones, cada una con una casilla para incluirla o quitarla del gráfico.
 export function MeasurementsChart({ measurements, latestPlan, title }: MeasurementsChartProps) {
     const [mode, setMode] = useState<ChartMode>(latestPlan ? 'plan' : 'all')
@@ -204,26 +207,55 @@ function LeftAlignedTick({ y, value, theme }: { y: number; value: unknown; theme
     )
 }
 
+// "dd/mm" de una fecha (marcas del eje X).
+function dayMonth(date: Date): string {
+    return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
+// Trazo de las líneas en lugar de la capa 'lines' de nivo, que no permite un trazo por serie: las medidas
+// continuas y las de proyección (series meta) discontinuas. Exportada para testearla sin medir el DOM.
+export function EvolutionLines({ series, lineGenerator, lineWidth }: LineCustomSvgLayerProps<ChartSeries>) {
+    return (
+        <g>
+            {series.map(({ id, color, goal, data }) => (
+                <path
+                    key={id}
+                    data-series={id}
+                    d={lineGenerator(data.map(({ position }) => position)) ?? undefined}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={lineWidth}
+                    strokeDasharray={goal ? '6 4' : undefined}
+                />
+            ))}
+        </g>
+    )
+}
+
 function EvolutionLine({ series }: { series: ChartSeries[] }) {
     // una línea horizontal (y una marca del eje) cada 10 unidades, con la escala redondeada a esos múltiplos
     const scale = yScaleTicks(series)
+    // eje X por tramos (0 a 100): marcas en las fechas medidas y en la proyectada, rotuladas con su fecha real
+    const ticks = chartTicks(series)
+    const tickLabels = new Map(ticks.map(({ x, date }) => [x, dayMonth(date)]))
     return (
         <ResponsiveLine<ChartSeries>
             data={series}
             margin={CHART_MARGIN}
-            xScale={{ type: 'time', format: 'native', precision: 'day' }}
+            xScale={{ type: 'linear', min: 0, max: 100 }}
             yScale={{ type: 'linear', min: scale?.min ?? 'auto', max: scale?.max ?? 'auto' }}
-            axisBottom={{ format: '%d/%m', tickValues: 5 }}
+            axisBottom={{ tickValues: ticks.map(({ x }) => x), format: (x) => tickLabels.get(Number(x)) ?? '' }}
             axisLeft={{ tickValues: scale?.ticks ?? 6, renderTick: LeftAlignedTick }}
             gridYValues={scale?.ticks}
             colors={{ datum: 'color' }}
             {...POINT_PROPS}
             enableGridX={false}
             useMesh
-            layers={['grid', 'markers', 'axes', 'lines', 'points', 'mesh']}
+            layers={['grid', 'markers', 'axes', EvolutionLines, 'points', 'mesh']}
             tooltip={({ point }) => {
                 const current = series.find(({ id }) => id === point.seriesId)
-                const date = point.data.x instanceof Date ? point.data.x.toISOString() : String(point.data.x)
+                // la fecha real del punto (x es solo su posición en el eje por tramos)
+                const date = (point.data as unknown as ChartPoint).date.toISOString()
                 return (
                     <div className="bg-white border border-zinc-200 rounded-lg shadow px-3 py-2 text-xs text-zinc-700">
                         <p className="font-semibold" style={{ color: point.seriesColor }}>
@@ -240,11 +272,12 @@ function EvolutionLine({ series }: { series: ChartSeries[] }) {
     )
 }
 
-// Leyenda HTML: una entrada por métrica presente. Las metas usan el mismo color y trazo continuo que su
-// métrica; el tooltip las marca como "(meta)".
+// Leyenda HTML: una entrada por métrica presente y, si hay metas, "Proyección" con una muestra de línea
+// discontinua (las metas usan el color de su métrica; el tooltip las marca como "(meta)").
 function ChartLegend({ series }: { series: ChartSeries[] }) {
     // una métrica puede tener serie medida y serie meta: se lista una sola vez
     const entries = series.filter(({ metric }, index) => series.findIndex((s) => s.metric === metric) === index)
+    const hasProjection = series.some(({ goal }) => goal)
 
     return (
         <ul className="flex flex-wrap justify-start gap-x-8 gap-y-2 text-xs text-zinc-600">
@@ -255,6 +288,14 @@ function ChartLegend({ series }: { series: ChartSeries[] }) {
                     {unit ? ` (${unit})` : ''}
                 </li>
             ))}
+            {hasProjection && (
+                <li className="flex items-center gap-1.5">
+                    <svg aria-hidden="true" width="18" height="4" className="text-zinc-500">
+                        <line x1="0" y1="2" x2="18" y2="2" stroke="currentColor" strokeWidth="2" strokeDasharray="4 3" />
+                    </svg>
+                    Proyección
+                </li>
+            )}
         </ul>
     )
 }

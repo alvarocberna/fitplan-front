@@ -8,9 +8,9 @@ import { faCalendarDays, faChevronRight, faDroplet, faGaugeHigh, faWeightScale }
 import { MeasurementSummaryDto } from '../dtos/measurement.dto'
 import { levelLabel } from '../labels'
 import { BMI_COLOR, BODY_FAT_COLOR, WEIGHT_COLOR } from '../colors'
-//features - panel
-import { NO_DATA, formatDate } from '../../panel/format'
-import { ICON_CIRCLE_STYLE } from '../../panel/plan-icons'
+//features - dashboard
+import { NO_DATA, formatDate } from '../../dashboard/format'
+import { ICON_CIRCLE_STYLE } from '../../dashboard/plan-icons'
 
 interface MeasurementsListProps {
     measurements: MeasurementSummaryDto[]

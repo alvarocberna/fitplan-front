@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { Card, SubsectionHead, SubsectionTitle } from '@/shared'
 
-// Boundary de error acotado a las rutas de sesión (/panel, /perfil, ...). Al vivir en la misma
+// Boundary de error acotado a las rutas de sesión (/inicio, /perfil, ...). Al vivir en la misma
 // carpeta que (sesion)/layout.tsx, Next.js preserva ese layout (y su <NavbarSesion/>) cuando una
 // página hija falla — a diferencia del error.tsx raíz, que solo preserva el layout raíz y se
 // llevaría puesto el sidebar de sesión si fuera el único boundary disponible.

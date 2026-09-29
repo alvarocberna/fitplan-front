@@ -48,7 +48,8 @@ test.describe('Planes predefinidos - selección y carro', () => {
 
     await fillSelection(page);
 
-    await expect(page.getByRole('alert')).toContainText('aún no está disponible');
+    // filtrado por texto: Next también monta un role="alert" propio (el anunciador de rutas)
+    await expect(page.getByRole('alert').filter({ hasText: 'aún no está disponible' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Añadir al carro' })).toBeDisabled();
   });
 
@@ -67,7 +68,7 @@ test.describe('Planes predefinidos - selección y carro', () => {
 });
 
 test.describe('Planes predefinidos - pago con sesión', () => {
-  test('paga el plan del carro y termina en /panel', async ({ page }) => {
+  test('paga el plan del carro y termina en /inicio', async ({ page }) => {
     await mockPredefinedProduct({ price: 14990 });
     await mockCreatePredefinedOrder({ orderId: 'order-predef-1' });
     await mockSimulatePayment();
@@ -92,7 +93,9 @@ test.describe('Planes predefinidos - pago con sesión', () => {
     await expect(page).toHaveURL(/\/pago\/order-predef-1\?tipo=predefinido$/);
     await page.getByRole('button', { name: 'Pagar' }).click();
 
-    await expect(page).toHaveURL(/\/panel$/);
+    await expect(page).toHaveURL(/\/inicio$/);
+    // la lista de planes (con su descarga) vive en /planes, no en /inicio
+    await page.goto('/planes');
     await expect(page.getByRole('link', { name: `Descargar plan Plan ${CODE}` })).toHaveAttribute('href', /plan\.pdf/);
 
     const calls = await getBackendCalls();

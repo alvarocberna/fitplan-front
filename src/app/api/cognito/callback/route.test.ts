@@ -80,7 +80,7 @@ describe('GET /api/cognito/callback', () => {
     expect(mockedApiFetch).not.toHaveBeenCalled();
   });
 
-  it('redirects to /panel when the profile check confirms the profile is already complete', async () => {
+  it('redirects to /inicio when the profile check confirms the profile is already complete', async () => {
     mockedAuthorizationCodeGrant.mockResolvedValue(makeTokens() as never);
     mockedFetchUserInfo.mockResolvedValue({ sub: 'sub-123', email: 'user@test.com' } as never);
     mockedApiFetch.mockResolvedValue({ profileComplete: true } as never);
@@ -88,7 +88,7 @@ describe('GET /api/cognito/callback', () => {
     const response = await GET(makeRequest());
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/panel');
+    expect(response.headers.get('location')).toBe('http://localhost:3000/inicio');
     expect(mockedCreateSession).toHaveBeenCalledTimes(1);
   });
 
@@ -115,7 +115,7 @@ describe('GET /api/cognito/callback', () => {
     expect(mockedCreateSession).toHaveBeenCalledTimes(1);
   });
 
-  it('vuelve a /carrito (y no a /panel) si el login se inició con return_to=/carrito, sin saltarse el chequeo de perfil', async () => {
+  it('vuelve a /carrito (y no a /inicio) si el login se inició con return_to=/carrito, sin saltarse el chequeo de perfil', async () => {
     const cookieStore = {
       get: vi.fn((name: string) => (name === 'post_login_return_to' ? { value: '/carrito' } : undefined)),
       delete: vi.fn(),
@@ -146,7 +146,7 @@ describe('GET /api/cognito/callback', () => {
 
     const response = await GET(makeRequest());
 
-    expect(response.headers.get('location')).toBe('http://localhost:3000/panel');
+    expect(response.headers.get('location')).toBe('http://localhost:3000/inicio');
   });
 
   it('calls apiFetch with the email from fetchUserInfo and the access token from the token exchange (no la cookie de sesión recién escrita)', async () => {

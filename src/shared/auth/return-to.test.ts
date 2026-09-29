@@ -9,9 +9,9 @@ describe('sanitizeReturnTo', () => {
   it.each([
     'https://evil.example',
     '//evil.example',
-    '/carrito/../panel',
+    '/carrito/../inicio',
     '/carrito?x=1',
-    '/panel',
+    '/inicio',
     '',
     null,
     undefined,

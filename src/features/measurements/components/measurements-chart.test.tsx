@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MeasurementsChart } from './measurements-chart.component';
+import { EvolutionLines, MeasurementsChart } from './measurements-chart.component';
 import type { MeasurementSummaryDto } from '../dtos/measurement.dto';
-import type { MyLatestPlanProjectionDto } from '../../panel/dtos/my-plan.dto';
+import type { MyLatestPlanProjectionDto } from '../../dashboard/dtos/my-plan.dto';
 
 // nivo necesita medidas reales del DOM: se reemplaza por un stub que lista cada serie y sus puntos,
 // y guarda las últimas props recibidas para revisar la configuración.
@@ -147,6 +147,44 @@ describe('MeasurementsChart', () => {
     expect(range.parentElement?.querySelector('svg')).not.toBeNull();
   });
 
+  it('eje X por tramos: en "Plan actual" las mediciones van de 0 a 70 y la proyección llega a 100', () => {
+    render(<MeasurementsChart measurements={measurements} latestPlan={latestPlan} />);
+
+    expect(lineProps.last.xScale).toEqual({ type: 'linear', min: 0, max: 100 });
+    const axis = lineProps.last.axisBottom as { tickValues: number[]; format: (x: number) => string };
+    // mediciones del 27-09 y 28-09 y proyección al 27-12
+    expect(axis.tickValues).toEqual([0, 70, 100]);
+    expect(axis.tickValues.map((x) => axis.format(x))).toEqual(['27/09', '28/09', '27/12']);
+    expect(screen.getByText('Proyección')).toBeInTheDocument();
+  });
+
+  it('sin proyección ("Todas las mediciones") las mediciones usan todo el ancho y no hay entrada "Proyección"', () => {
+    render(<MeasurementsChart measurements={measurements} latestPlan={null} />);
+
+    expect((lineProps.last.axisBottom as { tickValues: number[] }).tickValues).toEqual([0, 87.5, 100]);
+    expect(screen.queryByText('Proyección')).not.toBeInTheDocument();
+  });
+
+  it('traza las series meta (proyección) con línea discontinua y las medidas con línea continua', () => {
+    const position = (x: number) => ({ position: { x, y: 10 } });
+    const props = {
+      series: [
+        { id: 'weight', color: '#111', goal: false, data: [position(0), position(70)] },
+        { id: 'weight-meta', color: '#111', goal: true, data: [position(70), position(100)] },
+      ],
+      lineGenerator: (points: { x: number; y: number }[]) => points.map(({ x, y }) => `${x},${y}`).join(' '),
+      lineWidth: 2,
+    } as unknown as Parameters<typeof EvolutionLines>[0];
+    const { container } = render(
+      <svg>
+        <EvolutionLines {...props} />
+      </svg>,
+    );
+
+    expect(container.querySelector('[data-series="weight"]')).not.toHaveAttribute('stroke-dasharray');
+    expect(container.querySelector('[data-series="weight-meta"]')).toHaveAttribute('stroke-dasharray', '6 4');
+  });
+
   it('dibuja una línea horizontal cada 10 unidades, con la escala redondeada a esos múltiplos', () => {
     render(<MeasurementsChart measurements={measurements} latestPlan={null} />);
 
@@ -166,7 +204,7 @@ describe('MeasurementsChart', () => {
     expect(rows).toEqual(['Peso: 80 kg', 'IMC: 26.73', 'Grasa corporal: 17.6 kg', 'Masa muscular: 32 kg']);
   });
 
-  it('shows the inner title only when one is given (panel yes, /mediciones no)', () => {
+  it('shows the inner title only when one is given (/inicio yes, /mediciones no)', () => {
     const { rerender } = render(<MeasurementsChart measurements={measurements} latestPlan={null} />);
     expect(screen.queryByRole('heading', { name: 'Evolución' })).not.toBeInTheDocument();
 

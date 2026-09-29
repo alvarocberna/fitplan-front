@@ -16,7 +16,7 @@ describe('Card', () => {
     expect(card).not.toHaveClass('bg-white');
   });
 
-  it('renders an opaque white background with the "solid" variant (/panel and /perfil)', () => {
+  it('renders an opaque white background with the "solid" variant (/inicio and /perfil)', () => {
     render(<Card variant="solid">contenido</Card>);
 
     const card = outerCard('contenido');

@@ -65,14 +65,14 @@ The Content-Security-Policy is nonce-based and generated per-request in `src/pro
 ### Session area: `(sesion)` route group and route gating
 
 Every route that needs a logged-in user lives under the route group `src/app/(sesion)/` (no URL
-segment): `/panel`, `/planes`, `/mediciones`, `/perfil`, `/consulta/*`, `/pago/[orderId]` and `/ordenes/[id]`. They share
+segment): `/inicio`, `/planes`, `/mediciones`, `/perfil`, `/consulta/*`, `/pago/[orderId]` and `/ordenes/[id]`. They share
 `src/app/(sesion)/layout.tsx`, which renders `SesionShell` (`src/shared/components/sesion-shell.component.tsx`,
 a Client Component): `TopbarSesion` + the `NavbarSesion` sidebar + a `<main>` (`pt-19 md:pt-23`) whose
 left padding follows the sidebar width. `TopbarSesion` is a fixed 60px (`h-15`) full-width bar: the
-"Nuvi" text logo (→ `/panel`) on the left and the "Nueva consulta" button (→ `/consulta/anamnesis`) on the
-right. The sidebar (md+ only, below the top bar; options Home = `/panel`, Planes = `/planes`, Mediciones = `/mediciones`, Perfil, Cerrar sesión) starts
+"Nuvi" text logo (→ `/inicio`) on the left and the "Nueva consulta" button (→ `/consulta/anamnesis`) on the
+right. The sidebar (md+ only, below the top bar; options Inicio = `/inicio`, Planes = `/planes`, Mediciones = `/mediciones`, Perfil, Cerrar sesión) starts
 **docked** (narrow, `w-14`, no links) in the flow routes `/consulta/*`, `/pago/*`,
-`/ordenes/*`, and **undocked** (`w-56`, with links) in `/panel`, `/planes`, `/mediciones` and `/perfil`; the manual choice is kept
+`/ordenes/*`, and **undocked** (`w-56`, with links) in `/inicio`, `/planes`, `/mediciones` and `/perfil`; the manual choice is kept
 while navigating inside the same section and discarded when switching between sections. It is toggled
 by a 16×32px arrow button centered on the sidebar's right border (hover lights up its border and the
 sidebar's right border with `--color-primary`) or by clicking anywhere on the sidebar except the nav links. On small
@@ -80,19 +80,19 @@ screens there is no sidebar: `TopbarSesion` also hosts those options (`compact` 
 share `SESION_NAV_ITEMS` / `SesionNavLink` (`sesion-nav-link.component.tsx`). These routes do
 **not** show `NavbarLanding` — `NavbarLandingGate` (root layout) hides it via `usesSesionLayout()`.
 Because `<main>` already provides `min-h-screen` and padding, pages inside the group must not add their
-own `min-h-screen` / large top padding (they use `py-4`). Pages of the user sections (`/panel`, `/planes`, `/mediciones`,
+own `min-h-screen` / large top padding (they use `py-4`). Pages of the user sections (`/inicio`, `/planes`, `/mediciones`,
 `/perfil` and their subroutes, including `not-found`) wrap their content in `w-[90%] mx-auto` (no `max-w-*`).
 
 Gating is by `src/proxy.ts`, which redirects to `/login` without a valid session cookie:
 `/consulta/*` (except the bare `/consulta`, empty and intentionally public), `/pago/*`, `/ordenes/*`
-(via `isSessionGatedPrefix`), and `/panel`, `/planes`, `/mediciones`, `/perfil` and their subroutes, e.g. the consultation detail
-`/panel/consultas/[id]` (via `isSesionRoute`, prefix match). Route lists live in
+(via `isSessionGatedPrefix`), and `/inicio`, `/planes`, `/mediciones`, `/perfil` and their subroutes, e.g. the consultation detail
+`/inicio/consultas/[id]` (via `isSesionRoute`, prefix match). Route lists live in
 `src/shared/auth/sesion-routes.ts` — when adding a route to the session area, update that file **and**
 put the page under `(sesion)`; `isSesionRoute` (proxy) is deliberately separate from
 `isFocusRoute` / `usesSesionLayout` (presentation only).
 
 `apiFetch` throws `ApiError` (with the HTTP `status`) and `runAction` forwards that `status` in the failed
-`ActionResult`, so a service can tell a 404 apart (e.g. `PanelService.getConsultation` returns `null` →
+`ActionResult`, so a service can tell a 404 apart (e.g. `DashboardService.getConsultation` returns `null` →
 the page calls `notFound()`).
 
 ### Paid consultation flow (the core product)
@@ -107,26 +107,26 @@ gets redirected to `/login` anyway. With a session, `/consulta/inicio`'s own "In
 to one of three places depending on session + profile-completion state: `/login` (session became
 invalid in between — the proxy already re-checks this on every request, so this branch inside the
 page is defense-in-depth, not the primary gate), `/consulta/informacion-personal` (incomplete
-profile — RUT/name/gender/DOB aren't in Cognito, the user fills them once), or straight to `/panel`
-(profile already complete — `/panel` lives under `src/app/(sesion)/panel`, gated by `src/proxy.ts`
+profile — RUT/name/gender/DOB aren't in Cognito, the user fills them once), or straight to `/inicio`
+(profile already complete — `/inicio` lives under `src/app/(sesion)/inicio`, gated by `src/proxy.ts`
 just like the rest of the flow: no session redirects to `/login`).
 
 Routes: `/consulta/inicio` → `/consulta/informacion-personal` (skipped if the profile is already
-complete, in which case `/consulta/inicio` sends the user to `/panel` instead) → `/consulta/anamnesis`
+complete, in which case `/consulta/inicio` sends the user to `/inicio` instead) → `/consulta/anamnesis`
 → `/consulta/evaluacion-fisica` → `/consulta/generar-orden` → `/pago/[orderId]` → `/ordenes/[id]`.
 
 State lives in `ConsultationProvider` / `useConsultation` (`src/shared/context/consultation.context.tsx`), persisted to `localStorage` under `consulta_context` on every mutation (so it survives a refresh, except in-progress, unconfirmed anamnesis chat). It holds four independent pieces — `personalInfo`, `anamnesis`, `measurements`, `nutritionPlan` — each with its own setter and reset. `getCompleteConsultation()` assembles the full DTO from the first three, returning `null` if any is missing. Note: `nutritionPlan` in this context is effectively unused by the live flow — the actual plan is read via polling in `/ordenes/[id]` (`plan_json` from `OrderStatusDto`), not from context.
 
 Key steps:
 - **Anamnesis** (`ChatAnamnesis`): each user turn calls `ConsultationService.sendAnamnesisTurn`, sending the full message history + current `AnamnesisDto` to the backend, which returns the next question plus an updated `AnamnesisDto` and an `isComplete` flag. Anamnesis state is local to the component until the user confirms with "Siguiente" — reloading mid-chat loses progress.
-- **Physical assessment** (`FormMeasurements`): on submit it saves `measurements` and calls `ConsultationService.evaluateGoalFeasibility` (`POST consultations/goal-feasibility`, CU-CON-03). If the goal is not feasible (e.g. losing weight with BMI ≤ 20) the form is replaced by `GoalNotFeasible`: the backend's message plus "Salir" (→ `/panel`) and "Nueva consulta" (→ `/consulta/anamnesis`), both discarding `anamnesis` and `measurements` from the context (`personalInfo` is kept). Otherwise it goes on to `/consulta/generar-orden`. The context setters/resets update `stateRef` synchronously (`persist`), so two mutations in the same event don't overwrite each other in `localStorage`.
+- **Physical assessment** (`FormMeasurements`): on submit it saves `measurements` and calls `ConsultationService.evaluateGoalFeasibility` (`POST consultations/goal-feasibility`, CU-CON-03). If the goal is not feasible (e.g. losing weight with BMI ≤ 20) the form is replaced by `GoalNotFeasible`: the backend's message plus "Salir" (→ `/inicio`) and "Nueva consulta" (→ `/consulta/anamnesis`), both discarding `anamnesis` and `measurements` from the context (`personalInfo` is kept). Otherwise it goes on to `/consulta/generar-orden`. The context setters/resets update `stateRef` synchronously (`persist`), so two mutations in the same event don't overwrite each other in `localStorage`.
 - **Generate order**: builds a `CompleteConsultationDto` from context and calls `ConsultationService.createOrder`, creating an `orden` row backend-side with `estado_pago: 'PENDING'`. Requires a session with a **complete** profile — the backend resolves the `user` from the token and 400s if the profile isn't complete (shouldn't happen in practice, since the frontend already gates on this earlier, but it's enforced server-side too). The AI plan is **not** generated yet — that's deferred until payment confirms, to avoid spending compute on abandoned checkouts.
 - **Payment** (`/pago/[orderId]`): a simulated gateway (card fields are decorative/disabled). "Pagar" calls `ConsultationService.simulatePayment`, which triggers backend-side the same logic a real payment webhook would. This page is a stand-in for a future real-gateway checkout + webhook.
-- **Order status** (`/ordenes/[id]`): polls `ConsultationService.getOrderStatus` every 4s, reading `estado_pago` / `estado_generacion` / `plan_json`. Shows a delay notice past 45s while generating, renders a thumbnail of the plan's first page plus a "Descargar" button for the full PDF (`PlanPreviewCard`; the plan detail `/planes/[orderId]` shows the same thumbnail in its own PDF card; the backend generates the PDF and thumbnail and returns signed `pdfUrl`/`thumbnailUrl`) once `COMPLETED`, or a reassuring error state — the polling URL is meant to be revisited later.
+- **Order status** (`/ordenes/[id]`): polls `ConsultationService.getOrderStatus` every 4s, reading `estado_pago` / `estado_generacion` / `plan_json`. Shows a delay notice past 45s while generating, renders a thumbnail of the plan's first page plus a "Descargar plan" button for the full PDF and an "Ir a inicio" button (→ `/inicio`) (`PlanFileCard`, `src/shared/components/`, the same PDF card as the plan detail `/planes/[orderId]`; it shows "Ir a inicio" only on `/ordenes/*`, via `usePathname`; the backend generates the PDF and thumbnail and returns signed `pdfUrl`/`thumbnailUrl`) once `COMPLETED`, or a reassuring error state — the polling URL is meant to be revisited later.
 
 Backend data model (separate repo, NestJS + PostgreSQL): a single `orden` entity holding the submitted consultation data, `estado_pago` (`PENDING|PAID`), `estado_generacion` (`no_iniciado|generando|completado|error`), and `plan_json`.
 
-### Predefined plans (selection → cart → payment → /panel)
+### Predefined plans (selection → cart → payment → /inicio)
 
 Second way to buy, next to the paid consultation: 4 ready-made plans (`PLANS` in `src/shared/data/data.ts`:
 `plan-gimnasio-volumen`, `plan-gimnasio-definicion`, `plan-running`, `plan-deporte-cancha`), each in 28 hidden
@@ -148,8 +148,8 @@ S3 naming: `../doc/flows/purchase-flow-predefined-plan.md`.
 - **Cart / payment**: `/carrito` is a Server Component that reads `getSession()` (the cookie is httpOnly) and passes
   `isAuthenticated` to `CartView`. "Pagar" without a session opens `LoginModal` (same options as `/login`, shared `LoginOptions`,
   `return_to=/carrito`); with a session it calls `POST /plans/standard/:code/purchase` and goes to `/pago/<id>?tipo=predefinido`, which
-  after the simulated payment clears the cart and goes to `/panel` (without `?tipo`, the consultation flow keeps going to
-  `/ordenes/[id]`). `/pago/*` and `/panel` need a session (`src/proxy.ts`); the cart and the plan pages don't.
+  after the simulated payment clears the cart and goes to `/inicio` (without `?tipo`, the consultation flow keeps going to
+  `/ordenes/[id]`). `/pago/*` and `/inicio` need a session (`src/proxy.ts`); the cart and the plan pages don't.
 - **Login with return**: `/api/cognito/login?return_to=/carrito` stores the destination in a short-lived httpOnly cookie
   (`post_login_return_to`); `/api/cognito/callback` consumes it. Only routes in the allowlist of `src/shared/auth/return-to.ts`
   are accepted (no open redirect). The callback still runs the profile sync, which creates the identity the backend needs.
@@ -163,7 +163,7 @@ S3 naming: `../doc/flows/purchase-flow-predefined-plan.md`.
 
 ### Known inconsistency: README vs. code naming
 
-Routes were renamed from English to Spanish (`/consultation/...` → `/consulta/...`, `/orders/[id]` → `/ordenes/[id]`, `/payment/[orderId]` → `/pago/[orderId]`, `/articles` → `/articulos`, `/cart` → `/carrito`, `/plans` → `/planes` (later `/planes-estandar`, to free `/planes` for the session page "Mis planes"), `/testimonials` → `/testimonios`, etc.) so the routes now **match** `README.md`, which already documented Spanish route names from before an earlier English naming-convention refactor. What's still inconsistent between docs/README and code is naming *below* the route level: internal DTOs/services/functions keep the project's English convention (`PersonalInfoDto`, `ConsultationService` in `src/features/consultation`, ...) — only `src/app` folder names and the URLs they produce changed, `src/features/*` and `src/shared/*` did not. The backend (separate repo) exposes its own Spanish endpoint paths (`/consultations/chat`, `/consultations`, `/orders/:id/status`), unrelated to and unchanged by this frontend route rename. When in doubt, trust the code over any doc's naming for internal DTOs/functions — but for navigable routes, code and README now agree.
+Routes were renamed from English to Spanish (`/consultation/...` → `/consulta/...`, `/orders/[id]` → `/ordenes/[id]`, `/payment/[orderId]` → `/pago/[orderId]`, `/articles` → `/articulos`, `/cart` → `/carrito`, `/plans` → `/planes` (later `/planes-estandar`, to free `/planes` for the session page "Mis planes"), `/testimonials` → `/testimonios`, `/panel` → `/inicio` — with permanent redirects `/panel` and `/panel/*` → `/inicio` in `next.config.ts` `redirects()`; the feature folder became `src/features/dashboard` (`DashboardService`, …), etc.) so the routes now **match** `README.md`, which already documented Spanish route names from before an earlier English naming-convention refactor. What's still inconsistent between docs/README and code is naming *below* the route level: internal DTOs/services/functions keep the project's English convention (`PersonalInfoDto`, `ConsultationService` in `src/features/consultation`, ...) — only `src/app` folder names and the URLs they produce changed, `src/features/*` and `src/shared/*` did not. The backend (separate repo) exposes its own Spanish endpoint paths (`/consultations/chat`, `/consultations`, `/orders/:id/status`), unrelated to and unchanged by this frontend route rename. When in doubt, trust the code over any doc's naming for internal DTOs/functions — but for navigable routes, code and README now agree.
 
 ## Documentation maintenance
 
@@ -179,7 +179,7 @@ E2E gotchas (details in `doc/testing.md`): the backend is called from Server Act
 
 - ~~The order/consultation backend URL is exposed as a public env var...~~ — **resolved**: `BACKEND_URL` is private, every call goes through a Server Action carrying the Cognito Access Token. See `doc/auth.md`.
 - Anamnesis state is only persisted to context/localStorage once the chat completes; a mid-chat reload re-runs (and re-bills, token-wise) the whole conversation. Intended fix: persist incrementally per turn, plus add an explicit reset action for users who want to restart.
-- `athlete` ("Deportista" in `informacion-personal`) is persisted on the backend `User` via `PATCH /me` (`updateProfileAction`) and prefilled from `PerfilStatus.athlete`. (The BOLA on `GET /orders/:id/status` is recorded as **resolved** in the backend repo — see `doc/flow.md`; not re-verified from this repo.)
+- `athlete` ("Deportista" in `informacion-personal`) is persisted on the backend `User` via `PATCH /me` (`updateProfileAction`) and prefilled from `PerfilStatus.athlete`. The select has three levels (`none` / `recreational` / `professional`, form-only field `sportLevel`); only `professional` maps to `athlete = true`. Since only the boolean is stored, a previous "recreational" answer is prefilled as `none`. (The BOLA on `GET /orders/:id/status` is recorded as **resolved** in the backend repo — see `doc/flow.md`; not re-verified from this repo.)
 - E2E doesn't cover the real Cognito login (the session cookie is fabricated). The fake backend (`e2e/fake-backend/server.mjs`) mirrors the backend's `/api/v1` routes and rejects calls without the prefix; `/perfil` has no e2e spec yet.
 
 <!-- BEGIN:nextjs-agent-rules -->

@@ -11,7 +11,7 @@ export * from './components/subsection-footer'
 export * from './components/input-outlined'
 export * from './components/input-standard'
 export * from './components/subsection-row'
-export * from './components/plan-preview-card.component'
+export * from './components/plan-file-card.component'
 export * from './components/modal.component'
 export * from './components/login-options.component'
 export * from './context/consultation.context';

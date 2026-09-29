@@ -20,9 +20,9 @@ beforeEach(() => {
 });
 
 describe('proxy — session gating', () => {
-  describe('/panel (PROTECTED_PATHS, fuera de /consulta/*)', () => {
+  describe('/inicio (PROTECTED_PATHS, fuera de /consulta/*)', () => {
     it('redirects to /login when there is no session cookie at all', async () => {
-      const response = await proxy(makeRequest('/panel'));
+      const response = await proxy(makeRequest('/inicio'));
 
       expect(response.status).toBe(307);
       expect(response.headers.get('location')).toBe('http://localhost:3000/login');
@@ -32,7 +32,7 @@ describe('proxy — session gating', () => {
     it('redirects to /login when the session cookie is present but invalid/expired', async () => {
       hasValidSessionMock.mockResolvedValue(false);
 
-      const response = await proxy(makeRequest('/panel', 'invalid-token'));
+      const response = await proxy(makeRequest('/inicio', 'invalid-token'));
 
       expect(response.status).toBe(307);
       expect(response.headers.get('location')).toBe('http://localhost:3000/login');
@@ -41,7 +41,7 @@ describe('proxy — session gating', () => {
     it('lets the request through when the session cookie is valid', async () => {
       hasValidSessionMock.mockResolvedValue(true);
 
-      const response = await proxy(makeRequest('/panel', 'valid-token'));
+      const response = await proxy(makeRequest('/inicio', 'valid-token'));
 
       expect(response.headers.get('location')).toBeNull();
     });
@@ -170,7 +170,7 @@ describe('proxy — Content-Security-Policy', () => {
     return csp.split(';').map((d) => d.trim()).find((d) => d.startsWith(`${name} `)) ?? '';
   }
 
-  it('permite cargar como <img> las miniaturas del bucket de planes (/panel y /ordenes/[id])', async () => {
+  it('permite cargar como <img> las miniaturas del bucket de planes (/inicio y /ordenes/[id])', async () => {
     const response = await proxy(makeRequest('/'));
     const csp = response.headers.get('Content-Security-Policy') ?? '';
 

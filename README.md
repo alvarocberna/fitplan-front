@@ -21,19 +21,19 @@ El backend es un proyecto aparte (NestJS + SQLite) y no vive en este repo. Su ba
 El estado de la consulta se administra mediante `ConsultaProvider` (React Context) y persiste en `localStorage` para no perderse entre pasos.
 
 **Layout de estas páginas.** Las páginas de `/consulta/*`, `/pago/[ordenId]` y `/ordenes/[id]` viven en el route group
-`src/app/(sesion)/` (el paréntesis no agrega segmento a la URL; las URLs no cambian), junto con `/panel`,
+`src/app/(sesion)/` (el paréntesis no agrega segmento a la URL; las URLs no cambian), junto con `/inicio`,
 `/planes`, `/mediciones` y `/perfil`. Comparten `src/app/(sesion)/layout.tsx`, que renderiza `SesionShell`
 (`src/shared/components/sesion-shell.component.tsx`): una barra superior fija `TopbarSesion` (100% de ancho,
-60px de alto, con el logo "Nuvi" a la izquierda, que lleva a `/panel`, y el botón "Nueva consulta" a la derecha, que
+60px de alto, con el logo "Nuvi" a la izquierda, que lleva a `/inicio`, y el botón "Nueva consulta" a la derecha, que
 lleva a `/consulta/anamnesis`), un sidebar `NavbarSesion` a la izquierda (solo md+, debajo de la barra superior) y
-el contenido con el padding correspondiente. El sidebar tiene las opciones Home (`/panel`), Planes (`/planes`),
+el contenido con el padding correspondiente. El sidebar tiene las opciones Inicio (`/inicio`), Planes (`/planes`),
 Mediciones (`/mediciones`), Perfil y Cerrar sesión; en móvil no se renderiza y esas opciones pasan a la barra superior. Estas rutas ya no muestran el
 navbar público (`NavbarLanding`). En
 `/consulta/*`, `/pago/*` y `/ordenes/*` el sidebar arranca **acoplado** en pantallas md+ (angosto, sin links; se
 alterna con el botón de flecha del borde derecho o con un click en el sidebar) para dejar espacio al flujo, mientras que
-en `/panel`, `/planes`, `/mediciones` y `/perfil` arranca desacoplado. La elección manual se mantiene entre páginas de una misma
+en `/inicio`, `/planes`, `/mediciones` y `/perfil` arranca desacoplado. La elección manual se mantiene entre páginas de una misma
 sección y se reinicia al pasar de una a la otra. Todo el flujo exige sesión: el proxy protege `/consulta/*`
-(salvo la raíz vacía `/consulta`), `/pago/*` y `/ordenes/*` además de `/panel`, `/planes`, `/mediciones` y `/perfil`; sin sesión válida
+(salvo la raíz vacía `/consulta`), `/pago/*` y `/ordenes/*` además de `/inicio`, `/planes`, `/mediciones` y `/perfil`; sin sesión válida
 redirige a `/login`. Detalle del gating en `doc/auth.md`.
 
 ### 1. Información personal — `/consulta/informacion-personal`
@@ -84,11 +84,11 @@ Hace polling a `GET orders/{id}/status` (`getOrderStatusAction`) cada 4s
 (`INTERVALO_POLLING_MS`), leyendo `EstadoOrdenDto { estado_pago, estado_generacion, plan_json, pdf_url }`:
 - `NOT_STARTED` / `GENERATING` → spinner ("Estamos generando tu plan nutricional..."). Pasados 45s
   (`UMBRAL_DEMORA_MS`) se muestra un aviso de demora, aclarando que el pago ya quedó registrado.
-- `COMPLETED` (con `pdf_url`) → detiene el polling y muestra `PlanPreviewCard`
-  (`src/shared/components/plan-preview-card.component.tsx`, la misma tarjeta que usa `/panel`): la miniatura
+- `COMPLETED` (con `pdf_url`) → detiene el polling y muestra `PlanFileCard`
+  (`src/shared/components/plan-file-card.component.tsx`, la misma card del PDF que usa `/planes/[orderId]`): la miniatura
   de la página 1 del plan (`thumbnailUrl`, URL firmada de S3 de corta duración; placeholder si es `null`) y un
-  botón "Descargar" hacia `pdfUrl` (URL firmada con `Content-Disposition: attachment`, que baja el PDF
-  completo). El PDF ya no se incrusta en un `<iframe>`. El PDF tampoco se genera en el navegador: antes esta
+  botón "Descargar plan" hacia `pdfUrl` (URL firmada con `Content-Disposition: attachment`, que baja el PDF
+  completo), más un botón "Ir a inicio" (→ `/inicio`) que la card muestra solo en `/ordenes/[id]` (`usePathname`). El PDF ya no se incrusta en un `<iframe>`. El PDF tampoco se genera en el navegador: antes esta
   página renderizaba `DescargarPlanPdf` (`@react-pdf/renderer`, cargado dinámicamente porque solo corre
   client-side) a partir de `plan_json`; ahora el backend lo genera, lo sube a S3 y devuelve `pdf_url`
   directamente. `DescargarPlanPdf` sigue existiendo y en uso en `/consulta/plan-nutricional`, solo dejó
@@ -130,13 +130,13 @@ Vive en otro repo (`../nutricionista-virtual-back`). Su contrato está documenta
 |---|---|---|---|
 | POST | `me/sync` | `syncProfileAction` + callback de Cognito | crea/sincroniza la identidad y devuelve el perfil |
 | GET / PATCH | `me` | `getUserProfileAction` / `updateUserProfileAction`, `updateProfileAction` | leer / actualizar el perfil (PATCH parcial) |
-| GET | `me/summary` | `getPanelSummaryAction` | nombre y edad de la card "Información personal" de `/panel` |
-| GET | `me/consultations` | `getMyConsultationsAction` | consultas del usuario con estado del plan (`/panel`, tarjeta 2) |
-| GET | `me/consultations/:id` | `getMyConsultationAction` | detalle de una consulta (`/panel/consultas/[id]`; 404 → página "Consulta no encontrada") |
-| GET | `me/plans` | `getMyPlansAction` | planes del usuario con PDF (nombre, tipo, fecha, resumen), del más nuevo al más antiguo (`/panel`, tarjeta 3) |
-| GET | `me/plans/:orderId` | `getMyPlanAction` | detalle de un plan (`/planes/[orderId]`; 404 → página "Plan no encontrado") |
+| GET | `me/summary` | `getDashboardSummaryAction` | nombre y edad de la card "Información personal" de `/inicio` |
+| GET | `me/consultations` | `getMyConsultationsAction` | consultas del usuario con estado del plan (`/inicio`, tarjeta 2) |
+| GET | `me/consultations/:id` | `getMyConsultationAction` | detalle de una consulta (`/inicio/consultas/[id]`; 404 → página "Consulta no encontrada") |
+| GET | `me/plans` | `getMyPlansAction` | planes del usuario con PDF (nombre, tipo, fecha, resumen), del más nuevo al más antiguo (`/inicio`, tarjeta 3) |
+| GET | `me/plans/:orderId` | `getMyPlanAction` | detalle de un plan (`/planes/[orderId]` y el plan de `/inicio/consultas/[id]`; 404 → página "Plan no encontrado") |
 | GET | `me/measurements` | `getMyMeasurementsAction` | mediciones del usuario, más reciente primero (`/mediciones`) |
-| GET | `me/measurements/:id` | `getMyMeasurementAction` | detalle de una medición (`/mediciones/[id]` y su edición; 404 → "Medición no encontrada") |
+| GET | `me/measurements/:id` | `getMyMeasurementAction` | detalle de una medición (`/mediciones/[id]` y su edición, y cada medición de `/inicio/consultas/[id]`; 404 → "Medición no encontrada") |
 | POST / PATCH | `me/measurements`, `me/measurements/:id` | `recordMeasurementAction` / `updateMeasurementAction` | registrar (`/mediciones/nueva`) y corregir (`/mediciones/[id]/editar`) una medición. Bioimpedancia: grasa corporal y masa muscular obligatorias, grasa visceral y masa ósea opcionales, cada una en % o kg (un solo valor); el backend calcula la otra unidad y el IMC |
 | POST | `consultations/chat` | `sendAnamnesisTurnAction` | turno de chat de anamnesis |
 | POST | `consultations` | `createOrderAction` | crea la consulta y su orden (`paymentStatus: 'PENDING'`) |

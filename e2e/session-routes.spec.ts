@@ -4,11 +4,11 @@ import { mockOrderStatusSequence } from './helpers/mock-backend';
 
 const FLOW_PATHS = ['/consulta/inicio', '/consulta/anamnesis', '/pago/order-e2e-123', '/ordenes/order-e2e-123'];
 
-// src/proxy.ts exige sesión válida en /consulta/*, /pago/*, /ordenes/*, /panel, /planes, /mediciones y /perfil.
+// src/proxy.ts exige sesión válida en /consulta/*, /pago/*, /ordenes/*, /inicio, /planes, /mediciones y /perfil.
 test.describe('Session gating (sin sesión)', () => {
   test.use({ authenticated: false });
 
-  for (const path of [...FLOW_PATHS, '/panel', '/planes', '/mediciones', '/perfil']) {
+  for (const path of [...FLOW_PATHS, '/inicio', '/planes', '/mediciones', '/perfil']) {
     test(`redirects ${path} to /login`, async ({ page }) => {
       await page.goto(path);
 
@@ -27,7 +27,7 @@ test.describe('Session gating (sin sesión)', () => {
 // "Nueva consulta"), sidebar de sesión acoplado por defecto (solo el ícono para desacoplarlo) y sin
 // el navbar de la landing.
 //
-// Los enlaces Home/Planes/Mediciones/Perfil/Cerrar sesión existen dos veces en el DOM: en el sidebar (md+) y en el menú
+// Los enlaces Inicio/Planes/Mediciones/Perfil/Cerrar sesión existen dos veces en el DOM: en el sidebar (md+) y en el menú
 // móvil de la barra superior (`md:hidden`). En el viewport de escritorio de Playwright el móvil está
 // oculto (los selectores por rol lo ignoran), pero igual se acota al sidebar / a la barra superior.
 const sidebarOf = (page: Page) =>
@@ -44,11 +44,11 @@ test.describe('Session layout (con sesión)', () => {
       await page.goto(path);
 
       // barra superior: siempre visible, no depende de acoplar el sidebar
-      await expect(topbarOf(page).getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/panel');
+      await expect(topbarOf(page).getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/inicio');
       await expect(topbarOf(page).getByRole('link', { name: 'Nueva consulta' })).toBeVisible();
 
       await expect(page.getByRole('button', { name: 'Desacoplar menú lateral' })).toBeVisible();
-      await expect(sidebarOf(page).getByRole('link', { name: 'Home', exact: true })).toBeHidden();
+      await expect(sidebarOf(page).getByRole('link', { name: 'Inicio', exact: true })).toBeHidden();
       // sin navbar de la landing: su CTA "Iniciar sesión" (→ /login) no está en el DOM. Ojo: el link
       // a `/#plan-personal` ya no sirve para detectarlo, porque el Footer (que SesionShell monta) lo repite.
       await expect(page.locator('a[href="/login"]')).toHaveCount(0);
@@ -67,8 +67,8 @@ test.describe('Session layout (con sesión)', () => {
     await expect(newConsultation).toHaveAttribute('href', '/consulta/anamnesis');
 
     await page.getByRole('button', { name: 'Desacoplar menú lateral' }).click();
-    // exact: true, para que 'Home' no matchee por substring con otros links de la página
-    await expect(sidebar.getByRole('link', { name: 'Home', exact: true })).toHaveAttribute('href', '/panel');
+    // exact: true, para que 'Inicio' no matchee por substring con otros links de la página
+    await expect(sidebar.getByRole('link', { name: 'Inicio', exact: true })).toHaveAttribute('href', '/inicio');
     await expect(sidebar.getByRole('link', { name: 'Planes', exact: true })).toHaveAttribute('href', '/planes');
     await expect(sidebar.getByRole('link', { name: 'Mediciones', exact: true })).toHaveAttribute('href', '/mediciones');
     await expect(sidebar.getByRole('link', { name: 'Perfil' })).toBeVisible();
@@ -78,7 +78,7 @@ test.describe('Session layout (con sesión)', () => {
     await expect(newConsultation).toBeVisible();
 
     await page.getByRole('button', { name: 'Acoplar menú lateral' }).click();
-    await expect(sidebar.getByRole('link', { name: 'Home', exact: true })).toBeHidden();
+    await expect(sidebar.getByRole('link', { name: 'Inicio', exact: true })).toBeHidden();
     await expect(page.getByRole('button', { name: 'Desacoplar menú lateral' })).toBeVisible();
     // acoplar el sidebar no toca la barra superior
     await expect(newConsultation).toBeVisible();
@@ -92,7 +92,7 @@ test.describe('Session layout (con sesión)', () => {
 
     const userMenu = page.getByRole('navigation', { name: 'Menú de usuario' });
     await expect(userMenu.getByRole('link', { name: 'Perfil' })).toBeVisible();
-    await expect(userMenu.getByRole('link', { name: 'Home', exact: true })).toHaveAttribute('href', '/panel');
+    await expect(userMenu.getByRole('link', { name: 'Inicio', exact: true })).toHaveAttribute('href', '/inicio');
     await expect(userMenu.getByRole('link', { name: 'Planes', exact: true })).toHaveAttribute('href', '/planes');
     await expect(userMenu.getByRole('link', { name: 'Mediciones', exact: true })).toHaveAttribute('href', '/mediciones');
     await expect(userMenu.getByRole('link', { name: 'Cerrar sesión' })).toBeVisible();

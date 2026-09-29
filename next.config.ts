@@ -19,6 +19,15 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // /panel pasó a llamarse /inicio: los enlaces y marcadores viejos redirigen (permanente). Los redirects
+  // de config corren antes que src/proxy.ts, así que el chequeo de sesión se aplica sobre /inicio.
+  async redirects() {
+    return [
+      { source: "/panel", destination: "/inicio", permanent: true },
+      { source: "/panel/:path*", destination: "/inicio/:path*", permanent: true },
+    ];
+  },
+
   // Deshabilitar source maps en producción para evitar exposición de código fuente
   productionBrowserSourceMaps: false,
 

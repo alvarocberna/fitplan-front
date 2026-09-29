@@ -72,7 +72,7 @@ const PROFILE_DEFAULT = {
   rutCheckDigit: null,
 }
 
-const PANEL_SUMMARY_DEFAULT = {
+const DASHBOARD_SUMMARY_DEFAULT = {
   firstName: 'Ana',
   middleName: null,
   paternalLastName: 'Pérez',
@@ -177,10 +177,10 @@ const server = http.createServer(async (req, res) => {
       return respond(res, mock, { orderId: mock.orderId ?? 'order-predef-1' })
     }
 
-    // ---- panel: resumen del usuario y listado de planes (el destino tras pagar un plan predefinido) ----
+    // ---- inicio (/inicio): resumen del usuario y listado de planes (el destino tras pagar un plan predefinido) ----
     if (path === '/me/summary' && method === 'GET') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
-      return send(res, 200, mocks.panelSummary?.summary ?? PANEL_SUMMARY_DEFAULT)
+      return send(res, 200, mocks.dashboardSummary?.summary ?? DASHBOARD_SUMMARY_DEFAULT)
     }
 
     if (path === '/me/plans' && method === 'GET') {

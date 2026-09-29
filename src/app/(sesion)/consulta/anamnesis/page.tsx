@@ -43,7 +43,7 @@ export default function AnamnesisPage() {
     return (
         <div className='w-full py-4'>
             <div className="max-w-2xl flex flex-col mx-auto" >
-            <Card>
+            <Card variant='solid'>
                 <div className='py-8'>
                     <ChatAnamnesis/>
                 </div>

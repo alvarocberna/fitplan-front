@@ -10,21 +10,21 @@ const mobileNav = () => screen.getByRole('navigation', { name: 'Menú de usuario
 
 describe('TopbarSesion', () => {
   it('renders a fixed full-width header of h-15', () => {
-    usePathnameMock.mockReturnValue('/panel');
+    usePathnameMock.mockReturnValue('/inicio');
     render(<TopbarSesion />);
 
     expect(screen.getByRole('banner')).toHaveClass('fixed', 'top-0', 'w-full', 'h-15');
   });
 
-  it('links the "Nuvi" logo to /panel', () => {
-    usePathnameMock.mockReturnValue('/panel');
+  it('links the "Nuvi" logo to /inicio', () => {
+    usePathnameMock.mockReturnValue('/inicio');
     render(<TopbarSesion />);
 
-    expect(screen.getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/panel');
+    expect(screen.getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/inicio');
   });
 
   it('renders the "Nueva consulta" button pointing to /consulta/anamnesis, outside the mobile menu', () => {
-    usePathnameMock.mockReturnValue('/panel');
+    usePathnameMock.mockReturnValue('/inicio');
     render(<TopbarSesion />);
 
     const button = screen.getByRole('link', { name: 'Nueva consulta' });
@@ -33,7 +33,7 @@ describe('TopbarSesion', () => {
   });
 
   it('keeps "Nueva consulta" visible on every route (never hidden by the collapse or active state)', () => {
-    for (const path of ['/panel', '/perfil', '/consulta/anamnesis', '/pago/abc']) {
+    for (const path of ['/inicio', '/perfil', '/consulta/anamnesis', '/pago/abc']) {
       usePathnameMock.mockReturnValue(path);
       const { unmount } = render(<TopbarSesion />);
 
@@ -46,20 +46,20 @@ describe('TopbarSesion', () => {
 
   describe('menú de usuario (móvil)', () => {
     it('is a flex md:hidden nav, so it only shows on small screens', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       render(<TopbarSesion />);
 
       expect(mobileNav()).toHaveClass('flex', 'md:hidden');
     });
 
-    it('lists Home, Planes, Mediciones, Perfil and Cerrar sesión, in that order, with the right hrefs', () => {
-      usePathnameMock.mockReturnValue('/panel');
+    it('lists Inicio, Planes, Mediciones, Perfil and Cerrar sesión, in that order, with the right hrefs', () => {
+      usePathnameMock.mockReturnValue('/inicio');
       render(<TopbarSesion />);
 
       const links = within(mobileNav()).getAllByRole('link');
-      expect(links.map((link) => link.textContent)).toEqual(['Home', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']);
+      expect(links.map((link) => link.textContent)).toEqual(['Inicio', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']);
       expect(links.map((link) => link.getAttribute('href'))).toEqual([
-        '/panel',
+        '/inicio',
         '/planes',
         '/mediciones',
         '/perfil',
@@ -67,12 +67,12 @@ describe('TopbarSesion', () => {
       ]);
     });
 
-    it('highlights the link matching the pathname with the primary color (Home on /panel)', () => {
-      usePathnameMock.mockReturnValue('/panel');
+    it('highlights the link matching the pathname with the primary color (Inicio on /inicio)', () => {
+      usePathnameMock.mockReturnValue('/inicio');
       render(<TopbarSesion />);
 
       const nav = within(mobileNav());
-      expect(nav.getByRole('link', { name: 'Home' })).toHaveStyle({ color: 'var(--color-primary)' });
+      expect(nav.getByRole('link', { name: 'Inicio' })).toHaveStyle({ color: 'var(--color-primary)' });
       expect(nav.getByRole('link', { name: 'Perfil' })).not.toHaveStyle({ color: 'var(--color-primary)' });
       expect(nav.getByRole('link', { name: 'Cerrar sesión' })).not.toHaveStyle({ color: 'var(--color-primary)' });
     });
@@ -83,7 +83,7 @@ describe('TopbarSesion', () => {
 
       const nav = within(mobileNav());
       expect(nav.getByRole('link', { name: 'Perfil' })).toHaveStyle({ color: 'var(--color-primary)' });
-      expect(nav.getByRole('link', { name: 'Home' })).not.toHaveStyle({ color: 'var(--color-primary)' });
+      expect(nav.getByRole('link', { name: 'Inicio' })).not.toHaveStyle({ color: 'var(--color-primary)' });
     });
 
     it.each([
@@ -95,7 +95,7 @@ describe('TopbarSesion', () => {
 
       const nav = within(mobileNav());
       expect(nav.getByRole('link', { name })).toHaveStyle({ color: 'var(--color-primary)' });
-      expect(nav.getByRole('link', { name: 'Home' })).not.toHaveStyle({ color: 'var(--color-primary)' });
+      expect(nav.getByRole('link', { name: 'Inicio' })).not.toHaveStyle({ color: 'var(--color-primary)' });
     });
 
     it('highlights nothing on routes that are not in the menu', () => {
@@ -108,7 +108,7 @@ describe('TopbarSesion', () => {
     });
 
     it('never renders the side rectangle (compact variant), even for the active link', () => {
-      usePathnameMock.mockReturnValue('/panel');
+      usePathnameMock.mockReturnValue('/inicio');
       render(<TopbarSesion />);
 
       expect(screen.queryByTestId('nav-active-indicator')).not.toBeInTheDocument();

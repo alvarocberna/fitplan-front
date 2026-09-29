@@ -1,10 +1,10 @@
 //features
-import { MeasurementsChart, MeasurementsList, MeasurementsService, PanelService } from '@/features'
+import { MeasurementsChart, MeasurementsList, MeasurementsService, DashboardService } from '@/features'
 
 export default async function MedicionesPage() {
     const [measurements, latestPlan] = await Promise.all([
         MeasurementsService.getMeasurements(),
-        PanelService.getLatestPlanProjection(),
+        DashboardService.getLatestPlanProjection(),
     ])
 
     return (

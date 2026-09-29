@@ -48,7 +48,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/ordenes/order-1'));
   });
 
-  it('plan predefinido (?tipo=predefinido): tras pagar vacía el carro y va a /panel', async () => {
+  it('plan predefinido (?tipo=predefinido): tras pagar vacía el carro y va a /inicio', async () => {
     searchParams = new URLSearchParams('tipo=predefinido');
     localStorage.setItem(
       'plan_selection',
@@ -62,7 +62,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
 
     await user.click(screen.getByRole('button', { name: 'Pagar' }));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/panel'));
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/inicio'));
     expect(pushMock).not.toHaveBeenCalledWith('/ordenes/order-1');
     expect(JSON.parse(localStorage.getItem('plan_selection')!).cartItem).toBeNull();
   });

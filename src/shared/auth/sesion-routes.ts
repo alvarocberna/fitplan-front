@@ -1,4 +1,4 @@
-export const SESION_PATHS = new Set(["/panel", "/planes", "/mediciones", "/perfil"]);
+export const SESION_PATHS = new Set(["/inicio", "/planes", "/mediciones", "/perfil"]);
 
 // Secciones "de flujo" dentro del layout de sesión (consulta → pago → orden): el sidebar arranca
 // acoplado (solo el ícono para desacoplarlo) para dejar el espacio al contenido del flujo. Ver
@@ -14,7 +14,7 @@ function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
-// Área de usuario (/panel, /planes, /mediciones, /perfil y sus subrutas, p. ej. /panel/consultas/[id]): el proxy exige
+// Área de usuario (/inicio, /planes, /mediciones, /perfil y sus subrutas, p. ej. /inicio/consultas/[id]): el proxy exige
 // sesión (/consulta/*, /pago/* y /ordenes/* se resuelven aparte, ver src/proxy.ts).
 export function isSesionRoute(pathname: string): boolean {
   return [...SESION_PATHS].some((path) => matchesPrefix(pathname, path));

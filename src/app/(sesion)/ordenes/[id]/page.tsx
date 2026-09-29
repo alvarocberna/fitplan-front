@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation'
 //react
 import { useEffect, useRef, useState } from 'react'
 //shared
-import { Card, PlanPreviewCard, SubsectionHead, SubsectionTitle, useConsultation } from '@/shared'
+import { Card, PlanFileCard, SubsectionHead, SubsectionTitle, useConsultation } from '@/shared'
 //features
 import { ConsultationService, GenerationStatus, OrderStatusDto } from '@/features'
 
@@ -95,7 +95,7 @@ export default function OrderPage() {
                         <SubsectionHead>
                             <SubsectionTitle mb={2} title="¡Tu plan nutricional está listo!" />
                             <div className="w-full py-8">
-                                <PlanPreviewCard pdfUrl={plan.pdfUrl} thumbnailUrl={plan.thumbnailUrl} />
+                                <PlanFileCard pdfUrl={plan.pdfUrl} thumbnailUrl={plan.thumbnailUrl} />
                             </div>
                         </SubsectionHead>
                     )}

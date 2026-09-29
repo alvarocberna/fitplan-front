@@ -22,11 +22,11 @@ En cada request, `src/proxy.ts`:
   `apiNuviUrl` (`NEXT_PUBLIC_BACKEND_URL`) y el bucket S3 (`https://web-core-storage.s3.us-east-1.amazonaws.com`).
 - `plansS3Bucket` apunta al bucket privado donde el backend almacena los PDFs de los planes nutricionales y sus
   miniaturas (`https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com`) y va en `img-src`:
-  `/planes/[orderId]` (card del PDF de `PlanDetail`) y `/ordenes/[id]` (`PlanPreviewCard`) muestran la miniatura con un `<img>` a una URL
+  `/planes/[orderId]` y `/ordenes/[id]` (ambas con `PlanFileCard`) muestran la miniatura con un `<img>` a una URL
   firmada de ese bucket. No hace falta `connect-src` (ni CORS del bucket): la miniatura y la descarga del PDF
   son una carga de `<img>` y una navegación de `<a>`, no un `fetch`.
 - `frame-src` es solo `'self' blob:` (este último lo usa `/dev/preview-pdf`). El bucket de planes estuvo en
-  `frame-src` mientras `/ordenes/[id]` y `/panel` incrustaban el PDF con un `<iframe>` (`PdfViewer`); se quitó
+  `frame-src` mientras `/ordenes/[id]` y `/inicio` incrustaban el PDF con un `<iframe>` (`PdfViewer`); se quitó
   al reemplazar el visor por la miniatura + botón de descarga. Si algún día vuelve a incrustarse el PDF,
   habría que volver a añadirlo ahí. Cubierto por `src/proxy.test.ts` ("Content-Security-Policy").
 

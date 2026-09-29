@@ -71,9 +71,22 @@ describe('MeasurementDetail', () => {
 
     expect(screen.getByRole('heading', { name: 'Medición N°1' })).toBeInTheDocument();
     expect(screen.getByText(/15\/03\/2026 · Básica ·/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Consulta N°3' })).toHaveAttribute('href', '/panel/consultas/c-1');
+    expect(screen.getByRole('link', { name: 'Consulta N°3' })).toHaveAttribute('href', '/inicio/consultas/c-1');
     expect(screen.getByRole('link', { name: 'Editar medición' })).toHaveAttribute('href', '/mediciones/m-1/editar');
     expect(screen.getByRole('link', { name: '← Volver a mis mediciones' })).toHaveAttribute('href', '/mediciones');
+  });
+
+  it('embedded (consultation detail): compact header linking to the measurement, without back, edit or origin links', () => {
+    render(<MeasurementDetail measurement={basic} embedded />);
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Medición N°1' })).toBeInTheDocument();
+    expect(screen.getByText('15/03/2026 · Básica')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ver medición' })).toHaveAttribute('href', '/mediciones/m-1');
+    expect(screen.queryByRole('link', { name: '← Volver a mis mediciones' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Editar medición' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Consulta N°3' })).not.toBeInTheDocument();
+    // las secciones son las mismas que en /mediciones/[id]
+    expect(stat('Peso')).toBe('72 kg');
   });
 
   it('shows weight, height and BMI with its classification plus the BMI scale', () => {

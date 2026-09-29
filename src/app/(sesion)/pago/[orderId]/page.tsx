@@ -37,9 +37,9 @@ function SimulatedPayment() {
             //dispara la misma lógica que ejecutaría el webhook real de la pasarela
             await ConsultationService.simulatePayment(orderId)
             if (isPredefined) {
-                //el plan predefinido queda listo al confirmarse el pago: se vacía el carro y se lo muestra en el panel
+                //el plan predefinido queda listo al confirmarse el pago: se vacía el carro y se lo muestra en /inicio
                 clearCart()
-                router.push('/panel')
+                router.push('/inicio')
             } else {
                 //el plan personalizado se genera después del pago: /ordenes/[id] espera (polling) a que esté listo
                 router.push(`/ordenes/${orderId}`)

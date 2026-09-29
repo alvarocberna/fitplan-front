@@ -16,31 +16,37 @@ interface FormUserInfoProps {
     profile: PerfilStatus | null
 }
 
+//nivel deportivo elegido en el select "Deportista"; solo 'professional' marca al usuario como athlete
+type SportLevel = 'none' | 'recreational' | 'professional'
+type FormUserInfoValues = Omit<FormPersonalInfoInterface, 'athlete'> & { sportLevel: SportLevel }
+
 export function FormUserInfo({ profile }: FormUserInfoProps) {
     //router
     const router = useRouter();
     //llamamos al estado de PersonalInfo desde el context
     const { setPersonalInfo } = useConsultation();
     //hook useForm destructuring — pre-llenado con lo que el backend ya conoce del perfil
-    const { register, handleSubmit, formState: { errors, isSubmitting }, } = useForm<FormPersonalInfoInterface>({
+    const { register, handleSubmit, formState: { errors, isSubmitting }, } = useForm<FormUserInfoValues>({
         defaultValues: {
             firstName: profile?.firstName ?? undefined,
             paternalLastName: profile?.paternalLastName ?? undefined,
             gender: profile?.gender ?? undefined,
             email: profile?.email ?? undefined,
-            athlete: profile?.athlete ?? false,
+            //el backend solo guarda un booleano: un "recreacional" previo se muestra como "No" (ambos son false)
+            sportLevel: profile?.athlete ? 'professional' : 'none',
             dateOfBirth: profile?.dateOfBirth ? (profile.dateOfBirth.slice(0, 10) as unknown as Date) : undefined,
         },
     })
 
     //on submit: persiste el perfil en el backend (User, incluido athlete) antes de avanzar
-    const onSubmit: SubmitHandler<FormPersonalInfoInterface> = async (data) => {
+    const onSubmit: SubmitHandler<FormUserInfoValues> = async (data) => {
+        const athlete = data.sportLevel === 'professional'
         const result = await updateProfileAction({
             firstName: data.firstName,
             paternalLastName: data.paternalLastName,
             gender: data.gender,
             dateOfBirth: new Date(data.dateOfBirth).toISOString(),
-            athlete: data.athlete,
+            athlete,
         })
 
         if (!result.ok) {
@@ -56,7 +62,7 @@ export function FormUserInfo({ profile }: FormUserInfoProps) {
             firstName: data.firstName,
             paternalLastName: data.paternalLastName,
             gender: data.gender,
-            athlete: data.athlete,
+            athlete,
             email: profile?.email ?? data.email,
             dateOfBirth: data.dateOfBirth,
         })
@@ -98,16 +104,16 @@ export function FormUserInfo({ profile }: FormUserInfoProps) {
             </label>
         </div>
 
-        {/* Deportista */}
+        {/* Deportista — solo profesional/alto rendimiento marca user.athlete = true */}
         <div className="relative w-full mt-3">
             <select
-            {...register("athlete", {required: false, setValueAs: (value) => value === "true"})}
+            {...register("sportLevel")}
                 id="floating-outlined-deportista"
                 className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-800 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-primary peer"
             >
-                <option value="false">No, no hago ningún deporte</option>
-                <option value="false">Sí, de forma recreacional o como hobby</option>
-                <option value="true">Sí, de forma profesional o alto rendimiento</option>
+                <option value="none">No, no hago ningún deporte</option>
+                <option value="recreational">Sí, de forma recreacional o como hobby</option>
+                <option value="professional">Sí, de forma profesional o alto rendimiento</option>
             </select>
             <label
                 className="absolute text-sm text-zinc-700 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2

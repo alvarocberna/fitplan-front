@@ -93,7 +93,7 @@ autenticadas al backend).
 **Volver a un destino concreto (`return_to`)**: `/api/cognito/login` acepta `?return_to=<ruta>` (lo agrega el modal de
 registro al pagar desde `/carrito`) y lo guarda en una cookie httpOnly de 10 minutos (`post_login_return_to`; si no se
 pide destino, borra una vieja de un intento abandonado). El callback la lee y la borra, y **solo** si la ruta está en la
-lista permitida de `src/shared/auth/return-to.ts` (hoy `/carrito`) redirige ahí en vez de a `/panel` o `/consulta/inicio`;
+lista permitida de `src/shared/auth/return-to.ts` (hoy `/carrito`) redirige ahí en vez de a `/inicio` o `/consulta/inicio`;
 cualquier otro valor se ignora (evita usar el login como redirección abierta). El chequeo de perfil (`POST /me/sync`)
 se ejecuta igual: es lo que crea la identidad que el backend necesita para crear la orden.
 
@@ -104,7 +104,7 @@ de fingir éxito.
 Al terminar (éxito), hace un chequeo **best-effort** del estado del perfil antes de decidir el
 redirect: llama `POST /me/sync` (mismo endpoint que ya usaba `syncProfileAction()`) directo vía
 `apiFetch`, con el `email`/`accessToken` que ya tiene en memoria de este mismo request — sin releer
-la cookie de sesión recién escrita. Si `profileComplete === true`, redirige directo a **`/panel`**,
+la cookie de sesión recién escrita. Si `profileComplete === true`, redirige directo a **`/inicio`**,
 saltándose `/consulta/inicio`. Si da `false`, o si la llamada falla (red, backend caído), redirige a
 **`/consulta/inicio`** como antes — un fallo en este chequeo nunca bloquea el login ni manda a la
 pantalla de error, porque la sesión ya se creó independientemente de él (el `try/catch` de este
@@ -130,7 +130,7 @@ Tres opciones: **"Continuar con Google"** (`/api/cognito/login?identity_provider
 Los dos botones "Iniciar Consulta" del sitio (navbar global y hero de la home) usan
 `getStartConsultationHref()` (`session.ts`) para no mandar a todo el mundo a `/consulta/inicio` por
 igual: sin sesión (o expirada) van directo a `/login`; con sesión, a `/consulta/inicio`
-(que a su vez decide entre `informacion-personal`/`panel` según el perfil — ver `doc/flow.md`).
+(que a su vez decide entre `informacion-personal`/`inicio` según el perfil — ver `doc/flow.md`).
 
 **Gotcha de bundling a tener presente**: `Hero` (`hero.component.tsx`) y `NavbarLanding`
 (`navbar-landing.component.tsx`) se re-exportan desde el barrel `@/features/index.ts`, que también
@@ -161,13 +161,13 @@ ese barrel y necesite código `server-only` va a pisar el mismo problema.
   (el backend unificó `auth/perfil` y `user/me` en `/me`, con un único DTO de campos opcionales): este
   archivo solo lee/edita nombre, apellido y fecha de nacimiento, mientras que `updateProfileAction`
   completa el perfil obligatorio (género, deportista) que gatea el wizard de `/consulta/*`.
-- `src/features/panel/services/panel.actions.ts` — `getPanelSummaryAction` (`GET /me/summary`) y
-  `getMyConsultationsAction` (`GET /me/consultations`), usadas por `/panel`, y
-  `getMyConsultationAction` (`GET /me/consultations/:id`), usada por `/panel/consultas/[id]`,
-  `getMyPlansAction` (`GET /me/plans`, `/panel`) y `getMyPlanAction` (`GET /me/plans/:orderId`,
-  `/planes/[orderId]`).
+- `src/features/dashboard/services/dashboard.actions.ts` — `getDashboardSummaryAction` (`GET /me/summary`) y
+  `getMyConsultationsAction` (`GET /me/consultations`), usadas por `/inicio`, y
+  `getMyConsultationAction` (`GET /me/consultations/:id`), usada por `/inicio/consultas/[id]`,
+  `getMyPlansAction` (`GET /me/plans`, `/inicio`) y `getMyPlanAction` (`GET /me/plans/:orderId`,
+  `/planes/[orderId]` y `/inicio/consultas/[id]`).
 - `src/features/measurements/services/measurements.actions.ts` — `getMyMeasurementsAction`
-  (`GET /me/measurements`, `/panel`), `getMyMeasurementAction` (`GET /me/measurements/:id`),
+  (`GET /me/measurements`, `/inicio`), `getMyMeasurementAction` (`GET /me/measurements/:id`),
   `recordMeasurementAction` (`POST /me/measurements`) y `updateMeasurementAction`
   (`PATCH /me/measurements/:id`), usadas por `/mediciones/*` vía `MeasurementsService`.
 - `src/shared/api/action-result.ts` — `ActionResult<T>`/`runAction()` compartido por todos los
@@ -199,10 +199,10 @@ mecanismos:
   punta.
 - **`PROTECTED_PATHS`** (hoy `SESION_PATHS` / `isSesionRoute()` en `src/shared/auth/sesion-routes.ts`):
   un set explícito de rutas *fuera* de los prefijos anteriores que también requieren
-  sesión — `/panel`, `/planes`, `/mediciones` y `/perfil` (área de usuario logueado, ver sección siguiente), **con sus
-  subrutas** (p. ej. `/panel/consultas/[id]`, el detalle de una consulta): la comparación es por
-  prefijo (`/panel` y `/panel/*`, sin falsos positivos tipo `/panelx`). Una ruta nueva fuera de
-  `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel/*`, `/planes/*`, `/mediciones/*` y `/perfil/*` queda pública salvo que se agregue
+  sesión — `/inicio`, `/planes`, `/mediciones` y `/perfil` (área de usuario logueado, ver sección siguiente), **con sus
+  subrutas** (p. ej. `/inicio/consultas/[id]`, el detalle de una consulta): la comparación es por
+  prefijo (`/inicio` y `/inicio/*`, sin falsos positivos tipo `/iniciox`). Una ruta nueva fuera de
+  `/consulta/*`, `/pago/*`, `/ordenes/*`, `/inicio/*`, `/planes/*`, `/mediciones/*` y `/perfil/*` queda pública salvo que se agregue
   explícitamente a este set.
 
 Si la ruta lo requiere, lee la cookie `session` con `request.cookies.get(...)` (no `cookies()` de
@@ -225,7 +225,7 @@ se prueba en e2e. Ver `doc/testing.md`.
 ## Área de usuario logueado — layout `(sesion)`
 
 Todas las rutas del route group `src/app/(sesion)/` (el paréntesis no agrega segmento a la URL)
-comparten `src/app/(sesion)/layout.tsx`: `/panel`, `/planes`, `/mediciones`, `/perfil`, `/consulta/*`, `/pago/[orderId]` y
+comparten `src/app/(sesion)/layout.tsx`: `/inicio`, `/planes`, `/mediciones`, `/perfil`, `/consulta/*`, `/pago/[orderId]` y
 `/ordenes/[id]` (`/pago` vivía antes en `src/app/pago/` con el navbar público; se movió a
 `src/app/(sesion)/pago/` sin cambiar la URL).
 
@@ -238,12 +238,12 @@ el ancho actual del sidebar y cuyo padding superior (`pt-19 md:pt-23`) deja libr
 `usesSesionLayout(pathname)`, ver `src/shared/auth/sesion-routes.ts`).
 
 - **Barra superior (`TopbarSesion`)**: fija, 100% de ancho, `h-15` (60px). A la izquierda el logo de
-  texto "Nuvi" (link a `/panel`); a la derecha el botón "Nueva consulta" (link a `/consulta/anamnesis`). En
-  móvil (<md) también aloja las opciones de navegación (Home, Planes, Mediciones, Perfil y Cerrar sesión, en variante
+  texto "Nuvi" (link a `/inicio`); a la derecha el botón "Nueva consulta" (link a `/consulta/anamnesis`). En
+  móvil (<md) también aloja las opciones de navegación (Inicio, Planes, Mediciones, Perfil y Cerrar sesión, en variante
   `compact`: ícono sobre la etiqueta), porque el sidebar no se renderiza en esa resolución.
 - **Sidebar (`NavbarSesion`, solo md+)**: `hidden md:flex`, fijo a la izquierda debajo de la barra
-  superior (`top-15`, alto `calc(100vh - 3.75rem)`). Sus opciones son, en orden, Home (etiqueta
-  visible de `/panel`; el href sigue siendo `/panel`), Planes (`/planes`), Mediciones (`/mediciones`),
+  superior (`top-15`, alto `calc(100vh - 3.75rem)`). Sus opciones son, en orden, Inicio (etiqueta
+  visible de `/inicio`; el href sigue siendo `/inicio`), Planes (`/planes`), Mediciones (`/mediciones`),
   Perfil (`/perfil`) y Cerrar sesión (`/api/cognito/logout`), más el
   botón de acoplar/desacoplar (16×32px con una flecha, centrado sobre el borde derecho del sidebar;
   al pasar el mouse se ilumina su borde y el borde derecho del sidebar con `var(--color-primary)`); ya no incluye "Nueva consulta" (ahora vive en la barra
@@ -256,26 +256,26 @@ el ancho actual del sidebar y cuyo padding superior (`pt-19 md:pt-23`) deja libr
   click en cualquier parte del sidebar que no sea un link de navegación. El
   estado inicial depende de la sección: en `/consulta/*`, `/pago/*` y `/ordenes/*`
   (`isFocusRoute()`, "rutas de flujo") arranca **acoplado** para dejar espacio al contenido del
-  flujo; en `/panel`, `/planes`, `/mediciones` y `/perfil` arranca **desacoplado**. La elección manual del usuario
+  flujo; en `/inicio`, `/planes`, `/mediciones` y `/perfil` arranca **desacoplado**. La elección manual del usuario
   (`SesionShell`, `useState`) persiste entre páginas de una misma sección mientras el layout no se
-  remonte, y se descarta al cambiar entre la sección de usuario (panel/planes/mediciones/perfil) y la de flujo (vuelve al valor
+  remonte, y se descarta al cambiar entre la sección de usuario (inicio/planes/mediciones/perfil) y la de flujo (vuelve al valor
   por defecto de la nueva sección).
 - **Padding de las páginas**: como el `<main>` del layout ya aporta el padding, los wrappers de
   las páginas de `/consulta/*`, `/pago/[orderId]` y `/ordenes/[id]` (que no deben sumar su propio
   `min-h-screen` ni un padding superior grande) usan `py-4` (`/pago`, además,
   `w-full flex justify-center px-6`) en vez del antiguo `min-h-screen py-24` / `pt-40` /
   `min-h-screen items-center` (que compensaban el navbar público o centraban en pantalla completa).
-- **Gating**: `/panel`, `/planes`, `/mediciones` y `/perfil` están en `PROTECTED_PATHS` (ver arriba); `/consulta/*` (salvo
+- **Gating**: `/inicio`, `/planes`, `/mediciones` y `/perfil` están en `PROTECTED_PATHS` (ver arriba); `/consulta/*` (salvo
   `/consulta`) y `/pago/*` + `/ordenes/*` se protegen por prefijo — sin sesión válida,
   `src/proxy.ts` redirige a `/login` antes de que el layout o la página se rendericen.
-  `isSesionRoute()` (`/panel`, `/planes`, `/mediciones`, `/perfil` y sus subrutas) e `isSessionGatedPrefix()` (`/pago`, `/ordenes`) son
+  `isSesionRoute()` (`/inicio`, `/planes`, `/mediciones`, `/perfil` y sus subrutas) e `isSessionGatedPrefix()` (`/pago`, `/ordenes`) son
   lo que consulta el proxy; `isFocusRoute()` y `usesSesionLayout()` (que agrupa `isSesionRoute` +
   `isFocusRoute`) solo deciden presentación (navbar/sidebar), no seguridad.
 
 Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc/flow.md`):
 
-- **`/panel`** (`src/app/(sesion)/panel/page.tsx`, Server Component): llama en paralelo, vía
-  `PanelService` (`src/features/panel/services/panel.service.ts` → Server Actions de `panel.actions.ts`,
+- **`/inicio`** (`src/app/(sesion)/inicio/page.tsx`, Server Component): llama en paralelo, vía
+  `DashboardService` (`src/features/dashboard/services/dashboard.service.ts` → Server Actions de `dashboard.actions.ts`,
   que obtienen el access token con `getValidAccessToken()` y llaman al backend vía `apiFetch`),
   `getSummary()` (`GET /me/summary`), `getConsultations()` (`GET /me/consultations`), `getPlans()`
   (`GET /me/plans`), `MeasurementsService.getMeasurements()` (`GET /me/measurements`) y
@@ -288,17 +288,27 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
   gráfico de `/mediciones`, con título interno "Evolución" que `/mediciones` no muestra); `ConsultationsList` (título "Mis consultas" y, sin card contenedor, un card por consulta con la estructura
   de `MyPlansList`: fecha y "Consulta N°X"; "Consulta nutricional" + estado, objetivo, régimen y macronutrientes
   con íconos (`MacrosRow`, compartido con `MyPlansList`); "Ver detalle" y, si está por pagar, "Pagar consulta";
-  todo el card abre `/panel/consultas/[id]`). El panel ya no lista los planes: `getPlans()` solo elige el más
+  todo el card abre `/inicio/consultas/[id]`). Inicio ya no lista los planes: `getPlans()` solo elige el más
   reciente; la lista vive en `/planes`.
-- **`/planes/[orderId]`** (Server Component): `PanelService.getPlan(orderId)` (`GET /me/plans/:orderId`;
+- **`/inicio/consultas/[id]`** (Server Component): `DashboardService.getConsultation(id)` (`GET /me/consultations/:id`;
+  `null` ante 404 → "Consulta no encontrada") y, en paralelo, el plan de la consulta (`DashboardService.getPlan`,
+  `GET /me/plans/:orderId`) y el detalle de cada medición (`MeasurementsService.getMeasurement`, `GET /me/measurements/:id`).
+  `ConsultationDetail` reutiliza las cards de otras secciones: encabezado ("Consulta N°X", estado, fecha); `PlanOverviewCard`
+  a ancho completo; fila 50/50 con `PlanFileCard` y `MacroDistributionCard`; `GeneratedPlanSections` (resumen por tiempo
+  de comida, suplementación, recomendaciones deportivas — la misma de `/planes/[orderId]`); y "Mediciones" con
+  `MeasurementDetail` en modo `embedded` (encabezado compacto con "Ver medición", sin "Volver"/"Editar"). Sin plan listo,
+  en lugar de las cards del plan muestra su estado ("Pagar consulta", generando o error con "Ver estado del plan").
+- **`/planes/[orderId]`** (Server Component): `DashboardService.getPlan(orderId)` (`GET /me/plans/:orderId`;
   `null` ante 404 → `notFound()` → "Plan no encontrado"; contenido al 90 % del ancho disponible). Renderiza `PlanDetail`:
   encabezado en dos columnas (apiladas en móvil) — a la izquierda (60 %) título, fecha de compra, una card
-  "Datos del plan" (objetivo, régimen y duración, calculada con `planDurationLabel` de `panel/format.ts`
+  "Datos del plan" (objetivo, régimen y duración, calculada con `planDurationLabel` de `dashboard/format.ts`
   desde `startDate`/`endDate`; "—" en los estándar o sin término) y, en la misma card tras una línea
   horizontal, los macronutrientes sin título propio (calorías, proteínas, carbohidratos y lípidos); a la derecha (40 %) la card del PDF (miniatura, "Plan nutricional",
-  "PDF" y "Descargar plan"). Debajo, el detalle guardado en la base — personalizado: "Resumen del plan"
-  (una sub-card por tiempo de comida, en una columna: tiempo y hora | porciones con valor), suplementación y
-  recomendaciones deportivas (la card "Tiempos de comida" con el detalle está oculta por ahora); estándar: descripción (sus datos
+  "PDF" y "Descargar plan"). Debajo, el detalle guardado en la base — personalizado: "Resumen Plan Nutricional"
+  (un card de títulos "Tiempo | Alimentos | Aporte nutricional" y, debajo, una sub-card por tiempo de comida con esas 3 columnas: tiempo y hora | porciones con valor | calorías, proteínas, carbohidratos y lípidos en 2×2), "Suplementación" (título a la izquierda con ícono; por suplemento: nombre con ícono, Dosis 1/4 | Toma 3/4,
+  aporte nutricional en un card interno de 4 columnas y Efectos | Consideraciones en 2 columnas) y
+  "Recomendaciones deportivas" (título con ícono; por sesión: nombre con ícono, estrategia en un card interno y antes |
+  durante | después de la actividad en 3 columnas con ícono, "—" sin dato) (la card "Tiempos de comida" con el detalle está oculta por ahora); estándar: descripción (sus datos
   del encabezado salen del resumen del producto). Ya no hay card "Resumen". Ninguna vista incrusta el PDF en un `<iframe>` (`PdfViewer` se eliminó).
 - **`/mediciones/[id]`**, **`/mediciones/nueva`** y **`/mediciones/[id]/editar`**: detalle
   (`MeasurementDetail`, datos y resultados juntos por tema: card "Peso e IMC" con la escala del IMC por rangos
@@ -307,23 +317,26 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
   mediciones" (pliegues, perímetros, diámetros, talla sentado, envergadura e índices) solo si hay; la lógica
   vive en `features/measurements/measurement-detail-data.ts`; 404 → "Medición no encontrada"), registro y corrección de una medición (`MeasurementForm`, Client Component con
   react-hook-form que llama a `MeasurementsService` y, al guardar, navega al detalle). Registro y edición
-  van dentro de una `Card` sólida. Todas vuelven a `/mediciones`. `/panel` no muestra mediciones.
+  van dentro de una `Card` sólida. Todas vuelven a `/mediciones`. `/inicio` no muestra mediciones.
 - **`/planes`** (`src/app/(sesion)/planes/page.tsx`, Server Component): título "Mis planes nutricionales"
-  (arriba de la lista, a la izquierda) y `MyPlansList` (`PanelService.getPlans()` → `GET /me/plans`, ya ordenados del más
+  (arriba de la lista, a la izquierda) y `MyPlansList` (`DashboardService.getPlans()` → `GET /me/plans`, ya ordenados del más
   nuevo al más antiguo por el backend; sin card contenedor): cada plan es un card blanco de 3 columnas — ícono de comida en un cuadrado redondeado;
-  nombre + tipo, fecha de compra, régimen, una línea divisoria y los 4 macronutrientes con su ícono (`features/panel/plan-icons.ts`,
+  nombre + tipo, fecha de compra, régimen, una línea divisoria y los 4 macronutrientes con su ícono (`features/dashboard/plan-icons.ts`,
   compartido con el detalle); "Ver plan" y "Descargar plan" (`pdfUrl`, URL firmada con `Content-Disposition: attachment`, que
   descarga el PDF completo en vez de abrirlo) — y el primero (el último plan) lleva una pestaña
-  del color primario a la izquierda. "Ver plan" (en `/planes` y en `/panel`) abre `/planes/[orderId]`, cuyo
+  del color primario a la izquierda. "Ver plan" (en `/planes` y en `/inicio`) abre `/planes/[orderId]`, cuyo
   "Volver" regresa a `/planes`.
 - **`/mediciones`** (`src/app/(sesion)/mediciones/page.tsx`, Server Component): el título "Evolución de tus mediciones" (fuera de la card)
   y la card `MeasurementsChart` (gráfico de evolución, Client Component con `@nivo/line`, contenido al 96 %) y `MeasurementsList` (un card con el título "Mis mediciones" y "Registrar medición", y
   debajo, sin card contenedor, un card por medición: calendario; fecha y tipo; peso, IMC y % de grasa, cada uno
   con su ícono en el color de su línea del gráfico)
   (`MeasurementsService.getMeasurements()` → `GET /me/measurements`); es la única página que las muestra. El
-  gráfico recibe además `PanelService.getLatestPlanProjection()` (→ `GET /me/plans/latest/projection`, `null`
+  gráfico recibe además `DashboardService.getLatestPlanProjection()` (→ `GET /me/plans/latest/projection`, `null`
   ante 404) y tiene dos modos: "Plan actual" (mediciones dentro del período del último plan + la proyección
-  como meta, en trazo continuo del mismo color; el rango del plan, con un ícono de calendario, va a la izquierda
+  como meta, en línea discontinua del mismo color; el eje X va por tramos: las mediciones ocupan el 70 % del ancho
+  y el tramo de la última medición a la fecha proyectada el 30 % restante (`buildTimeAxis`; con una sola medición, esta va
+  al inicio y la proyección ocupa todo el ancho), con marcas en cada
+  fecha medida y en la proyectada; la leyenda suma "Proyección"; el rango del plan, con un ícono de calendario, va a la izquierda
   de los botones de modo; deshabilitado sin plan) y "Todas las mediciones" (una casilla por medición para
   quitarla o reponerla). Grafica peso, IMC, grasa (kg) y masa muscular (kg), con una línea horizontal cada 10
   unidades (`yScaleTicks`). En una columna paralela (debajo en móvil), "Resumen actual": el último valor
@@ -369,7 +382,7 @@ Ver `nutricionista-virtual-back/doc/auth.md` para el detalle completo. Resumen:
 
 - El backend valida el Access Token (`CognitoAuthGuard`, `aws-jwt-verify` contra el JWKS del User
   Pool) en las rutas que lo requieren: `/consultations`, `/consultations/chat`,
-  `/orders/:id/status`, `me/plans` (listado usado en `/panel`).
+  `/orders/:id/status`, `me/plans` (listado usado en `/inicio`).
 - La identidad (`AuthIdentity`+`User` "esqueleto") se crea apenas hay sesión válida
   (`POST /me/sync`), separada de completar el perfil (`PATCH /me`) — ver `doc/flow.md`
   para el flujo completo, incluido por qué están separados.
@@ -381,6 +394,6 @@ Ver `nutricionista-virtual-back/doc/auth.md` para el detalle completo. Resumen:
 `tsc --noEmit`, `npm run build` y la suite de Vitest compilan/pasan limpio en cada paso. Probado
 manualmente end-to-end contra el User Pool real: login nativo, registro, gating de rutas, creación
 de orden autenticada, refresh silencioso del access_token, y el flujo completo de
-`consulta/inicio` → `informacion-personal` (o directo a `/panel` si el perfil ya está completo).
+`consulta/inicio` → `informacion-personal` (o directo a `/inicio` si el perfil ya está completo).
 Login vía Google integrado en el código pero no ejercitado todavía contra el User Pool real — ver
 `doc/auth-pending.md`.

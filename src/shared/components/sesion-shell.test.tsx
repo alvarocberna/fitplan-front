@@ -10,7 +10,7 @@ const UNDOCK = 'Desacoplar menú lateral';
 
 // El sidebar (md+) es el <nav> que contiene el botón de acoplar/desacoplar. jsdom no aplica CSS, así
 // que además de él está en el DOM el menú móvil de la barra superior con los mismos enlaces
-// (Home/Planes/Mediciones/Perfil/Cerrar sesión): hay que acotar los selectores a uno de los dos.
+// (Inicio/Planes/Mediciones/Perfil/Cerrar sesión): hay que acotar los selectores a uno de los dos.
 function sidebar() {
   const nav = screen.getByRole('button', { name: /menú lateral/ }).closest('nav');
   if (!nav) throw new Error('sidebar <nav> not found');
@@ -39,13 +39,13 @@ function navigateTo(rerender: ReturnType<typeof render>['rerender'], pathname: s
 
 describe('SesionShell', () => {
   it('renders its children inside <main>', () => {
-    renderAt('/panel');
+    renderAt('/inicio');
 
     expect(screen.getByRole('main')).toContainElement(screen.getByText('contenido'));
   });
 
   describe('default por ruta', () => {
-    it.each(['/panel', '/planes', '/mediciones', '/perfil'])('starts undocked (wide sidebar) on %s', (pathname) => {
+    it.each(['/inicio', '/planes', '/mediciones', '/perfil'])('starts undocked (wide sidebar) on %s', (pathname) => {
       renderAt(pathname);
 
       expect(screen.getByRole('button', { name: DOCK })).toHaveAttribute('aria-expanded', 'true');
@@ -69,25 +69,25 @@ describe('SesionShell', () => {
 
     it('hides the sidebar links when docked and shows them when undocked', () => {
       const { unmount } = renderAt('/consulta/inicio');
-      expect(within(sidebar()).getByRole('link', { name: 'Home' })).toHaveClass('hidden');
+      expect(within(sidebar()).getByRole('link', { name: 'Inicio' })).toHaveClass('hidden');
       unmount();
 
-      renderAt('/panel');
-      expect(within(sidebar()).getByRole('link', { name: 'Home' })).not.toHaveClass('hidden');
+      renderAt('/inicio');
+      expect(within(sidebar()).getByRole('link', { name: 'Inicio' })).not.toHaveClass('hidden');
     });
 
     it('never hides the topbar links when docking the sidebar (the mobile menu is independent)', () => {
       renderAt('/consulta/inicio');
 
       const mobileMenu = within(screen.getByRole('navigation', { name: 'Menú de usuario' }));
-      for (const name of ['Home', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
+      for (const name of ['Inicio', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
         expect(mobileMenu.getByRole('link', { name })).not.toHaveClass('hidden');
       }
     });
   });
 
   describe('barra superior y padding del contenido', () => {
-    it.each(['/panel', '/consulta/inicio'])('renders the topbar (banner) with logo and "Nueva consulta" on %s', (pathname) => {
+    it.each(['/inicio', '/consulta/inicio'])('renders the topbar (banner) with logo and "Nueva consulta" on %s', (pathname) => {
       renderAt(pathname);
 
       const topbar = within(screen.getByRole('banner'));
@@ -96,22 +96,22 @@ describe('SesionShell', () => {
     });
 
     it('renders the topbar and the sidebar as siblings of <main>, not inside it', () => {
-      renderAt('/panel');
+      renderAt('/inicio');
 
       expect(screen.getByRole('main')).not.toContainElement(screen.getByRole('banner'));
       expect(screen.getByRole('main')).not.toContainElement(sidebar());
     });
 
-    it.each(['/panel', '/consulta/inicio'])('offsets <main> below the topbar (pt-19 md:pt-23) on %s', (pathname) => {
+    it.each(['/inicio', '/consulta/inicio'])('offsets <main> below the topbar (pt-19 md:pt-23) on %s', (pathname) => {
       renderAt(pathname);
 
       expect(screen.getByRole('main')).toHaveClass('pt-19', 'md:pt-23');
     });
 
     it('exposes the session links twice in the DOM (sidebar + mobile menu); CSS decides which one shows', () => {
-      renderAt('/panel');
+      renderAt('/inicio');
 
-      expect(screen.getAllByRole('link', { name: 'Home' })).toHaveLength(2);
+      expect(screen.getAllByRole('link', { name: 'Inicio' })).toHaveLength(2);
       expect(screen.getAllByRole('link', { name: 'Perfil' })).toHaveLength(2);
       expect(screen.getAllByRole('link', { name: 'Cerrar sesión' })).toHaveLength(2);
       // "Nueva consulta" solo existe en la barra superior
@@ -128,7 +128,7 @@ describe('SesionShell', () => {
       return wrapper;
     };
 
-    it.each(['/panel', '/consulta/inicio'])('renders the Footer (contentinfo) on %s', (pathname) => {
+    it.each(['/inicio', '/consulta/inicio'])('renders the Footer (contentinfo) on %s', (pathname) => {
       renderAt(pathname);
 
       expect(screen.getAllByRole('contentinfo')).toHaveLength(1);
@@ -138,7 +138,7 @@ describe('SesionShell', () => {
     });
 
     it('renders the Footer as a sibling of <main>, not inside it', () => {
-      renderAt('/panel');
+      renderAt('/inicio');
 
       expect(screen.getByRole('main')).not.toContainElement(screen.getByRole('contentinfo'));
       expect(footerWrapper()).not.toContainElement(screen.getByRole('main'));
@@ -146,7 +146,7 @@ describe('SesionShell', () => {
     });
 
     it('renders the Footer after <main> in document order', () => {
-      renderAt('/panel');
+      renderAt('/inicio');
 
       expect(
         screen.getByRole('main').compareDocumentPosition(screen.getByRole('contentinfo')) &
@@ -154,7 +154,7 @@ describe('SesionShell', () => {
       ).toBeTruthy();
     });
 
-    it.each(['/panel', '/planes', '/mediciones', '/perfil'])('gives the footer wrapper the undocked padding (md:pl-56) on %s', (pathname) => {
+    it.each(['/inicio', '/planes', '/mediciones', '/perfil'])('gives the footer wrapper the undocked padding (md:pl-56) on %s', (pathname) => {
       renderAt(pathname);
 
       expect(footerWrapper()).toHaveClass('md:pl-56');
@@ -172,7 +172,7 @@ describe('SesionShell', () => {
     );
 
     it('keeps the footer padding in sync with <main> when the sidebar is toggled', () => {
-      renderAt('/panel');
+      renderAt('/inicio');
       expect(footerWrapper()).toHaveClass('md:pl-56');
       expect(screen.getByRole('main')).toHaveClass('md:pl-56');
 
@@ -187,21 +187,21 @@ describe('SesionShell', () => {
     });
 
     it('resets the footer padding to the new section default when navigating between sections', () => {
-      const { rerender } = renderAt('/panel');
+      const { rerender } = renderAt('/inicio');
       fireEvent.click(screen.getByRole('button', { name: DOCK }));
       expect(footerWrapper()).toHaveClass('md:pl-14');
 
       navigateTo(rerender, '/consulta/inicio');
       expect(footerWrapper()).toHaveClass('md:pl-14');
 
-      navigateTo(rerender, '/panel');
+      navigateTo(rerender, '/inicio');
       expect(footerWrapper()).toHaveClass('md:pl-56');
     });
   });
 
   describe('toggle', () => {
-    it('docks the sidebar on /panel when the toggle is clicked', () => {
-      renderAt('/panel');
+    it('docks the sidebar on /inicio when the toggle is clicked', () => {
+      renderAt('/inicio');
 
       fireEvent.click(screen.getByRole('button', { name: DOCK }));
 
@@ -219,7 +219,7 @@ describe('SesionShell', () => {
     });
 
     it('toggles back and forth on repeated clicks', () => {
-      renderAt('/panel');
+      renderAt('/inicio');
 
       fireEvent.click(screen.getByRole('button', { name: DOCK }));
       fireEvent.click(screen.getByRole('button', { name: UNDOCK }));
@@ -250,8 +250,8 @@ describe('SesionShell', () => {
       expect(screen.getByRole('main')).toHaveClass('md:pl-56');
     });
 
-    it('keeps the manual choice when navigating within the same section (/panel <-> /perfil)', () => {
-      const { rerender } = renderAt('/panel');
+    it('keeps the manual choice when navigating within the same section (/inicio <-> /perfil)', () => {
+      const { rerender } = renderAt('/inicio');
       fireEvent.click(screen.getByRole('button', { name: DOCK }));
       expect(screen.getByRole('main')).toHaveClass('md:pl-14');
 
@@ -263,36 +263,36 @@ describe('SesionShell', () => {
   });
 
   describe('reset al cambiar de sección', () => {
-    it('falls back to the default of the new section: /panel (docked manually) -> /consulta (docked by default)', () => {
-      const { rerender } = renderAt('/panel');
+    it('falls back to the default of the new section: /inicio (docked manually) -> /consulta (docked by default)', () => {
+      const { rerender } = renderAt('/inicio');
       fireEvent.click(screen.getByRole('button', { name: DOCK }));
 
       navigateTo(rerender, '/consulta/inicio');
 
-      // default de /consulta/* es acoplado; la elección hecha en /panel no se arrastra
+      // default de /consulta/* es acoplado; la elección hecha en /inicio no se arrastra
       expect(screen.getByRole('button', { name: UNDOCK })).toBeInTheDocument();
       expect(screen.getByRole('main')).toHaveClass('md:pl-14');
     });
 
-    it('falls back to the default of the new section: /consulta (undocked manually) -> /panel (undocked by default)', () => {
+    it('falls back to the default of the new section: /consulta (undocked manually) -> /inicio (undocked by default)', () => {
       const { rerender } = renderAt('/consulta/inicio');
       fireEvent.click(screen.getByRole('button', { name: UNDOCK }));
       expect(screen.getByRole('main')).toHaveClass('md:pl-56');
 
-      navigateTo(rerender, '/panel');
+      navigateTo(rerender, '/inicio');
 
       expect(screen.getByRole('button', { name: DOCK })).toBeInTheDocument();
       expect(screen.getByRole('main')).toHaveClass('md:pl-56');
     });
 
     it('discards the old manual choice for good: returning to the section where it was made shows the default again', () => {
-      const { rerender } = renderAt('/panel');
-      fireEvent.click(screen.getByRole('button', { name: DOCK })); // manual: acoplado en /panel
+      const { rerender } = renderAt('/inicio');
+      fireEvent.click(screen.getByRole('button', { name: DOCK })); // manual: acoplado en /inicio
 
       navigateTo(rerender, '/consulta/inicio');
-      navigateTo(rerender, '/panel');
+      navigateTo(rerender, '/inicio');
 
-      // el default de /panel es desacoplado: la elección manual previa ya no reaparece
+      // el default de /inicio es desacoplado: la elección manual previa ya no reaparece
       expect(screen.getByRole('button', { name: DOCK })).toBeInTheDocument();
       expect(screen.getByRole('main')).toHaveClass('md:pl-56');
     });

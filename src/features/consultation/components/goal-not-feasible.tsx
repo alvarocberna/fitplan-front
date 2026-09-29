@@ -22,7 +22,7 @@ export function GoalNotFeasible({ message }: GoalNotFeasibleProps) {
 
     const exit = () => {
         discardConsultation()
-        router.push('/panel')
+        router.push('/inicio')
     }
 
     const newConsultation = () => {

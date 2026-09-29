@@ -2,19 +2,19 @@ import { describe, it, expect } from 'vitest';
 import { SESION_PATHS, isSesionRoute, isSessionGatedPrefix, isFocusRoute, usesSesionLayout } from './sesion-routes';
 
 describe('isSesionRoute', () => {
-  it.each(['/panel', '/planes', '/mediciones', '/perfil', '/panel/consultas/abc-123', '/perfil/sub'])('is true for %s (raíz y subrutas)', (pathname) => {
+  it.each(['/inicio', '/planes', '/mediciones', '/perfil', '/inicio/consultas/abc-123', '/perfil/sub'])('is true for %s (raíz y subrutas)', (pathname) => {
     expect(isSesionRoute(pathname)).toBe(true);
   });
 
-  it.each(['/', '/consulta/inicio', '/ordenes/abc', '/pago/abc', '/panelx', '/planesx', '/planes-estandar', '/planes-estandar/plan-x', '/medicionesx', '/perfilx', '/dev'])(
+  it.each(['/', '/consulta/inicio', '/ordenes/abc', '/pago/abc', '/iniciox', '/planesx', '/planes-estandar', '/planes-estandar/plan-x', '/medicionesx', '/perfilx', '/dev'])(
     'is false for %s',
     (pathname) => {
       expect(isSesionRoute(pathname)).toBe(false);
     },
   );
 
-  it('exposes exactly /panel, /planes, /mediciones and /perfil in SESION_PATHS', () => {
-    expect([...SESION_PATHS].sort()).toEqual(['/mediciones', '/panel', '/perfil', '/planes']);
+  it('exposes exactly /inicio, /planes, /mediciones and /perfil in SESION_PATHS', () => {
+    expect([...SESION_PATHS].sort()).toEqual(['/inicio', '/mediciones', '/perfil', '/planes']);
   });
 });
 
@@ -23,7 +23,7 @@ describe('isSessionGatedPrefix', () => {
     expect(isSessionGatedPrefix(pathname)).toBe(true);
   });
 
-  it.each(['/', '/consulta', '/consulta/inicio', '/panel', '/pagos', '/pago-x', '/ordenesx'])(
+  it.each(['/', '/consulta', '/consulta/inicio', '/inicio', '/pagos', '/pago-x', '/ordenesx'])(
     'is false for %s',
     (pathname) => {
       expect(isSessionGatedPrefix(pathname)).toBe(false);
@@ -45,7 +45,7 @@ describe('isFocusRoute', () => {
     expect(isFocusRoute(pathname)).toBe(true);
   });
 
-  it.each(['/', '/panel', '/planes', '/mediciones', '/perfil', '/dev', '/articulos', '/consultas', '/consulta-x', '/pagos', '/ordenesx'])(
+  it.each(['/', '/inicio', '/planes', '/mediciones', '/perfil', '/dev', '/articulos', '/consultas', '/consulta-x', '/pagos', '/ordenesx'])(
     'is false for %s',
     (pathname) => {
       expect(isFocusRoute(pathname)).toBe(false);
@@ -54,7 +54,7 @@ describe('isFocusRoute', () => {
 });
 
 describe('usesSesionLayout', () => {
-  it.each(['/panel', '/panel/consultas/abc-123', '/planes', '/mediciones', '/perfil', '/consulta', '/consulta/inicio', '/consulta/anamnesis', '/pago/abc', '/ordenes/abc-123'])(
+  it.each(['/inicio', '/inicio/consultas/abc-123', '/planes', '/mediciones', '/perfil', '/consulta', '/consulta/inicio', '/consulta/anamnesis', '/pago/abc', '/ordenes/abc-123'])(
     'is true for %s',
     (pathname) => {
       expect(usesSesionLayout(pathname)).toBe(true);

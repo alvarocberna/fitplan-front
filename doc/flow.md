@@ -21,9 +21,9 @@
 | Gating de rutas `/consulta/*` según sesión + perfil completo | **Implementado** | `src/proxy.ts` (sesión — protege todo `/consulta/*` salvo `/consulta`, vacía y sin uso; incluye `/consulta/inicio`) + `src/app/(sesion)/consulta/inicio/page.tsx` (perfil completo, además de su propia verificación de sesión como defensa en profundidad, ya casi nunca alcanzada porque el proxy corta antes) |
 | Botones "Iniciar Consulta" de la home ya evalúan sesión (antes iban siempre a `/consulta/inicio`) | **Implementado** | `src/shared/auth/session.ts` (`getStartConsultationHref`), usado en `navbar-landing.component.tsx`/`hero.component.tsx` |
 | BOLA en `/orders/:id/status` | **Resuelto** (backend, repo separado) | Ver sección 5 |
-| Atajo directo a `/panel` desde el propio callback si el perfil ya está completo (evita pasar por `/consulta/inicio`) | **Implementado** | `nutricionista-virtual-front/src/app/api/cognito/callback/route.ts` — chequeo best-effort de `POST /me/sync`, nunca bloquea el login si falla |
-| Área de usuario logueado `/panel`, `/planes`, `/mediciones` y `/perfil`, gateada por sesión (`PROTECTED_PATHS`) | **Implementado** | `src/proxy.ts` (`PROTECTED_PATHS`) + `src/app/(sesion)/layout.tsx` (`SesionShell`: `TopbarSesion` + `NavbarSesion`) + `src/app/(sesion)/{panel,planes,mediciones,perfil}/page.tsx` |
-| Layout `(sesion)` compartido por `/panel`, `/perfil`, `/consulta/*`, `/pago/[orderId]` y `/ordenes/[id]`: barra superior `TopbarSesion` (logo "Nuvi" + botón "Nueva consulta") más sidebar `NavbarSesion` acoplable en md+ (arranca acoplado en `/consulta/*`, `/pago/*` y `/ordenes/*`, desacoplado en `/panel` y `/perfil`; en móvil las opciones del sidebar pasan a la barra superior) en vez del navbar público. El layout en sí es solo presentación; la sesión la exige `src/proxy.ts`, que además de `/consulta/*`, `/panel` y `/perfil` protege `/pago/*` y `/ordenes/*` (`isSessionGatedPrefix`) | **Implementado** | `src/app/(sesion)/layout.tsx` → `SesionShell` (`src/shared/components/sesion-shell.component.tsx`) + `src/shared/auth/sesion-routes.ts` (`isFocusRoute`, `isSessionGatedPrefix`, `usesSesionLayout`). Detalle en `doc/auth.md` |
+| Atajo directo a `/inicio` desde el propio callback si el perfil ya está completo (evita pasar por `/consulta/inicio`) | **Implementado** | `nutricionista-virtual-front/src/app/api/cognito/callback/route.ts` — chequeo best-effort de `POST /me/sync`, nunca bloquea el login si falla |
+| Área de usuario logueado `/inicio`, `/planes`, `/mediciones` y `/perfil`, gateada por sesión (`PROTECTED_PATHS`) | **Implementado** | `src/proxy.ts` (`PROTECTED_PATHS`) + `src/app/(sesion)/layout.tsx` (`SesionShell`: `TopbarSesion` + `NavbarSesion`) + `src/app/(sesion)/{inicio,planes,mediciones,perfil}/page.tsx` |
+| Layout `(sesion)` compartido por `/inicio`, `/perfil`, `/consulta/*`, `/pago/[orderId]` y `/ordenes/[id]`: barra superior `TopbarSesion` (logo "Nuvi" + botón "Nueva consulta") más sidebar `NavbarSesion` acoplable en md+ (arranca acoplado en `/consulta/*`, `/pago/*` y `/ordenes/*`, desacoplado en `/inicio` y `/perfil`; en móvil las opciones del sidebar pasan a la barra superior) en vez del navbar público. El layout en sí es solo presentación; la sesión la exige `src/proxy.ts`, que además de `/consulta/*`, `/inicio` y `/perfil` protege `/pago/*` y `/ordenes/*` (`isSessionGatedPrefix`) | **Implementado** | `src/app/(sesion)/layout.tsx` → `SesionShell` (`src/shared/components/sesion-shell.component.tsx`) + `src/shared/auth/sesion-routes.ts` (`isFocusRoute`, `isSessionGatedPrefix`, `usesSesionLayout`). Detalle en `doc/auth.md` |
 
 > **E2E**: las specs de Playwright (`e2e/`) instalan una cookie de sesión firmada (fixture
 > `e2e/fixtures.ts`) y usan un backend falso (`e2e/fake-backend/server.mjs`) en lugar del backend real,
@@ -75,12 +75,12 @@ sequenceDiagram
         Note over FE: se loguea el error; se trata como perfil no confirmado, nunca como error de login
     end
     alt profileComplete === true
-        FE-->>U: 307 a /panel (salta /consulta/inicio)
+        FE-->>U: 307 a /inicio (salta /consulta/inicio)
     else profileComplete === false, o el chequeo falló
         FE-->>U: 307 a /consulta/inicio, ya autenticado
     end
 
-    U->>FE: /consulta/inicio (Server Component) — solo si no hubo atajo directo a /panel
+    U->>FE: /consulta/inicio (Server Component) — solo si no hubo atajo directo a /inicio
     FE->>FE: getSession() → hay sesión
     FE->>BE: POST /me/sync {email} — Authorization: Bearer <access_token> (llamada duplicada respecto a la del callback; aceptado porque el endpoint es idempotente)
     BE->>BE: CognitoAuthGuard valida el token (JWKS)
@@ -178,9 +178,9 @@ encontrado y arreglado durante la verificación manual) en `doc/auth.md`, secci�
 | `POST /consultations` | Sí | Además valida perfil completo |
 | `POST /consultations/chat` | Sí | Solo gating, no usa la identidad |
 | `GET /orders/:id/status` | Sí | **BOLA resuelto** (backend, repo separado): ahora valida que la orden sea del usuario del token. Devuelve además `pdfUrl` (URL firmada de S3 con el PDF del plan) una vez `completado` |
-| `GET /me/plans` | Sí | Lista las órdenes con plan generado del usuario del token, del más nuevo al más antiguo (usada en `/panel`, ver `doc/flow.md` del backend y `README.md` de este repo) |
+| `GET /me/plans` | Sí | Lista las órdenes con plan generado del usuario del token, del más nuevo al más antiguo (usada en `/inicio`, ver `doc/flow.md` del backend y `README.md` de este repo) |
 | `GET /me`, `PATCH /me` | Sí | Lee/actualiza el perfil (PATCH parcial, un único DTO): lo usan `informacion-personal` (completar perfil) y `/perfil` (editar datos básicos), ver `doc/auth.md` |
-| `GET /me/summary` | Sí | Resumen para `/panel`: datos del usuario + último plan nutricional generado |
+| `GET /me/summary` | Sí | Resumen para `/inicio`: datos del usuario + último plan nutricional generado |
 | `POST /webhooks/payments`, `POST /dev/orders/:id/simulate-payment` | No | Los llama la pasarela de pago (o el frontend sin sesión de por medio, en el caso simulado) — necesitan verificación de firma propia, no sesión de usuario |
 
 Detalle completo (Guard, `aws-jwt-verify`, `CurrentUserResolver`) en

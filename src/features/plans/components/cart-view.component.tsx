@@ -42,7 +42,7 @@ export function CartView({ isAuthenticated }: CartViewProps) {
         setIsPaying(true)
         try {
             const { orderId } = await PlansService.createPredefinedOrder(cartItem.code)
-            //?tipo=predefinido: tras pagar, la pasarela lleva al panel (no a /ordenes, que es del plan personalizado)
+            //?tipo=predefinido: tras pagar, la pasarela lleva a inicio (no a /ordenes, que es del plan personalizado)
             router.push(`/pago/${orderId}?tipo=predefinido`)
         } catch (error) {
             //la sesión pudo expirar desde que cargó la página: se pide iniciarla de nuevo en vez de fallar sin más

@@ -5,7 +5,7 @@ import { createSessionCookieValue } from './helpers/session';
 // `test` de los e2e: los specs lo importan de acá en vez de '@playwright/test'. Antes de cada test:
 //  1. deja limpio el backend falso (mocks y registro de llamadas),
 //  2. si `authenticated` (por defecto true), instala la cookie de sesión — casi toda la app
-//     (/consulta/*, /pago/*, /ordenes/*, /panel, /perfil) redirige a /login sin ella.
+//     (/consulta/*, /pago/*, /ordenes/*, /inicio, /perfil) redirige a /login sin ella.
 // Para probar el comportamiento sin sesión: `test.use({ authenticated: false })`.
 export const test = base.extend<{ authenticated: boolean }>({
   authenticated: [true, { option: true }],

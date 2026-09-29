@@ -13,7 +13,7 @@ describe('FooterGate', () => {
   // En estas rutas SesionShell monta su propio Footer (con el padding del sidebar): el del layout
   // raíz no debe duplicarlo.
   it.each([
-    '/panel',
+    '/inicio',
     '/perfil',
     '/consulta',
     '/consulta/inicio',

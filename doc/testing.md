@@ -41,7 +41,7 @@ resolubles para el CMS (`http://cms-backend.e2e.local`), de modo que cualquier r
 
 ### Cómo funcionan los e2e
 
-- **Sesión**: `src/proxy.ts` redirige a `/login` en `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel`, `/planes`, `/mediciones` y `/perfil` sin sesión. Los
+- **Sesión**: `src/proxy.ts` redirige a `/login` en `/consulta/*`, `/pago/*`, `/ordenes/*`, `/inicio`, `/planes`, `/mediciones` y `/perfil` sin sesión. Los
   specs importan `test`/`expect` de `e2e/fixtures.ts` (no de `@playwright/test`): antes de cada test ese fixture instala la
   cookie `session` (un JWT HS256 firmado con `SESSION_SECRET`, fabricado en `e2e/helpers/session.ts` igual que lo emite
   `src/shared/auth/session.ts`). Para probar sin sesión: `test.use({ authenticated: false })`.
@@ -85,8 +85,8 @@ src/features/articles/services/articles.service.test.ts
 src/features/testimonials/services/testimonials.service.test.ts
 src/features/profile/services/profile.service.test.ts
 src/features/profile/components/profile-form.test.tsx
-src/features/panel/services/panel.service.test.ts
-src/features/panel/components/panel-summary.test.tsx
+src/features/dashboard/services/dashboard.service.test.ts
+src/features/dashboard/components/inicio-summary.test.tsx
 src/shared/components/navbar-sesion.test.tsx
 src/shared/components/topbar-sesion.test.tsx
 src/shared/components/sesion-nav-link.test.tsx
@@ -141,12 +141,12 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   polling al completarse o fallar, resiliencia ante un error de red puntual, y la limpieza del intervalo al desmontar. Al
   completarse verifica la miniatura (`img` con la `thumbnailUrl`), el enlace "Descargar" hacia `pdfUrl`, que no haya
   `<iframe>`, y el placeholder cuando el plan no tiene miniatura.
-- **`src/proxy.ts` (`PROTECTED_PATHS`)**: `/panel` y `/perfil` tienen su propio describe (mismo patrón:
+- **`src/proxy.ts` (`PROTECTED_PATHS`)**: `/inicio` y `/perfil` tienen su propio describe (mismo patrón:
   redirect sin cookie, redirect con cookie inválida/expirada, passthrough con sesión válida). `/pago/*` y `/ordenes/*`
   (gateadas por `isSessionGatedPrefix`) repiten ese patrón para la raíz (`/pago`, `/ordenes`) y una subruta
   (`/pago/abc`, `/ordenes/abc`), más la comprobación de que paths parecidos (`/pagox`, `/ordenesx`) no quedan gateados.
   `/consulta/*` sigue protegida salvo `/consulta`, que es pública.
-- **`ProfileService` / `PanelService`**: que cada método pega al endpoint esperado (`me`, `me/summary`) y que un
+- **`ProfileService` / `DashboardService`**: que cada método pega al endpoint esperado (`me`, `me/summary`) y que un
   `ActionResult` con `ok: false` se traduce en una excepción con el mensaje del backend — mismo patrón que `ConsultationService`.
 - **`ProfileForm`**: prellenado de los campos editables desde el perfil (con el correo deshabilitado y de solo lectura),
   envío que convierte la fecha a ISO y llama a `ProfileService.updateProfile`, toast de éxito/error, y las validaciones de
@@ -156,7 +156,9 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   de un estándar (desde su resumen, sin duración) y "—" sin plan; macros para la dona desde la ingesta o el resumen
   (`null` sin plan o con datos incompletos).
 - **`MeasurementsChart`** y **`chart-series.ts`**: filtro por período del plan (bordes incluidos), series por métrica
-  sin cortar en los `null`, series meta desde el último valor medido (solo las métricas proyectadas), modo por
+  sin cortar en los `null`, series meta desde el último valor medido (solo las métricas proyectadas), eje X por tramos (`buildTimeAxis`:
+  mediciones 0–70 con proyección / 0–100 sin ella, una sola medición al inicio con la proyección a todo el ancho, proyección hasta 100; `chartTicks`),
+  capa `EvolutionLines` con las metas discontinuas, modo por
   defecto según haya plan, casillas que quitan/reponen mediciones y mensajes vacíos. `@nivo/line` se mockea con un
   stub que lista series y puntos (nivo necesita medidas reales del DOM).
 - **`MeasurementDetail`** y **`measurement-detail-data.ts`**: posición en la escala de IMC (con recorte), barras en kg
@@ -169,7 +171,7 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   presentes; campos de bioimpedancia condicionales (grasa y masa muscular obligatorias; grasa visceral y masa ósea
   opcionales: vacías no se envían al registrar y van como `null` al editar), payload de POST/PATCH, fecha futura y
   rangos bloqueados, modo edición con el tipo deshabilitado; `getMeasurement` devuelve `null` ante 404.
-- **`MacroDistributionCard`** y **`macroDistribution`** (`src/features/panel/`, aún sin montar): % de cada macronutriente
+- **`MacroDistributionCard`** y **`macroDistribution`** (`src/features/dashboard/`, aún sin montar): % de cada macronutriente
   sobre sus calorías (4/4/9 kcal/g) redondeado por resto mayor para sumar 100, sin datos → `[]`; título por defecto o
   custom, porciones con su color (carbohidratos verde, proteínas púrpura, lípidos amarillo), "Total" + kcal en el centro
   de la dona (el stub de `@nivo/pie` dibuja las capas custom), leyenda "% (g)" y mensaje sin datos.
@@ -182,16 +184,19 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 - **`PlanDetail`**: encabezado (card del PDF con "Plan nutricional", "PDF" y
   descarga; "Datos del plan" con objetivo, régimen y duración —"—" sin término— y, en la misma card, los macronutrientes
   sin título propio; sin card "Resumen"),
-  secciones del plan personalizado ("Resumen del plan": tiempo, hora y porciones por tiempo de comida; "Tiempos de comida"
-  oculta por ahora; suplementación,
-  recomendaciones deportivas; las vacías se ocultan) y del estándar (datos del encabezado desde su resumen).
-  **`planDurationLabel`** / **`formatDateOnly`** (`panel/format.ts`): meses completos, días bajo un mes, `null` sin
-  fechas, fechas DATE sin correr de día. **`NutritionalPlanSummary`**: bloque de resumen del detalle de consulta.
-- **`PlanPreviewCard`** (`src/shared/components/`, usada en `/ordenes/[id]`): fecha (opcional), miniatura (`<img>` lazy con `alt`), enlace "Descargar" (o `downloadLabel`) con el `href` del PDF, y el
-  placeholder "Vista previa no disponible" cuando `thumbnailUrl` es `null` o falta (backend aún sin actualizar).
+  secciones del plan personalizado ("Resumen Plan Nutricional": card de títulos y, por tiempo de comida, tiempo, hora, porciones y aporte nutricional 2×2; "Tiempos de comida"
+  oculta por ahora; suplementación: Dosis/Toma (título arriba, valor abajo), aporte nutricional en 4 columnas, Efectos y Consideraciones;
+  recomendaciones deportivas: estrategia y antes/durante/después con "—" sin dato, ocultos si la sesión no tiene ninguno; las secciones vacías se ocultan) y del estándar (datos del encabezado desde su resumen).
+  **`planDurationLabel`** / **`formatDateOnly`** (`dashboard/format.ts`): meses completos, días bajo un mes, `null` sin
+  fechas, fechas DATE sin correr de día.
+- **`ConsultationDetail`**: encabezado; con plan, `PlanOverviewCard`, `PlanFileCard` (sin "Ir a inicio"), dona de macros y
+  `GeneratedPlanSections` (o aviso sin detalle); sin plan, "Pagar consulta" / generando / error; mediciones con
+  `MeasurementDetail` embebido o estado vacío. **`MeasurementDetail`** además cubre el modo `embedded`.
+- **`PlanFileCard`** (`src/shared/components/`, usada en `/planes/[orderId]`, `/inicio/consultas/[id]` y `/ordenes/[id]`): miniatura (`<img>` lazy con `alt`), "Plan nutricional"/"PDF", enlace "Descargar plan" con el `href` del PDF,
+  placeholder "Vista previa no disponible" cuando `thumbnailUrl` es `null`, y el enlace "Ir a inicio" (`/inicio`) solo cuando la ruta es `/ordenes/*` (`usePathname` mockeado).
 - **`proxy` (CSP)**: `img-src` incluye el bucket de planes; `frame-src` y `connect-src` no.
 - **`NavbarSesion`** (sidebar, solo md+: `hidden md:flex fixed left-0 top-15`, debajo de la barra superior): los links a
-  `/panel` (label visible "Home"), `/planes` ("Planes"), `/mediciones` ("Mediciones"), `/perfil` ("Perfil") y
+  `/inicio` (label visible "Inicio"), `/planes` ("Planes"), `/mediciones` ("Mediciones"), `/perfil` ("Perfil") y
   `/api/cognito/logout`, en ese orden — "Nueva consulta" ya **no** es un
   ítem del sidebar, vive en `TopbarSesion`. Qué link queda resaltado según `usePathname` (igualdad exacta con el `href`): el
   activo cambia el `color` del texto a `var(--color-primary)` (no el fondo) y renderiza el indicador
@@ -200,38 +205,38 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   `collapsed`, que un click en el `<nav>` (o en el botón, una sola vez) llama `onToggle` pero no uno sobre un link, el
   hover/focus del botón que ilumina su borde y el borde derecho del `<nav>` con `var(--color-primary)`, que los links llevan
   `hidden` al colapsar y el `<nav>` `w-14` en vez de `w-56`.
-- **`TopbarSesion`** (barra superior `<header>` fija, `h-15`): logo "Nuvi" hacia `/panel`, botón "Nueva consulta" hacia
+- **`TopbarSesion`** (barra superior `<header>` fija, `h-15`): logo "Nuvi" hacia `/inicio`, botón "Nueva consulta" hacia
   `/consulta/anamnesis` (siempre visible, fuera del menú móvil), y el `<nav aria-label="Menú de usuario">` (`flex md:hidden`)
-  con Perfil, Home y Cerrar sesión (mismos hrefs que el sidebar), con el link activo por pathname en color primary y **sin**
+  con Perfil, Inicio y Cerrar sesión (mismos hrefs que el sidebar), con el link activo por pathname en color primary y **sin**
   rectángulo lateral (variante `compact`).
 - **`SesionNavLink` / `SESION_NAV_ITEMS`** (`sesion-nav-link.component.tsx`, compartidos por sidebar y barra superior): la lista
-  de ítems (Perfil, Home), activo = color primary + indicador (solo en la variante no-compact), inactivo sin ninguno, y que
+  de ítems (Perfil, Inicio), activo = color primary + indicador (solo en la variante no-compact), inactivo sin ninguno, y que
   `className` se aplica al link.
 - **`SesionShell`** (layout `(sesion)`): estado por defecto según la ruta (acoplado en `/consulta/*`, `/pago/*` y `/ordenes/*`, desacoplado en
-  `/panel` y `/perfil`, verificado vía el `md:pl-*` del `<main>`), el toggle, que la elección manual se mantiene al navegar dentro
+  `/inicio` y `/perfil`, verificado vía el `md:pl-*` del `<main>`), el toggle, que la elección manual se mantiene al navegar dentro
   de la misma sección (re-render sin remontar, con `usePathname` mockeado), y que al cambiar de sección vale el default de la nueva.
   También que renderiza `TopbarSesion` (banner con logo y "Nueva consulta") como hermano de `<main>`, y el padding superior del
   `<main>` (`pt-19 md:pt-23`). Además renderiza un único `Footer` (`contentinfo`) como hermano de `<main>` (posterior a él en el
   DOM), dentro de un wrapper con el mismo padding lateral que `<main>` (`md:pl-56` desacoplado / `md:pl-14` acoplado, porque el
   sidebar es `fixed` y taparía el borde izquierdo del footer), que cambia al hacer toggle y se reinicia al cambiar de sección.
-  Gotcha: jsdom no aplica CSS, así que los enlaces Home/Perfil/Cerrar sesión aparecen **dos veces**
+  Gotcha: jsdom no aplica CSS, así que los enlaces Inicio/Perfil/Cerrar sesión aparecen **dos veces**
   en el DOM (sidebar + menú móvil `md:hidden` de la barra superior): los tests acotan por contenedor (`within(sidebar)`, donde
   el sidebar es el `<nav>` que contiene el botón de acoplar; o `within(getByRole('navigation', { name: 'Menú de usuario' }))`)
-  en vez de `getByRole('link', { name: 'Home' })` a secas, que falla por "múltiples elementos".
-- **`sesion-routes.ts`**: `isSesionRoute` (`/panel`, `/planes`, `/mediciones`, `/perfil` y sus subrutas como `/panel/consultas/abc`, sin falsos positivos
-  tipo `/panelx`; la usa el proxy; `/pago/*` y `/ordenes/*` dan false), `isSessionGatedPrefix` (`/pago` y `/ordenes`, raíz y subrutas, sin falsos positivos tipo `/pagos`, `/pago-x`,
+  en vez de `getByRole('link', { name: 'Inicio' })` a secas, que falla por "múltiples elementos".
+- **`sesion-routes.ts`**: `isSesionRoute` (`/inicio`, `/planes`, `/mediciones`, `/perfil` y sus subrutas como `/inicio/consultas/abc`, sin falsos positivos
+  tipo `/iniciox`; la usa el proxy; `/pago/*` y `/ordenes/*` dan false), `isSessionGatedPrefix` (`/pago` y `/ordenes`, raíz y subrutas, sin falsos positivos tipo `/pagos`, `/pago-x`,
   `/ordenesx`; `/consulta` no entra), `isFocusRoute` (prefijos `/consulta`, `/pago` y `/ordenes` sin falsos positivos tipo
   `/consultas`) y `usesSesionLayout` (la unión de `isSesionRoute` e `isFocusRoute`).
-- **`NavbarLandingGate`**: no renderiza nada en `/consulta/*`, `/pago/*`, `/ordenes/*`, `/panel`, `/perfil` ni `/dev*`; renderiza
+- **`NavbarLandingGate`**: no renderiza nada en `/consulta/*`, `/pago/*`, `/ordenes/*`, `/inicio`, `/perfil` ni `/dev*`; renderiza
   `NavbarLanding` (mockeado) en el resto de rutas.
 - **`Footer`** (`footer.component.tsx`): `<footer>` (`contentinfo`) con el link de marca a `/`, el `<nav aria-label="Enlaces del pie de
   página">` con sus 3 links (`/#consulta-nutricional-virtual`, `/#plan-personal`, `/#plan-estandarizado-por-disciplina`, en ese
   orden) y el copyright con el año calculado al renderizar (verificado con `vi.useFakeTimers` + `setSystemTime`).
-- **`FooterGate`** (layout raíz): no renderiza nada en las rutas de sesión (`/panel`, `/perfil`, `/consulta*`, `/pago/*`,
+- **`FooterGate`** (layout raíz): no renderiza nada en las rutas de sesión (`/inicio`, `/perfil`, `/consulta*`, `/pago/*`,
   `/ordenes/*`) porque ahí `SesionShell` monta su propio `Footer`; sí renderiza `Footer` (mockeado) en `/`, `/articulos`,
   `/login`, `/dev` y `/dev/*`.
 
-### Planes predefinidos (selección → carro → pago → /panel)
+### Planes predefinidos (selección → carro → pago → /inicio)
 
 Unitarios: `plan-code` (código de versión, solo 18-30 es "joven", la talla no cambia la versión, `PLANS` coincide con los slugs
 del backend), `plan-selection.context` (hidratación, corrupción de `localStorage`, el carro admite un solo plan),
@@ -239,7 +244,7 @@ del backend), `plan-selection.context` (hidratación, corrupción de `localStora
 deshabilitado hasta completar, navegación a `/planes-estandar/<slug>`), `/planes-estandar` (botón "Seleccionar", ya no "Añadir al carro"),
 `/planes-estandar/[slug]` (busca la versión al completar los datos, precio, miniatura o imagen estática, versión no disponible, añadir
 al carro), `CartView` (sin sesión abre el modal de registro con `return_to`, con sesión crea la orden y va a
-`/pago/<id>?tipo=predefinido`, sesión expirada, errores), `/pago/[orderId]` (`?tipo=predefinido` → `/panel`, si no →
+`/pago/<id>?tipo=predefinido`, sesión expirada, errores), `/pago/[orderId]` (`?tipo=predefinido` → `/inicio`, si no →
 `/ordenes/<id>`), `return-to` y el `callback` con `return_to`.
 
 E2E: `e2e/predefined-plan-purchase.spec.ts` (con handlers nuevos en el backend falso: `/plans/standard/:code`,
@@ -266,12 +271,12 @@ individuales no verían (traspaso de `localStorage`, remonte de `ConsultationPro
    `<iframe>`, con `nutritionPlanMock` como `planJson`), placeholder cuando el plan no tiene miniatura, aviso de demora
    pasados 45s, y el estado de error reasegurante.
 7. **Protección de rutas y layout de sesión** (`session-routes.spec.ts`): sin sesión, `/consulta/*`, `/pago/*`, `/ordenes/*`,
-   `/panel` y `/perfil` redirigen a `/login` y `/consulta` (raíz) sigue pública; con sesión, `/consulta/*`, `/pago/*` y
+   `/inicio` y `/perfil` redirigen a `/login` y `/consulta` (raíz) sigue pública; con sesión, `/consulta/*`, `/pago/*` y
    `/ordenes/*` muestran la barra superior (logo "Nuvi" y "Nueva consulta", siempre visible), el sidebar de sesión acoplado, sin
    el navbar de la landing, y el botón lo desacopla y lo vuelve a acoplar (sin afectar a la barra superior). En un viewport
-   móvil (390px) el sidebar desaparece y Perfil/Home/Cerrar sesión pasan al menú de la barra superior. Los selectores se acotan
+   móvil (390px) el sidebar desaparece y Perfil/Inicio/Cerrar sesión pasan al menú de la barra superior. Los selectores se acotan
    al sidebar (`<nav>` que contiene el botón de acoplar), a la barra superior (`banner`) o al menú móvil
-   (`navigation` "Menú de usuario"), y usan `exact: true` para "Home". Como `SesionShell` monta el `Footer` (que repite los links `/#...` de la landing), la
+   (`navigation` "Menú de usuario"), y usan `exact: true` para "Inicio". Como `SesionShell` monta el `Footer` (que repite los links `/#...` de la landing), la
    ausencia del navbar de la landing se verifica con su CTA `a[href="/login"]` (count 0) y no con `a[href="/#plan-personal"]`;
    además se comprueba que haya un único `contentinfo`.
 
@@ -300,7 +305,7 @@ individuales no verían (traspaso de `localStorage`, remonte de `ConsultationPro
   el navegador.
 - El login real contra Cognito (Hosted UI, Google) **no** se prueba en e2e: la cookie de sesión se fabrica directamente. Lo
   que sí ejercita el e2e es todo lo que depende de tener una sesión válida (proxy, layout, Access Token hacia el backend).
-- `/perfil` no tiene e2e propio, y `/panel` solo se recorre como destino de la compra de un plan estándar (el backend falso
+- `/perfil` no tiene e2e propio, y `/inicio` solo se recorre como destino de la compra de un plan estándar (el backend falso
   responde `me/summary` y `me/plans` con valores por defecto).
 - No hay CI configurado (no existe `.github/workflows` en el repo) — correr `npm test` / `npm run test:e2e` en un pipeline
   queda pendiente como tarea aparte.

@@ -34,7 +34,7 @@ test('completes the full consultation flow end-to-end: personal info -> anamnesi
   await page.getByLabel('Fecha nacimiento').fill('1990-05-20');
   const personalInfoSelects = page.getByRole('combobox');
   await personalInfoSelects.nth(0).selectOption('FEMENINO');
-  await personalInfoSelects.nth(1).selectOption('true');
+  await personalInfoSelects.nth(1).selectOption('professional');
   await page.getByRole('button', { name: 'Siguiente' }).click();
   await expect(page).toHaveURL(/\/consulta\/anamnesis$/);
 

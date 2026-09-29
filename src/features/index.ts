@@ -46,22 +46,23 @@ export * from './profile/services/profile.service';
 export * from './profile/dtos/user-profile.dto';
 
 //PANEL
-export * from './panel/components/personal-info-card.component';
-export * from './panel/components/card-title.component';
-export * from './panel/components/plan-overview-card.component';
-export * from './panel/components/consultations-list.component';
-export * from './panel/components/my-plans-list.component';
-export * from './panel/components/macro-distribution-card.component';
-export * from './panel/components/consultation-detail.component';
-export * from './panel/components/plan-status-badge.component';
-export * from './panel/components/plan-detail.component';
-export * from './panel/components/plan-type-badge.component';
-export * from './panel/components/nutritional-plan-summary.component';
-export * from './panel/services/panel.service';
-export * from './panel/dtos/panel-summary.dto';
-export * from './panel/dtos/consultation-summary.dto';
-export * from './panel/dtos/consultation-detail.dto';
-export * from './panel/dtos/my-plan.dto';
+export * from './dashboard/components/personal-info-card.component';
+export * from './dashboard/components/card-title.component';
+export * from './dashboard/components/plan-overview-card.component';
+export * from './dashboard/components/consultations-list.component';
+export * from './dashboard/components/my-plans-list.component';
+export * from './dashboard/components/macro-distribution-card.component';
+export * from './dashboard/components/consultation-detail.component';
+export * from './dashboard/components/plan-status-badge.component';
+export * from './dashboard/components/plan-detail.component';
+export * from './dashboard/components/plan-type-badge.component';
+export * from './dashboard/components/detail-section.component';
+export * from './dashboard/components/generated-plan-sections.component';
+export * from './dashboard/services/dashboard.service';
+export * from './dashboard/dtos/dashboard-summary.dto';
+export * from './dashboard/dtos/consultation-summary.dto';
+export * from './dashboard/dtos/consultation-detail.dto';
+export * from './dashboard/dtos/my-plan.dto';
 
 //MEASUREMENTS
 export * from './measurements/components/measurements-list.component';

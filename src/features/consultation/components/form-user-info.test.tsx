@@ -34,13 +34,16 @@ function renderForm(profile: PerfilStatus | null = baseProfile) {
   );
 }
 
-async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
+async function fillRequiredFields(
+  user: ReturnType<typeof userEvent.setup>,
+  sportLevel: 'none' | 'recreational' | 'professional' = 'professional',
+) {
   await user.type(screen.getByLabelText('Primer nombre'), 'Ana');
   await user.type(screen.getByLabelText('Apellido paterno'), 'Pérez');
   fireEvent.change(screen.getByLabelText('Fecha nacimiento'), { target: { value: '1990-05-20' } });
   const [genderSelect, athleteSelect] = screen.getAllByRole('combobox');
   await user.selectOptions(genderSelect, 'FEMENINO');
-  await user.selectOptions(athleteSelect, 'true');
+  await user.selectOptions(athleteSelect, sportLevel);
 }
 
 beforeEach(() => {
@@ -109,10 +112,36 @@ describe('FormUserInfo', () => {
     expect(values).toEqual(['MASCULINO', 'FEMENINO']);
   });
 
-  it('documents the current athlete select: two options share value="false" (intended, not a bug to fix)', () => {
+  it('offers three distinct sport levels in the athlete select', () => {
     renderForm(null);
     const [, athleteSelect] = screen.getAllByRole('combobox');
     const values = Array.from(athleteSelect.querySelectorAll('option')).map((o) => (o as HTMLOptionElement).value);
-    expect(values).toEqual(['false', 'false', 'true']);
+    expect(values).toEqual(['none', 'recreational', 'professional']);
+  });
+
+  it.each([
+    ['none', false],
+    ['recreational', false],
+    ['professional', true],
+  ] as const)('maps sport level "%s" to athlete=%s', async (sportLevel, athlete) => {
+    mockedUpdateProfileAction.mockResolvedValue({ ok: true, data: baseProfile });
+    const user = userEvent.setup();
+    renderForm();
+    await fillRequiredFields(user, sportLevel);
+
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }));
+
+    await waitFor(() => expect(mockedUpdateProfileAction).toHaveBeenCalledWith(expect.objectContaining({ athlete })));
+    await waitFor(() => expect(pushMock).toHaveBeenCalled());
+    expect(JSON.parse(localStorage.getItem('consulta_context')!).personalInfo.athlete).toBe(athlete);
+  });
+
+  it('prefills the athlete select from the profile (true → professional, false → none)', () => {
+    const { unmount } = renderForm({ ...baseProfile, athlete: true });
+    expect((screen.getAllByRole('combobox')[1] as HTMLSelectElement).value).toBe('professional');
+    unmount();
+
+    renderForm({ ...baseProfile, athlete: false });
+    expect((screen.getAllByRole('combobox')[1] as HTMLSelectElement).value).toBe('none');
   });
 });

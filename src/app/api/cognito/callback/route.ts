@@ -8,7 +8,7 @@ import { apiFetch } from '@/shared/api/client'
 import type { PerfilStatus } from '@/shared/auth/profile.actions'
 
 const POST_LOGIN_REDIRECT = '/consulta/inicio'
-const PROFILE_COMPLETE_REDIRECT = '/panel'
+const PROFILE_COMPLETE_REDIRECT = '/inicio'
 const LOGIN_ERROR_REDIRECT = '/login?error=callback_failed'
 
 export async function GET(request: Request) {

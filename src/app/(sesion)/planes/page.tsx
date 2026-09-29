@@ -1,8 +1,8 @@
 //features
-import { MyPlansList, PanelService } from '@/features'
+import { MyPlansList, DashboardService } from '@/features'
 
 export default async function PlanesPage() {
-    const plans = await PanelService.getPlans()
+    const plans = await DashboardService.getPlans()
 
     return (
         <div className="w-[90%] mx-auto">

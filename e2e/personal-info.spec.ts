@@ -16,7 +16,7 @@ test.describe('Consultation - personal info', () => {
     await page.getByLabel('Fecha nacimiento').fill('1990-05-20');
     const selects = page.getByRole('combobox');
     await selects.nth(0).selectOption('FEMENINO');
-    await selects.nth(1).selectOption('true');
+    await selects.nth(1).selectOption('professional');
 
     await page.getByRole('button', { name: 'Siguiente' }).click();
 

@@ -14,17 +14,20 @@ import {
 } from '../measurement-detail-data'
 import { BmiScale } from './bmi-scale.component'
 import { BodyCompositionCharts } from './body-composition-charts.component'
-import { NO_DATA, formatDate, bmiClassificationLabel } from '../../panel/format'
+import { NO_DATA, formatDate, bmiClassificationLabel } from '../../dashboard/format'
 
 interface MeasurementDetailProps {
     measurement: MeasurementDetailDto
+    // Dentro de otra página (detalle de consulta): encabezado compacto — "Medición N°X", enlace a
+    // /mediciones/[id] y "fecha · nivel" — sin "Volver", sin "Editar" y sin el enlace de origen a la consulta.
+    embedded?: boolean
 }
 
 // Detalle de solo lectura de una medición (GET /me/measurements/:id, HU-CLI-04). Datos y resultados
 // van juntos, por tema: "Peso e IMC" (con la escala del IMC), "Composición corporal" (barras en kg y
 // torta en %, solo si la medición tiene componentes) y "Otras mediciones" (pliegues, perímetros,
-// diámetros e índices, solo si hay).
-export function MeasurementDetail({ measurement }: MeasurementDetailProps) {
+// diámetros e índices, solo si hay). Se usa en /mediciones/[id] y, con `embedded`, en /inicio/consultas/[id].
+export function MeasurementDetail({ measurement, embedded = false }: MeasurementDetailProps) {
     const { measurementId, measurementNumber, measuredAt, level, origin, consultationId, consultationNumber, editable, raw, results } =
         measurement
 
@@ -36,32 +39,49 @@ export function MeasurementDetail({ measurement }: MeasurementDetailProps) {
 
     return (
         <div className="w-full flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-                <Link href="/mediciones" className="self-start text-sm text-zinc-600 hover:text-zinc-900 underline">
-                    ← Volver a mis mediciones
-                </Link>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h1 className="text-2xl font-bold text-zinc-900">Medición N°{measurementNumber}</h1>
-                    {editable && (
+            {embedded ? (
+                <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap items-baseline justify-between gap-3">
+                        <h2 className="text-xl font-semibold text-zinc-900">Medición N°{measurementNumber}</h2>
                         <Link
-                            href={`/mediciones/${measurementId}/editar`}
-                            className="btn secondary-btn h-10! px-6 no-underline"
+                            href={`/mediciones/${measurementId}`}
+                            className="text-sm text-zinc-600 hover:text-zinc-900 underline"
                         >
-                            Editar medición
+                            Ver medición
                         </Link>
-                    )}
+                    </div>
+                    <p className="text-zinc-500">
+                        {formatDate(measuredAt)} · {levelLabel(level)}
+                    </p>
                 </div>
-                <p className="text-zinc-500">
-                    {formatDate(measuredAt)} · {levelLabel(level)} ·{' '}
-                    {consultationId ? (
-                        <Link href={`/panel/consultas/${consultationId}`} className="underline hover:text-zinc-900">
-                            {originLabel(origin, consultationNumber)}
-                        </Link>
-                    ) : (
-                        originLabel(origin, consultationNumber)
-                    )}
-                </p>
-            </div>
+            ) : (
+                <div className="flex flex-col gap-2">
+                    <Link href="/mediciones" className="self-start text-sm text-zinc-600 hover:text-zinc-900 underline">
+                        ← Volver a mis mediciones
+                    </Link>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <h1 className="text-2xl font-bold text-zinc-900">Medición N°{measurementNumber}</h1>
+                        {editable && (
+                            <Link
+                                href={`/mediciones/${measurementId}/editar`}
+                                className="btn secondary-btn h-10! px-6 no-underline"
+                            >
+                                Editar medición
+                            </Link>
+                        )}
+                    </div>
+                    <p className="text-zinc-500">
+                        {formatDate(measuredAt)} · {levelLabel(level)} ·{' '}
+                        {consultationId ? (
+                            <Link href={`/inicio/consultas/${consultationId}`} className="underline hover:text-zinc-900">
+                                {originLabel(origin, consultationNumber)}
+                            </Link>
+                        ) : (
+                            originLabel(origin, consultationNumber)
+                        )}
+                    </p>
+                </div>
+            )}
 
             <Section title="Peso e IMC">
                 <div className="w-full flex flex-col gap-6">
