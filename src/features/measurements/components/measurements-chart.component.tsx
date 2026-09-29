@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 //nivo
 import { ResponsiveLine } from '@nivo/line'
 //icons
-import { CalendarDaysIcon } from '@heroicons/react/24/outline'
+import { CalendarDaysIcon, PresentationChartLineIcon } from '@heroicons/react/24/outline'
 //shared
 import { Card, SubsectionBody } from '@/shared'
 //features - measurements
@@ -22,6 +22,7 @@ import {
 //features - panel
 import type { MyLatestPlanProjectionDto } from '../../panel/dtos/my-plan.dto'
 import { formatDate } from '../../panel/format'
+import { CardTitle } from '../../panel/components/card-title.component'
 
 type ChartMode = 'plan' | 'all'
 
@@ -29,6 +30,8 @@ interface MeasurementsChartProps {
     measurements: MeasurementSummaryDto[]
     // Último plan con período (GET /me/plans/latest/projection); null si no hay.
     latestPlan: MyLatestPlanProjectionDto | null
+    // Título interno (con ícono), p. ej. "Evolución" en /panel; /mediciones pone su propio título fuera de la card.
+    title?: string
 }
 
 // Tarjeta del gráfico de evolución (peso, IMC, grasa y masa muscular en kg), sin título (lo pone la
@@ -36,7 +39,7 @@ interface MeasurementsChartProps {
 // - "Plan actual": solo las mediciones dentro del período del último plan, más la proyección del plan
 //   como meta (tramo hasta la fecha de término). El rango del plan va a la izquierda de los botones.
 // - "Todas": todas las mediciones, cada una con una casilla para incluirla o quitarla del gráfico.
-export function MeasurementsChart({ measurements, latestPlan }: MeasurementsChartProps) {
+export function MeasurementsChart({ measurements, latestPlan, title }: MeasurementsChartProps) {
     const [mode, setMode] = useState<ChartMode>(latestPlan ? 'plan' : 'all')
     const [unselected, setUnselected] = useState<Set<string>>(() => new Set())
 
@@ -66,6 +69,11 @@ export function MeasurementsChart({ measurements, latestPlan }: MeasurementsChar
     return (
         <Card widthInner="96%" variant="solid">
             <SubsectionBody>
+                {title && (
+                    <div className="w-full mb-4">
+                        <CardTitle icon={PresentationChartLineIcon} title={title} />
+                    </div>
+                )}
                 {/* dos columnas paralelas (apiladas en móvil): a la izquierda rango del plan + modos, gráfico y
                     casillas; a la derecha "Resumen actual" */}
                 <div className="w-full flex flex-col md:flex-row gap-6">

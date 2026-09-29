@@ -277,13 +277,19 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
 - **`/panel`** (`src/app/(sesion)/panel/page.tsx`, Server Component): llama en paralelo, vía
   `PanelService` (`src/features/panel/services/panel.service.ts` → Server Actions de `panel.actions.ts`,
   que obtienen el access token con `getValidAccessToken()` y llaman al backend vía `apiFetch`),
-  `getSummary()` (`GET /me/summary`), `getConsultations()` (`GET /me/consultations`) y `getPlans()`
-  (`GET /me/plans`). Renderiza tres cards: `PanelSummary` (resumen del usuario, plan vigente y última
-  medición), `ConsultationsList` (cada consulta abre `/panel/consultas/[id]`) y `PlansList` ("Mis planes
-  nutricionales"): una fila por plan (`MyPlanSummaryDto`, ya ordenados del más nuevo al más antiguo por el
-  backend) con nombre, tipo (Personalizado/Estándar), fecha de compra, régimen y macros, y dos botones:
-  "Ver plan" (→ `/planes/[orderId]`) y "Descargar plan" (`pdfUrl`, URL firmada con
-  `Content-Disposition: attachment`, por lo que descarga el PDF completo en vez de abrirlo).
+  `getSummary()` (`GET /me/summary`), `getConsultations()` (`GET /me/consultations`), `getPlans()`
+  (`GET /me/plans`), `MeasurementsService.getMeasurements()` (`GET /me/measurements`) y
+  `getLatestPlanProjection()` (`GET /me/plans/latest/projection`); después, `getPlan()` del plan más reciente
+  (`GET /me/plans/:orderId`, `null` sin planes o ante 404). Renderiza, en orden: `PersonalInfoCard`
+  ("Información personal": ícono de usuario; nombre y edad en una fila; 100 % del ancho); en dos columnas del 50 %
+  (apiladas en móvil) `PlanOverviewCard` (título "Información plan", que el detalle `/planes/[orderId]` no
+  muestra; objetivo, régimen, duración y macronutrientes del último plan; "—" sin plan) y `MacroDistributionCard` (dona con el % de
+  calorías de cada macronutriente, gramos debajo del %, vía `planMacrosOf`); `MeasurementsChart` (el mismo
+  gráfico de `/mediciones`, con título interno "Evolución" que `/mediciones` no muestra); `ConsultationsList` (título "Mis consultas" y, sin card contenedor, un card por consulta con la estructura
+  de `MyPlansList`: fecha y "Consulta N°X"; "Consulta nutricional" + estado, objetivo, régimen y macronutrientes
+  con íconos (`MacrosRow`, compartido con `MyPlansList`); "Ver detalle" y, si está por pagar, "Pagar consulta";
+  todo el card abre `/panel/consultas/[id]`). El panel ya no lista los planes: `getPlans()` solo elige el más
+  reciente; la lista vive en `/planes`.
 - **`/planes/[orderId]`** (Server Component): `PanelService.getPlan(orderId)` (`GET /me/plans/:orderId`;
   `null` ante 404 → `notFound()` → "Plan no encontrado"; contenido al 90 % del ancho disponible). Renderiza `PlanDetail`:
   encabezado en dos columnas (apiladas en móvil) — a la izquierda (60 %) título, fecha de compra, una card
@@ -303,10 +309,11 @@ Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc
   react-hook-form que llama a `MeasurementsService` y, al guardar, navega al detalle). Registro y edición
   van dentro de una `Card` sólida. Todas vuelven a `/mediciones`. `/panel` no muestra mediciones.
 - **`/planes`** (`src/app/(sesion)/planes/page.tsx`, Server Component): título "Mis planes nutricionales"
-  (arriba de la lista, a la izquierda) y `MyPlansList` (`PanelService.getPlans()` → `GET /me/plans`; no es la
-  `PlansList` de `/panel`; sin card contenedor): cada plan es un card blanco de 3 columnas — ícono de comida en un cuadrado redondeado;
+  (arriba de la lista, a la izquierda) y `MyPlansList` (`PanelService.getPlans()` → `GET /me/plans`, ya ordenados del más
+  nuevo al más antiguo por el backend; sin card contenedor): cada plan es un card blanco de 3 columnas — ícono de comida en un cuadrado redondeado;
   nombre + tipo, fecha de compra, régimen, una línea divisoria y los 4 macronutrientes con su ícono (`features/panel/plan-icons.ts`,
-  compartido con el detalle); "Ver plan" y "Descargar plan" — y el primero (el último plan) lleva una pestaña
+  compartido con el detalle); "Ver plan" y "Descargar plan" (`pdfUrl`, URL firmada con `Content-Disposition: attachment`, que
+  descarga el PDF completo en vez de abrirlo) — y el primero (el último plan) lleva una pestaña
   del color primario a la izquierda. "Ver plan" (en `/planes` y en `/panel`) abre `/planes/[orderId]`, cuyo
   "Volver" regresa a `/planes`.
 - **`/mediciones`** (`src/app/(sesion)/mediciones/page.tsx`, Server Component): el título "Evolución de tus mediciones" (fuera de la card)

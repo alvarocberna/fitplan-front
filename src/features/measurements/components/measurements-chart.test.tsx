@@ -165,4 +165,12 @@ describe('MeasurementsChart', () => {
       .map((term) => `${term.textContent}: ${term.nextElementSibling?.textContent}`);
     expect(rows).toEqual(['Peso: 80 kg', 'IMC: 26.73', 'Grasa corporal: 17.6 kg', 'Masa muscular: 32 kg']);
   });
+
+  it('shows the inner title only when one is given (panel yes, /mediciones no)', () => {
+    const { rerender } = render(<MeasurementsChart measurements={measurements} latestPlan={null} />);
+    expect(screen.queryByRole('heading', { name: 'Evolución' })).not.toBeInTheDocument();
+
+    rerender(<MeasurementsChart measurements={measurements} latestPlan={null} title="Evolución" />);
+    expect(screen.getByRole('heading', { name: 'Evolución' })).toBeInTheDocument();
+  });
 });

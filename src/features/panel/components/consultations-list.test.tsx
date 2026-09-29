@@ -35,6 +35,12 @@ function item(number: number): HTMLElement {
   return screen.getByRole('listitem', { name: `Consulta N°${number}` });
 }
 
+// Valor (<dd>) del macronutriente con esa etiqueta; la etiqueta va en un <span> dentro del <dt>.
+function macro(row: HTMLElement, label: string): string | null {
+  const term = within(row).getByText((_, element) => element?.tagName === 'DT' && element.textContent === label);
+  return within(term.parentElement as HTMLElement).getByRole('definition').textContent;
+}
+
 describe('ConsultationsList', () => {
   it('renders one item per consultation, in the order given by the backend', () => {
     render(<ConsultationsList consultations={[pending, ready]} />);
@@ -65,13 +71,10 @@ describe('ConsultationsList', () => {
     expect(within(row).getByText('15/03/2026')).toBeInTheDocument();
     expect(within(row).getByText('Bajar de peso')).toBeInTheDocument();
     expect(within(row).getByText('Hipocalórico')).toBeInTheDocument();
-    expect(
-      within(row).getByText(
-        (_, element) =>
-          element?.tagName === 'P' &&
-          element.textContent === 'Calorías: 2000 kcal · Proteínas: 150 g · Carbohidratos: 200 g · Lípidos: 60 g',
-      ),
-    ).toBeInTheDocument();
+    expect(macro(row, 'Calorías')).toBe('2000 kcal');
+    expect(macro(row, 'Proteínas')).toBe('150 g');
+    expect(macro(row, 'Carbohidratos')).toBe('200 g');
+    expect(macro(row, 'Lípidos')).toBe('60 g');
     expect(within(row).queryByText('Plan personalizado')).not.toBeInTheDocument();
     expect(within(row).queryByText(/Plan listo|Por pagar|Generando|Error/)).not.toBeInTheDocument();
     expect(within(row).queryByRole('link', { name: 'Pagar consulta' })).not.toBeInTheDocument();
@@ -110,5 +113,25 @@ describe('ConsultationsList', () => {
 
     expect(screen.getByText('Todavía no tienes consultas nutricionales.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Iniciar una consulta' })).toHaveAttribute('href', '/consulta/inicio');
+  });
+
+  it('shows date and consultation number instead of an icon, "Consulta nutricional" as title and "Ver detalle"', () => {
+    render(<ConsultationsList consultations={[ready]} />);
+
+    const row = item(1);
+    const date = within(row).getByText('15/03/2026');
+    expect(date.nextElementSibling?.textContent).toBe('Consulta N°1');
+    expect(within(row).getByText('Consulta nutricional')).toBeInTheDocument();
+    // "Ver detalle" es solo visual: el enlace es todo el card
+    expect(within(row).getByText('Ver detalle')).toHaveAttribute('aria-hidden', 'true');
+    expect(within(row).getByRole('link', { name: 'Ver consulta N°1' })).toHaveClass('absolute', 'inset-0');
+  });
+
+  it('shows "—" for regimen and macros when the consultation has no plan yet', () => {
+    render(<ConsultationsList consultations={[pending]} />);
+
+    const row = item(2);
+    expect(within(row).getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Régimen: —')).toBeInTheDocument();
+    expect(macro(row, 'Calorías')).toBe('—');
   });
 });

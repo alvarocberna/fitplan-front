@@ -130,7 +130,7 @@ Vive en otro repo (`../nutricionista-virtual-back`). Su contrato está documenta
 |---|---|---|---|
 | POST | `me/sync` | `syncProfileAction` + callback de Cognito | crea/sincroniza la identidad y devuelve el perfil |
 | GET / PATCH | `me` | `getUserProfileAction` / `updateUserProfileAction`, `updateProfileAction` | leer / actualizar el perfil (PATCH parcial) |
-| GET | `me/summary` | `getPanelSummaryAction` | resumen de `/panel` (tarjeta 1, incluye la última medición) |
+| GET | `me/summary` | `getPanelSummaryAction` | nombre y edad de la card "Información personal" de `/panel` |
 | GET | `me/consultations` | `getMyConsultationsAction` | consultas del usuario con estado del plan (`/panel`, tarjeta 2) |
 | GET | `me/consultations/:id` | `getMyConsultationAction` | detalle de una consulta (`/panel/consultas/[id]`; 404 → página "Consulta no encontrada") |
 | GET | `me/plans` | `getMyPlansAction` | planes del usuario con PDF (nombre, tipo, fecha, resumen), del más nuevo al más antiguo (`/panel`, tarjeta 3) |

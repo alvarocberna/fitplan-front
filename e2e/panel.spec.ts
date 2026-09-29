@@ -40,24 +40,32 @@ const READY = {
   plan: PLAN,
 };
 
-// /panel: tarjetas Resumen (GET me/summary), Mis consultas (GET me/consultations) y Mis planes
-// (GET me/plans), todas pedidas con la sesión desde Server Actions; cada consulta abre su detalle
-// en /panel/consultas/[id] (GET me/consultations/:id).
+// /panel: Información personal (GET me/summary), datos y macros del último plan (GET me/plans +
+// me/plans/:orderId), evolución (GET me/measurements + me/plans/latest/projection) y Mis consultas
+// (GET me/consultations), todas pedidas con la sesión desde Server Actions; cada consulta abre su
+// detalle en /panel/consultas/[id] (GET me/consultations/:id). La lista de planes vive en /planes.
 test.describe('Panel', () => {
-  test('muestra las tres tarjetas y el estado vacío de consultas', async ({ page }) => {
+  test('muestra información personal, datos del plan, macros, evolución y consultas', async ({ page }) => {
     await page.goto('/panel');
 
-    await expect(page.getByText('Mi información')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Información personal' })).toBeVisible();
+    // sin planes: la card de datos del plan con "—" y la dona sin datos
+    await expect(page.getByRole('region', { name: 'Datos del plan' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Información plan' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Evolución', exact: true })).toBeVisible();
+    await expect(page.getByText('Sin información de macronutrientes')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Resumen actual' })).toBeVisible();
     await expect(page.getByText('Mis consultas')).toBeVisible();
-    await expect(page.getByText('Mis planes nutricionales')).toBeVisible();
+    // "Mis planes nutricionales" ya no está en el panel: vive en /planes
+    await expect(page.getByText('Mis planes nutricionales')).toHaveCount(0);
     await expect(page.getByText('Todavía no tienes consultas nutricionales.')).toBeVisible();
 
-    // las mediciones (lista y gráfico) viven en /mediciones, no en el panel
+    // la lista de mediciones sigue solo en /mediciones; el gráfico de evolución sí está en el panel
     await expect(page.getByText('Mis mediciones')).not.toBeVisible();
 
     const calls = await getBackendCalls();
     expect(calls.find((c) => c.path === '/me/consultations')).toMatchObject({ method: 'GET', authorized: true });
-    expect(calls.find((c) => c.path === '/me/measurements')).toBeUndefined();
+    expect(calls.find((c) => c.path === '/me/measurements')).toMatchObject({ method: 'GET', authorized: true });
   });
 
   test('marca solo la consulta por pagar y permite retomar su pago', async ({ page }) => {
@@ -118,7 +126,7 @@ test.describe('Panel', () => {
   });
 });
 
-test.describe('Panel - mis planes', () => {
+test.describe('Mis planes (/planes)', () => {
   const PLAN_ROW = {
     orderId: 'order-1',
     type: 'GENERATED',
@@ -138,10 +146,10 @@ test.describe('Panel - mis planes', () => {
 
   test('lista cada plan en una fila con su resumen y los botones "Ver plan" y "Descargar plan"', async ({ page }) => {
     await mockPlansList([PLAN_ROW]);
-    await page.goto('/panel');
+    await page.goto('/planes');
 
     const row = page.getByRole('listitem', { name: 'Plan personalizado' });
-    await expect(row.getByText('Personalizado')).toBeVisible();
+    await expect(row.getByText('Personalizado', { exact: true })).toBeVisible();
     await expect(row.getByText('Hipocalórico')).toBeVisible();
     await expect(row.getByRole('link', { name: 'Descargar plan Plan personalizado' })).toHaveAttribute('href', /plan\.pdf/);
     await expect(row.getByRole('link', { name: 'Ver plan Plan personalizado' })).toHaveAttribute(
@@ -185,7 +193,7 @@ test.describe('Panel - mis planes', () => {
         sportsRecommendations: [],
       },
     });
-    await page.goto('/panel');
+    await page.goto('/planes');
 
     await page.getByRole('link', { name: 'Ver plan Plan personalizado' }).click();
 

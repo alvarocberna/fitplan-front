@@ -1,9 +1,7 @@
 //next
 import Link from 'next/link'
 //icons
-import { CalendarDaysIcon, DocumentTextIcon, FireIcon, FlagIcon } from '@heroicons/react/24/outline'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { DocumentTextIcon } from '@heroicons/react/24/outline'
 //shared
 import { Card, SubsectionHead, SubsectionTitle, SubsectionBody } from '@/shared'
 //features - panel
@@ -15,17 +13,8 @@ import {
     MyPlanSupplementDto,
     MyPlanSportsRecommendationDto,
 } from '../dtos/my-plan.dto'
-import {
-    INTAKE_FIELDS,
-    MEAL_TIME_LABELS,
-    NO_DATA,
-    PORTION_GROUP_LABELS,
-    formatDate,
-    formatDateOnly,
-    planDurationLabel,
-} from '../format'
-import { ICON_CIRCLE_STYLE, MACRO_ICONS, type IntakeKey } from '../plan-icons'
-import { DIVIDER, MACRO_COLUMN_CLASSES } from '../plan-dividers'
+import { MEAL_TIME_LABELS, NO_DATA, PORTION_GROUP_LABELS, formatDate } from '../format'
+import { PlanOverviewCard } from './plan-overview-card.component'
 import { PlanTypeBadge } from './plan-type-badge.component'
 
 interface PlanDetailProps {
@@ -33,13 +22,12 @@ interface PlanDetailProps {
 }
 
 // Detalle de solo lectura de un plan del usuario (GET /me/plans/:orderId, HU-PLN-05). Encabezado en dos
-// columnas: a la izquierda (60 %) título, fecha de compra, una card con objetivo, régimen y duración y otra
-// con los macronutrientes; a la derecha (40 %) la card del PDF (miniatura + descarga). Debajo, la
+// columnas: a la izquierda (60 %) título, fecha de compra y PlanOverviewCard (objetivo, régimen, duración y
+// macronutrientes); a la derecha (40 %) la card del PDF (miniatura + descarga). Debajo, la
 // información guardada del plan (personalizado: requerimientos vs ingesta, tiempos de comida,
 // suplementación y recomendaciones deportivas; estándar: descripción).
 export function PlanDetail({ plan }: PlanDetailProps) {
     const { type, name, purchasedAt, pdfUrl, thumbnailUrl, generated, predefined } = plan
-    const overview = planOverviewOf(plan)
 
     return (
         <div className="w-full flex flex-col gap-6">
@@ -56,41 +44,7 @@ export function PlanDetail({ plan }: PlanDetailProps) {
                         <p className="text-zinc-500">Comprado el {formatDate(purchasedAt)}</p>
                     </div>
 
-                    <InfoCard label="Datos del plan">
-                        {/* sin gap: el espacio entre columnas lo da el padding de cada una, con el separador al medio */}
-                        <dl className="grid grid-cols-3">
-                            <Stat label="Objetivo" value={overview.goal ?? NO_DATA} icon={FlagIcon} className="pr-4" />
-                            <Stat
-                                label="Régimen"
-                                value={overview.dietRegimen ?? NO_DATA}
-                                icon={FireIcon}
-                                className={`px-4 ${DIVIDER}`}
-                            />
-                            <Stat
-                                label="Duración"
-                                value={overview.duration ?? NO_DATA}
-                                detail={overview.range ?? undefined}
-                                icon={CalendarDaysIcon}
-                                className={`pl-4 ${DIVIDER}`}
-                            />
-                        </dl>
-
-                        <hr className="my-2 border-zinc-200" />
-
-                        {/* macronutrientes: sin gap horizontal, igual que arriba; el separador va al medio del padding */}
-                        <dl aria-label="Macronutrientes" className="grid grid-cols-2 sm:grid-cols-4 gap-y-4">
-                            {INTAKE_FIELDS.map(({ key, label, unit }, index) => (
-                                <MacroStat
-                                    key={key}
-                                    label={label}
-                                    value={overview.intake?.[key] ?? null}
-                                    unit={unit}
-                                    icon={MACRO_ICONS[key]}
-                                    className={MACRO_COLUMN_CLASSES[index]}
-                                />
-                            ))}
-                        </dl>
-                    </InfoCard>
+                    <PlanOverviewCard plan={plan} />
                 </div>
 
                 <div className="w-full md:w-[40%]">
@@ -114,134 +68,6 @@ export function PlanDetail({ plan }: PlanDetailProps) {
                         </p>
                     </Section>
                 ))}
-        </div>
-    )
-}
-
-interface PlanOverview {
-    goal: string | null
-    dietRegimen: string | null
-    duration: string | null
-    range: string | null
-    intake: Record<IntakeKey, number | null> | null
-}
-
-// Lo que muestra el encabezado, igual para los dos tipos: el personalizado lo toma del NutritionalPlan
-// (con duración si tiene fechas), el estándar del resumen del producto (sin duración).
-function planOverviewOf({ generated, predefined }: MyPlanDetailDto): PlanOverview {
-    if (generated) {
-        const duration = planDurationLabel(generated.startDate, generated.endDate)
-        return {
-            goal: generated.goal,
-            dietRegimen: generated.dietRegimen,
-            duration,
-            range:
-                duration && generated.startDate && generated.endDate
-                    ? `${formatDateOnly(generated.startDate)} – ${formatDateOnly(generated.endDate)}`
-                    : null,
-            intake: {
-                calorieIntake: generated.intake.calories,
-                proteinIntake: generated.intake.protein,
-                carbohydrateIntake: generated.intake.carbohydrate,
-                lipidIntake: generated.intake.fat,
-            },
-        }
-    }
-    const summary = predefined?.summary ?? null
-    return {
-        goal: summary?.goal ?? null,
-        dietRegimen: summary?.dietRegimen ?? null,
-        duration: null,
-        range: null,
-        intake: summary,
-    }
-}
-
-// Card compacta del encabezado: mismo aspecto que Card variant="solid", sin el padding ni el margen
-// pensados para las secciones de ancho completo.
-function InfoCard({ label, children }: { label: string; children: React.ReactNode }) {
-    return (
-        <section aria-label={label} className="w-full bg-white border border-white rounded-[12px] shadow-lg p-5 flex flex-col gap-3">
-            {children}
-        </section>
-    )
-}
-
-function Stat({
-    label,
-    value,
-    detail,
-    icon: Icon,
-    className = '',
-}: {
-    label: string
-    value: string
-    detail?: string
-    // Con ícono: círculo a la izquierda y título + valor a la derecha.
-    icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
-    className?: string
-}) {
-    if (!Icon) {
-        return (
-            <div className={`flex flex-col gap-1 min-w-0 ${className}`}>
-                <dt className="text-xs uppercase tracking-wide text-zinc-500">{label}</dt>
-                <dd className="text-zinc-900 font-semibold break-words">{value}</dd>
-                {detail && <dd className="text-xs text-zinc-500">{detail}</dd>}
-            </div>
-        )
-    }
-
-    // Grilla de 2 columnas: el <dt> usa `contents` para que el círculo (dentro del dt, así el grupo
-    // sigue siendo un <dt>/<dd> válido) ocupe la 1.ª columna a lo alto de todas las filas, y la etiqueta y
-    // los <dd> la 2.ª.
-    return (
-        <div className={`grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 min-w-0 ${className}`}>
-            <dt className="contents">
-                <span
-                    aria-hidden="true"
-                    className="row-span-3 self-center h-10 w-10 rounded-full flex items-center justify-center"
-                    style={ICON_CIRCLE_STYLE}
-                >
-                    <Icon className="h-5 w-5" />
-                </span>
-                <span className="col-start-2 text-xs uppercase tracking-wide text-zinc-500">{label}</span>
-            </dt>
-            <dd className="col-start-2 mt-1 text-zinc-900 font-semibold break-words">{value}</dd>
-            {detail && <dd className="col-start-2 mt-1 text-xs text-zinc-500">{detail}</dd>}
-        </div>
-    )
-}
-
-// Un macronutriente en columna centrada: ícono, valor, unidad y nutriente. Para el lector de pantalla el
-// nutriente sigue siendo el <dt> y valor y unidad los <dd>; el orden visual lo pone `order` (el <dt> usa
-// `contents` para que su ícono y su etiqueta se ordenen como hijos de la columna). Sin dato: "—" y sin unidad.
-function MacroStat({
-    label,
-    value,
-    unit,
-    icon,
-    className = '',
-}: {
-    label: string
-    value: number | null
-    unit: string
-    icon: IconDefinition
-    className?: string
-}) {
-    return (
-        <div className={`flex flex-col items-center gap-1 min-w-0 text-center ${className}`}>
-            <dt className="contents">
-                <span
-                    aria-hidden="true"
-                    className="order-1 mb-1 h-10 w-10 rounded-full flex items-center justify-center"
-                    style={ICON_CIRCLE_STYLE}
-                >
-                    <FontAwesomeIcon icon={icon} className="h-4 w-4" />
-                </span>
-                <span className="order-4 text-xs uppercase tracking-wide text-zinc-500">{label}</span>
-            </dt>
-            <dd className="order-2 text-xl font-bold text-zinc-900 leading-none">{value ?? NO_DATA}</dd>
-            {value != null && <dd className="order-3 text-xs text-zinc-500">{unit}</dd>}
         </div>
     )
 }

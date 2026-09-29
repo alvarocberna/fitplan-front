@@ -151,8 +151,10 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 - **`ProfileForm`**: prellenado de los campos editables desde el perfil (con el correo deshabilitado y de solo lectura),
   envío que convierte la fecha a ISO y llama a `ProfileService.updateProfile`, toast de éxito/error, y las validaciones de
   campo requerido.
-- **`PanelSummary`**: placeholders cuando faltan nombre/edad/objetivo y datos de la última medición, y el llamado a
-  iniciar una consulta cuando no hay consulta ni medición.
+- **`PersonalInfoCard`**: título, nombre completo y edad ("{n} años"), con "Sin datos" / "—" si faltan.
+- **`PlanOverviewCard`** y **`planMacrosOf`**: objetivo, régimen, duración y macronutrientes de un plan personalizado,
+  de un estándar (desde su resumen, sin duración) y "—" sin plan; macros para la dona desde la ingesta o el resumen
+  (`null` sin plan o con datos incompletos).
 - **`MeasurementsChart`** y **`chart-series.ts`**: filtro por período del plan (bordes incluidos), series por métrica
   sin cortar en los `null`, series meta desde el último valor medido (solo las métricas proyectadas), modo por
   defecto según haya plan, casillas que quitan/reponen mediciones y mensajes vacíos. `@nivo/line` se mockea con un
@@ -167,12 +169,17 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   presentes; campos de bioimpedancia condicionales (grasa y masa muscular obligatorias; grasa visceral y masa ósea
   opcionales: vacías no se envían al registrar y van como `null` al editar), payload de POST/PATCH, fecha futura y
   rangos bloqueados, modo edición con el tipo deshabilitado; `getMeasurement` devuelve `null` ante 404.
+- **`MacroDistributionCard`** y **`macroDistribution`** (`src/features/panel/`, aún sin montar): % de cada macronutriente
+  sobre sus calorías (4/4/9 kcal/g) redondeado por resto mayor para sumar 100, sin datos → `[]`; título por defecto o
+  custom, porciones con su color (carbohidratos verde, proteínas púrpura, lípidos amarillo), "Total" + kcal en el centro
+  de la dona (el stub de `@nivo/pie` dibuja las capas custom), leyenda "% (g)" y mensaje sin datos.
+- **`ConsultationsList`**: un card por consulta en orden, fecha + "Consulta N°X" en la 1.ª columna, "Consulta nutricional"
+  + estado, objetivo, régimen y macronutrientes ("—" sin plan), "Ver detalle" visual con el enlace cubriendo el card,
+  "Pagar consulta" solo por pagar y estado vacío con "Iniciar una consulta".
 - **`MyPlansList`** (lista de `/planes`): mensaje sin planes, un card por plan en orden, nombre/tipo/fecha/régimen,
   los 4 macronutrientes con valor y unidad ("—" sin resumen), botones "Ver plan"/"Descargar plan" y la pestaña
   decorativa solo en el primero.
-- **`PlansList`** (card "Mis planes nutricionales"): una fila por plan en el orden recibido, sin miniatura, con tipo,
-  fecha, régimen y macros (o "—"), el enlace "Ver plan" a `/planes/[orderId]` y "Descargar plan" al `pdfUrl`; el
-  mensaje de "sin planes" con la lista vacía. **`PlanDetail`**: encabezado (card del PDF con "Plan nutricional", "PDF" y
+- **`PlanDetail`**: encabezado (card del PDF con "Plan nutricional", "PDF" y
   descarga; "Datos del plan" con objetivo, régimen y duración —"—" sin término— y, en la misma card, los macronutrientes
   sin título propio; sin card "Resumen"),
   secciones del plan personalizado ("Resumen del plan": tiempo, hora y porciones por tiempo de comida; "Tiempos de comida"
