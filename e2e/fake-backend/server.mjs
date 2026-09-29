@@ -133,6 +133,18 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, nextInSequence(mock))
     }
 
+    // ---- factibilidad del objetivo (CU-CON-03, al terminar la evaluación física) ----
+    // factible por defecto, para no romper los flujos que no lo mockean
+    if (path === '/consultations/goal-feasibility' && method === 'POST') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      const mock = mocks.goalFeasibility
+      return respond(res, mock, {
+        feasible: mock?.feasible ?? true,
+        goal: mock?.goal ?? 'mantencion',
+        message: mock?.feasible === false ? (mock.message ?? 'Objetivo no factible') : null,
+      })
+    }
+
     // ---- crear consulta (y su orden) ----
     if (path === '/consultations' && method === 'POST') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })

@@ -58,6 +58,13 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     const stateRef = useRef({ personalInfo, anamnesis, measurements, nutritionPlan })
     stateRef.current = { personalInfo, anamnesis, measurements, nutritionPlan }
 
+    // actualiza el espejo en el acto (sin esperar al próximo render) y persiste: así dos mutaciones
+    // seguidas en el mismo evento (ej. resetAnamnesis() + resetMeasurements()) no se pisan en storage
+    const persist = (changes: Partial<typeof stateRef.current>) => {
+        stateRef.current = { ...stateRef.current, ...changes }
+        saveToStorage(stateRef.current)
+    }
+
     //carga el estado persistido recién montado en el cliente, para que el primer render coincida con el del servidor y no genere un hydration mismatch
     useEffect(() => {
         const saved = loadFromStorage()
@@ -71,25 +78,25 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     //muta el estado de  informacion personal
     const setPersonalInfo = (data: PersonalInfoDto) => {
         _setPersonalInfo(data)
-        saveToStorage({ ...stateRef.current, personalInfo: data })
+        persist({ personalInfo: data })
     }
 
     //muta el estado de anamnesis
     const setAnamnesis = (data: AnamnesisDto) => {
         _setAnamnesis(data)
-        saveToStorage({ ...stateRef.current, anamnesis: data })
+        persist({ anamnesis: data })
     }
 
     //muta el estado de evaluacion-fisica
     const setMeasurements = (data: MeasurementsDto) => {
         _setMeasurements(data)
-        saveToStorage({ ...stateRef.current, measurements: data })
+        persist({ measurements: data })
     }
 
     //muta el estado del plan nutricional
     const setNutritionPlan = (data: NutritionPlanDto) => {
         _setNutritionPlan(data)
-        saveToStorage({ ...stateRef.current, nutritionPlan: data })
+        persist({ nutritionPlan: data })
     }
 
     //accede al estado completo
@@ -103,31 +110,32 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
         _setAnamnesis(null)
         _setMeasurements(null)
         _setNutritionPlan(null)
+        stateRef.current = { personalInfo: null, anamnesis: null, measurements: null, nutritionPlan: null }
         localStorage.removeItem(STORAGE_KEY)
     }
 
     //limpia solo informacion personal
     const resetPersonalInfo = () => {
         _setPersonalInfo(null)
-        saveToStorage({ ...stateRef.current, personalInfo: null })
+        persist({ personalInfo: null })
     }
 
     //limpia solo anamnesis
     const resetAnamnesis = () => {
         _setAnamnesis(null)
-        saveToStorage({ ...stateRef.current, anamnesis: null })
+        persist({ anamnesis: null })
     }
 
     //limpia solo evaluacion fisica
     const resetMeasurements = () => {
         _setMeasurements(null)
-        saveToStorage({ ...stateRef.current, measurements: null })
+        persist({ measurements: null })
     }
 
     //limpia solo plan nutricional
     const resetNutritionPlan = () => {
         _setNutritionPlan(null)
-        saveToStorage({ ...stateRef.current, nutritionPlan: null })
+        persist({ nutritionPlan: null })
     }
 
     return (

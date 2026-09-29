@@ -4,11 +4,13 @@ import {
     simulatePaymentAction,
     sendAnamnesisTurnAction,
     getOrderStatusAction,
+    evaluateGoalFeasibilityAction,
     type ActionResult,
 } from './consultation.actions'
 import { CompleteConsultationDto } from "../dtos/consultation.dto";
 import { InputChatDto, OutputChatDto } from "../dtos/anamnesis-chat.dto";
 import { OrderStatusDto } from "../dtos/order.dto";
+import { GoalFeasibilityDto, GoalFeasibilityRequestDto } from "../dtos/goal-feasibility.dto";
 
 function unwrap<T>(result: ActionResult<T>): T {
     if (!result.ok) throw new Error(result.message)
@@ -34,6 +36,11 @@ export class ConsultationService{
 
     public static async getOrderStatus(orderId: string): Promise<OrderStatusDto> {
         return unwrap(await getOrderStatusAction(orderId))
+    }
+
+    //al terminar la evaluación física: ¿el objetivo es alcanzable según el estado nutricional?
+    public static async evaluateGoalFeasibility(data: GoalFeasibilityRequestDto): Promise<GoalFeasibilityDto> {
+        return unwrap(await evaluateGoalFeasibilityAction(data))
     }
 
 }

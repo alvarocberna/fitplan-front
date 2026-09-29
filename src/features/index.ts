@@ -14,12 +14,14 @@ export * from './consultation/components/chat-anamnesis';
 export * from './consultation/components/form-measurements';
 export * from './consultation/components/somatotype-selector';
 export * from './consultation/components/form-user-info'
+export * from './consultation/components/goal-not-feasible'
 export * from './nutrition-plan/components/generate-order-button'
 export * from "./consultation/services/consultation.service";
 export * from "./consultation/interfaces/measurements.interface";
 export * from "./consultation/dtos/consultation.dto";
 export * from "./consultation/dtos/anamnesis-chat.dto";
 export * from "./consultation/dtos/order.dto";
+export * from "./consultation/dtos/goal-feasibility.dto";
 export * from "./nutrition-plan/dtos/nutrition-plan.dto";
 
 //user

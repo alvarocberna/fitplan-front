@@ -5,6 +5,7 @@ import {
   simulatePaymentAction,
   sendAnamnesisTurnAction,
   getOrderStatusAction,
+  evaluateGoalFeasibilityAction,
 } from './consultation.actions';
 import type { CompleteConsultationDto } from '../dtos/consultation.dto';
 import type { InputChatDto } from '../dtos/anamnesis-chat.dto';
@@ -14,21 +15,44 @@ vi.mock('./consultation.actions', () => ({
   simulatePaymentAction: vi.fn(),
   sendAnamnesisTurnAction: vi.fn(),
   getOrderStatusAction: vi.fn(),
+  evaluateGoalFeasibilityAction: vi.fn(),
 }));
 
 const mockedCreateOrderAction = vi.mocked(createOrderAction);
 const mockedSimulatePaymentAction = vi.mocked(simulatePaymentAction);
 const mockedSendAnamnesisTurnAction = vi.mocked(sendAnamnesisTurnAction);
 const mockedGetOrderStatusAction = vi.mocked(getOrderStatusAction);
+const mockedEvaluateGoalFeasibilityAction = vi.mocked(evaluateGoalFeasibilityAction);
 
 beforeEach(() => {
   mockedCreateOrderAction.mockReset();
   mockedSimulatePaymentAction.mockReset();
   mockedSendAnamnesisTurnAction.mockReset();
   mockedGetOrderStatusAction.mockReset();
+  mockedEvaluateGoalFeasibilityAction.mockReset();
 });
 
 describe('ConsultationService', () => {
+  it('evaluateGoalFeasibility sends goals and measurements and returns the evaluation', async () => {
+    const evaluation = { feasible: false, goal: 'definicion' as const, message: 'peso bajo' };
+    mockedEvaluateGoalFeasibilityAction.mockResolvedValue({ ok: true, data: evaluation });
+    const request = {
+      goals: { primaryGoal: 'bajar de peso', secondaryGoal: null },
+      measurements: { weight: 55, height: 170 },
+    };
+
+    await expect(ConsultationService.evaluateGoalFeasibility(request)).resolves.toEqual(evaluation);
+    expect(mockedEvaluateGoalFeasibilityAction).toHaveBeenCalledWith(request);
+  });
+
+  it('evaluateGoalFeasibility throws the action error message', async () => {
+    mockedEvaluateGoalFeasibilityAction.mockResolvedValue({ ok: false, message: 'Sin sesion' } as never);
+
+    await expect(
+      ConsultationService.evaluateGoalFeasibility({ goals: null, measurements: { weight: 70, height: 170 } }),
+    ).rejects.toThrow('Sin sesion');
+  });
+
   it('createOrder posts the complete consultation to consultations', async () => {
     mockedCreateOrderAction.mockResolvedValue({ ok: true, data: { orderId: 'order-1' } });
     const dto: CompleteConsultationDto = { personalInfo: null, anamnesis: null, measurements: null };

@@ -50,6 +50,11 @@ export async function mockChatFailure(message = 'Error interno') {
   await setMock('chat', { fail: true, message });
 }
 
+// consultations/goal-feasibility (CU-CON-03). Sin llamar a esto responde "factible".
+export async function mockGoalFeasibility(options: { feasible: boolean; goal?: string; message?: string }) {
+  await setMock('goalFeasibility', options);
+}
+
 export async function mockCreateOrder(options: { orderId?: string; fail?: boolean } = {}) {
   await setMock('createOrder', {
     orderId: options.orderId ?? 'order-e2e-123',

@@ -2,13 +2,14 @@
 //next
 import { useRouter } from "next/navigation";
 //react
+import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 //toast
 import { toast } from 'react-toastify'
 //shared
 import { SubsectionTitle, InputOutlined, useConsultation} from '@/shared'
 //features
-import { FormMeasurementsInterface, SomatotypeSelector } from '@/features';
+import { ConsultationService, FormMeasurementsInterface, GoalNotFeasible, SomatotypeSelector } from '@/features';
 
 
 export function FormMeasurements(){
@@ -18,6 +19,8 @@ export function FormMeasurements(){
     const { personalInfo, anamnesis, setMeasurements, isHydrated } = useConsultation();
     //hook useForm destructuring
     const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormMeasurementsInterface>()
+    //mensaje de CU-CON-03 cuando el objetivo no es factible (reemplaza al formulario)
+    const [notFeasibleMessage, setNotFeasibleMessage] = useState<string | null>(null)
 
     //on submit
     const onSubmit: SubmitHandler<FormMeasurementsInterface> = async (data) => {
@@ -28,8 +31,28 @@ export function FormMeasurements(){
         //actualiza el estado de la propiedad measurements del context
         setMeasurements(data);
 
+        //evalúa si el objetivo es alcanzable según el estado nutricional (ej. no se trabaja una
+        //pérdida de peso con IMC <= 20) antes de pasar a generar la orden
+        try {
+            const feasibility = await ConsultationService.evaluateGoalFeasibility({
+                goals: anamnesis.goals,
+                measurements: { weight: data.weight, height: data.height },
+            });
+            if (!feasibility.feasible) {
+                setNotFeasibleMessage(feasibility.message ?? 'Lo siento, tu objetivo no es adecuado para tu estado nutricional actual.');
+                return;
+            }
+        } catch {
+            toast.error('No pudimos evaluar tu objetivo, intenta nuevamente');
+            return;
+        }
+
         //redirecciona a la ruta donde se arma la orden y se realiza el pago
         router.push('/consulta/generar-orden');
+    }
+
+    if (notFeasibleMessage) {
+        return <GoalNotFeasible message={notFeasibleMessage}/>
     }
 
     return(
@@ -79,7 +102,7 @@ export function FormMeasurements(){
                     disabled={isSubmitting}
                     className='primary-btn'
                 >
-                    Finalizar consulta
+                    {isSubmitting ? 'Evaluando…' : 'Finalizar consulta'}
                 </button>
             </div>
         </form>

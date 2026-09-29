@@ -6,6 +6,7 @@ import { getValidAccessToken } from '@/shared/auth/tokens'
 import { CompleteConsultationDto } from '../dtos/consultation.dto'
 import { InputChatDto, OutputChatDto } from '../dtos/anamnesis-chat.dto'
 import { OrderStatusDto } from '../dtos/order.dto'
+import { GoalFeasibilityDto, GoalFeasibilityRequestDto } from '../dtos/goal-feasibility.dto'
 
 export type { ActionResult }
 
@@ -15,6 +16,17 @@ export async function createOrderAction(
   return runAction(async () => {
     const accessToken = await getValidAccessToken()
     return apiFetch<{ orderId: string }>('consultations', 'POST', completeConsultation, accessToken)
+  })
+}
+
+// CU-CON-03: evalúa si el objetivo es alcanzable según el estado nutricional (al terminar la
+// evaluación física, antes de generar la orden).
+export async function evaluateGoalFeasibilityAction(
+  data: GoalFeasibilityRequestDto,
+): Promise<ActionResult<GoalFeasibilityDto>> {
+  return runAction(async () => {
+    const accessToken = await getValidAccessToken()
+    return apiFetch<GoalFeasibilityDto>('consultations/goal-feasibility', 'POST', data, accessToken)
   })
 }
 
