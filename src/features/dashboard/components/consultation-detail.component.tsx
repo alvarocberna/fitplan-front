@@ -82,10 +82,14 @@ export function ConsultationDetail({ consultation, plan, measurements }: Consult
 
 // Consulta sin plan listo: pagar si falta el pago; si no, el estado de la generación.
 function PlanStatusNotice({ planStatus, orderId }: Pick<ConsultationDetailDto, 'planStatus' | 'orderId'>) {
-    if (orderId && planStatus === 'awaiting_payment') {
+    if (orderId && (planStatus === 'awaiting_payment' || planStatus === 'payment_rejected')) {
         return (
             <div className="w-full flex flex-col items-center gap-3">
-                <p className="text-zinc-500 text-center">Aún no has pagado esta consulta.</p>
+                <p className="text-zinc-500 text-center">
+                    {planStatus === 'payment_rejected'
+                        ? 'Tu pago fue rechazado. Puedes intentarlo nuevamente.'
+                        : 'Aún no has pagado esta consulta.'}
+                </p>
                 <Link href={`/pago/${orderId}`} className="btn primary-btn h-10! px-6 no-underline">
                     Pagar consulta
                 </Link>

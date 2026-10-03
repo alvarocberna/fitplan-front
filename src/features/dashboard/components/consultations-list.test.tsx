@@ -42,6 +42,14 @@ function macro(row: HTMLElement, label: string): string | null {
 }
 
 describe('ConsultationsList', () => {
+  it('a consultation whose payment was rejected shows the "Pago rechazado" tag and still offers to pay', () => {
+    render(<ConsultationsList consultations={[{ ...pending, planStatus: 'payment_rejected' }]} />);
+
+    const row = item(2);
+    expect(within(row).getByText('Pago rechazado')).toBeInTheDocument();
+    expect(within(row).getByRole('link', { name: 'Pagar consulta' })).toHaveAttribute('href', '/pago/order-2');
+  });
+
   it('renders one item per consultation, in the order given by the backend', () => {
     render(<ConsultationsList consultations={[pending, ready]} />);
 

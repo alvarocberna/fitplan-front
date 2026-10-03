@@ -1,18 +1,19 @@
 'use client'
 //next
+import Link from 'next/link'
 import { useParams } from 'next/navigation'
 //react
 import { useEffect, useRef, useState } from 'react'
 //shared
 import { Card, PlanFileCard, SubsectionHead, SubsectionTitle, useConsultation } from '@/shared'
 //features
-import { ConsultationService, GenerationStatus, OrderStatusDto } from '@/features'
+import { ConsultationService, GenerationStatus, OrderStatusDto, PaymentStatus } from '@/features'
 
 const POLLING_INTERVAL_MS = 4000
 // a partir de este tiempo sin terminar, se muestra un mensaje de "esto está tardando más de lo normal"
 const DELAY_THRESHOLD_MS = 45_000
 
-type ViewState = 'loading' | 'generating' | 'completed' | 'error'
+type ViewState = 'loading' | 'generating' | 'completed' | 'error' | 'payment_rejected' | 'expired'
 
 export default function OrderPage() {
     const { id: orderId } = useParams<{ id: string }>()
@@ -50,6 +51,20 @@ export default function OrderPage() {
                 if (data.generationStatus === GenerationStatus.ERROR) {
                     cancelled = true
                     setViewState('error')
+                    return
+                }
+
+                //la orden venció sin pagarse: no hay nada que esperar
+                if (data.paymentStatus === PaymentStatus.EXPIRED) {
+                    cancelled = true
+                    setViewState('expired')
+                    return
+                }
+
+                //el pago fue rechazado: se puede reintentar desde la pasarela
+                if (data.paymentStatus === PaymentStatus.REJECTED) {
+                    cancelled = true
+                    setViewState('payment_rejected')
                     return
                 }
 
@@ -96,6 +111,36 @@ export default function OrderPage() {
                             <SubsectionTitle mb={2} title="¡Tu plan nutricional está listo!" />
                             <div className="w-full py-8">
                                 <PlanFileCard pdfUrl={plan.pdfUrl} thumbnailUrl={plan.thumbnailUrl} />
+                            </div>
+                        </SubsectionHead>
+                    )}
+
+                    {viewState === 'payment_rejected' && (
+                        <SubsectionHead>
+                            <SubsectionTitle mb={2} title="Tu pago fue rechazado" />
+                            <p className="text-zinc-900 text-md">
+                                No se realizó ningún cobro. Puedes intentar el pago nuevamente mientras la orden
+                                siga vigente (24 horas desde que la creaste).
+                            </p>
+                            <div className="pt-6">
+                                <Link href={`/pago/${orderId}`} className="btn primary-btn h-10! px-6 no-underline">
+                                    Reintentar pago
+                                </Link>
+                            </div>
+                        </SubsectionHead>
+                    )}
+
+                    {viewState === 'expired' && (
+                        <SubsectionHead>
+                            <SubsectionTitle mb={2} title="Esta orden expiró" />
+                            <p className="text-zinc-900 text-md">
+                                Pasaron más de 24 horas sin que se completara el pago, por lo que la orden ya no
+                                está disponible. No se realizó ningún cobro.
+                            </p>
+                            <div className="pt-6">
+                                <Link href="/consulta/anamnesis" className="btn primary-btn h-10! px-6 no-underline">
+                                    Iniciar una nueva consulta
+                                </Link>
                             </div>
                         </SubsectionHead>
                     )}

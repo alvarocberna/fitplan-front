@@ -2,6 +2,7 @@
 import {
     createOrderAction,
     simulatePaymentAction,
+    simulatePaymentRejectionAction,
     sendAnamnesisTurnAction,
     getOrderStatusAction,
     evaluateGoalFeasibilityAction,
@@ -28,6 +29,11 @@ export class ConsultationService{
     //que usaría el webhook real de una pasarela de pago una vez que se integre una.
     public static async simulatePayment(orderId: string): Promise<{ status: string }> {
         return unwrap(await simulatePaymentAction(orderId))
+    }
+
+    //pasarela simulada: el pago fue rechazado (la orden queda reintentable hasta que expire)
+    public static async simulatePaymentRejection(orderId: string): Promise<{ status: string }> {
+        return unwrap(await simulatePaymentRejectionAction(orderId))
     }
 
     public static async sendAnamnesisTurn( data: InputChatDto ): Promise<OutputChatDto> {

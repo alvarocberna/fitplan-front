@@ -89,7 +89,7 @@ function ConsultationCard({ consultation }: { consultation: ConsultationSummaryD
                 <span aria-hidden="true" className="btn primary-btn h-10! px-6">
                     Ver detalle
                 </span>
-                {orderId && planStatus === 'awaiting_payment' && (
+                {orderId && (planStatus === 'awaiting_payment' || planStatus === 'payment_rejected') && (
                     // por encima del enlace que cubre el card
                     <Link href={`/pago/${orderId}`} className="btn secondary-btn h-10! relative z-10 pointer-events-auto px-6 no-underline">
                         Pagar consulta

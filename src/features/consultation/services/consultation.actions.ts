@@ -34,6 +34,11 @@ export async function simulatePaymentAction(orderId: string): Promise<ActionResu
   return runAction(() => apiFetch<{ status: string }>(`dev/orders/${orderId}/simulate-payment`, 'POST'))
 }
 
+// CU-BIL-04: simula que la pasarela rechazó el pago (la orden queda REJECTED y se puede reintentar).
+export async function simulatePaymentRejectionAction(orderId: string): Promise<ActionResult<{ status: string }>> {
+  return runAction(() => apiFetch<{ status: string }>(`dev/orders/${orderId}/simulate-payment-rejection`, 'POST'))
+}
+
 export async function sendAnamnesisTurnAction(data: InputChatDto): Promise<ActionResult<OutputChatDto>> {
   return runAction(async () => {
     const accessToken = await getValidAccessToken()

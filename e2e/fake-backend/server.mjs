@@ -255,6 +255,13 @@ const server = http.createServer(async (req, res) => {
       return respond(res, mock, { status: 'processed' })
     }
 
+    // ---- rechazo de pago simulado ----
+    if (/^\/dev\/orders\/[^/]+\/simulate-payment-rejection$/.test(path) && method === 'POST') {
+      const mock = mocks.paymentRejection
+      if (!mock) return send(res, 501, { message: 'simulate-payment-rejection sin mock' })
+      return respond(res, mock, { status: 'rejected' })
+    }
+
     // ---- estado de la orden (polling de /ordenes/[id]) ----
     if (/^\/orders\/[^/]+\/status$/.test(path) && method === 'GET') {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { toast } from 'react-toastify';
 import SimulatedPaymentPage from '@/app/(sesion)/pago/[orderId]/page';
 import { ConsultationService } from '@/features';
+import type { OrderStatusDto } from '@/features';
 import { PlanSelectionProvider } from '@/shared';
 
 const pushMock = vi.fn();
@@ -16,10 +17,26 @@ vi.mock('next/navigation', () => ({
 vi.mock('react-toastify', () => ({ toast: { error: vi.fn() } }));
 vi.mock('@/features', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features')>();
-  return { ...actual, ConsultationService: { simulatePayment: vi.fn() } };
+  return {
+    ...actual,
+    ConsultationService: { simulatePayment: vi.fn(), simulatePaymentRejection: vi.fn(), getOrderStatus: vi.fn() },
+  };
 });
 
 const simulatePayment = vi.mocked(ConsultationService.simulatePayment);
+const simulatePaymentRejection = vi.mocked(ConsultationService.simulatePaymentRejection);
+const getOrderStatus = vi.mocked(ConsultationService.getOrderStatus);
+
+function orderStatus(paymentStatus: OrderStatusDto['paymentStatus']): OrderStatusDto {
+  return {
+    paymentStatus,
+    expirationDate: '2026-01-02T00:00:00.000Z',
+    generationStatus: 'NOT_STARTED',
+    planJson: null,
+    pdfUrl: null,
+    thumbnailUrl: null,
+  };
+}
 
 function renderPage() {
   return render(
@@ -34,6 +51,9 @@ beforeEach(() => {
   pushMock.mockClear();
   vi.mocked(toast.error).mockClear();
   simulatePayment.mockReset();
+  simulatePaymentRejection.mockReset();
+  getOrderStatus.mockReset();
+  getOrderStatus.mockResolvedValue(orderStatus('PENDING'));
 });
 
 describe('SimulatedPaymentPage (/pago/[orderId])', () => {
@@ -89,5 +109,82 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al procesar el pago'));
     expect(pushMock).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Pagar' })).toBeEnabled();
+  });
+
+  it('si no se puede leer el estado de la orden, igual deja pagar', async () => {
+    getOrderStatus.mockRejectedValue(new Error('network blip'));
+    simulatePayment.mockResolvedValue({ status: 'processed' });
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/ordenes/order-1'));
+  });
+
+  it('orden expirada: no ofrece pagar y enlaza a una nueva consulta', async () => {
+    getOrderStatus.mockResolvedValue(orderStatus('EXPIRED'));
+    renderPage();
+
+    expect(await screen.findByText('Esta orden expiró')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Pagar' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Iniciar una nueva consulta' })).toHaveAttribute(
+      'href',
+      '/consulta/anamnesis'
+    );
+  });
+
+  it('orden expirada de un plan predefinido: enlaza al catálogo de planes', async () => {
+    searchParams = new URLSearchParams('tipo=predefinido');
+    getOrderStatus.mockResolvedValue(orderStatus('EXPIRED'));
+    renderPage();
+
+    expect(await screen.findByRole('link', { name: 'Ver planes' })).toHaveAttribute('href', '/planes-estandar');
+  });
+
+  it('orden con el pago rechazado: avisa y permite reintentar', async () => {
+    getOrderStatus.mockResolvedValue(orderStatus('REJECTED'));
+    simulatePayment.mockResolvedValue({ status: 'processed' });
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tu pago fue rechazado');
+
+    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/ordenes/order-1'));
+  });
+
+  it('orden ya pagada: no vuelve a cobrar y va a /ordenes/<id>', async () => {
+    getOrderStatus.mockResolvedValue(orderStatus('PAID'));
+    renderPage();
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/ordenes/order-1'));
+    expect(simulatePayment).not.toHaveBeenCalled();
+  });
+
+  it('"Simular rechazo" deja la orden rechazada, sin navegar, y permite reintentar', async () => {
+    simulatePaymentRejection.mockResolvedValue({ status: 'rejected' });
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: 'Simular rechazo' }));
+
+    expect(simulatePaymentRejection).toHaveBeenCalledWith('order-1');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tu pago fue rechazado');
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Pagar' })).toBeEnabled();
+  });
+
+  it('si la orden expiró mientras la página estaba abierta, al pagar muestra el estado expirado', async () => {
+    getOrderStatus.mockResolvedValueOnce(orderStatus('PENDING')).mockResolvedValue(orderStatus('EXPIRED'));
+    simulatePayment.mockRejectedValue(new Error('La orden order-1 expiró sin pagarse'));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+
+    expect(await screen.findByText('Esta orden expiró')).toBeInTheDocument();
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
   });
 });

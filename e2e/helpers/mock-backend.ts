@@ -67,6 +67,10 @@ export async function mockSimulatePayment(options: { fail?: boolean } = {}) {
   await setMock('payment', { fail: options.fail, message: 'Error al procesar el pago' });
 }
 
+export async function mockSimulatePaymentRejection(options: { fail?: boolean } = {}) {
+  await setMock('paymentRejection', { fail: options.fail, message: 'Error al procesar el pago' });
+}
+
 // orders/:id/status con una secuencia de estados (la última se repite), simulando la
 // progresión que el polling de /ordenes/[id] vería del backend real.
 export async function mockOrderStatusSequence(sequence: Array<Record<string, unknown>>) {

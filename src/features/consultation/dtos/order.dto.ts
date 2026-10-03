@@ -1,9 +1,13 @@
 import { NutritionPlanDto } from '../../nutrition-plan/dtos/nutrition-plan.dto';
 
 // Espejo de los enums del backend (enums nativos de Postgres, ver back/src/domain/entities/enums.ts).
+// REJECTED: el último intento de pago fue rechazado (se puede reintentar). EXPIRED: venció el plazo
+// de pago (24 h) sin pagarse; la orden ya no se puede pagar.
 export const PaymentStatus = {
     PENDING: 'PENDING',
     PAID: 'PAID',
+    REJECTED: 'REJECTED',
+    EXPIRED: 'EXPIRED',
 } as const;
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
 
@@ -17,6 +21,8 @@ export type GenerationStatus = (typeof GenerationStatus)[keyof typeof Generation
 
 export interface OrderStatusDto {
     paymentStatus: PaymentStatus
+    // hasta cuándo se puede pagar la orden (ISO); null en órdenes antiguas sin plazo
+    expirationDate: string | null
     generationStatus: GenerationStatus
     planJson: NutritionPlanDto | null
     // URL firmada (corta duración) para DESCARGAR el PDF ya almacenado en S3 (el backend la firma con

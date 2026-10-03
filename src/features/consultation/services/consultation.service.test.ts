@@ -3,6 +3,7 @@ import { ConsultationService } from './consultation.service';
 import {
   createOrderAction,
   simulatePaymentAction,
+  simulatePaymentRejectionAction,
   sendAnamnesisTurnAction,
   getOrderStatusAction,
   evaluateGoalFeasibilityAction,
@@ -13,6 +14,7 @@ import type { InputChatDto } from '../dtos/anamnesis-chat.dto';
 vi.mock('./consultation.actions', () => ({
   createOrderAction: vi.fn(),
   simulatePaymentAction: vi.fn(),
+  simulatePaymentRejectionAction: vi.fn(),
   sendAnamnesisTurnAction: vi.fn(),
   getOrderStatusAction: vi.fn(),
   evaluateGoalFeasibilityAction: vi.fn(),
@@ -20,6 +22,7 @@ vi.mock('./consultation.actions', () => ({
 
 const mockedCreateOrderAction = vi.mocked(createOrderAction);
 const mockedSimulatePaymentAction = vi.mocked(simulatePaymentAction);
+const mockedSimulatePaymentRejectionAction = vi.mocked(simulatePaymentRejectionAction);
 const mockedSendAnamnesisTurnAction = vi.mocked(sendAnamnesisTurnAction);
 const mockedGetOrderStatusAction = vi.mocked(getOrderStatusAction);
 const mockedEvaluateGoalFeasibilityAction = vi.mocked(evaluateGoalFeasibilityAction);
@@ -27,6 +30,7 @@ const mockedEvaluateGoalFeasibilityAction = vi.mocked(evaluateGoalFeasibilityAct
 beforeEach(() => {
   mockedCreateOrderAction.mockReset();
   mockedSimulatePaymentAction.mockReset();
+  mockedSimulatePaymentRejectionAction.mockReset();
   mockedSendAnamnesisTurnAction.mockReset();
   mockedGetOrderStatusAction.mockReset();
   mockedEvaluateGoalFeasibilityAction.mockReset();
@@ -71,6 +75,14 @@ describe('ConsultationService', () => {
     expect(mockedSimulatePaymentAction).toHaveBeenCalledWith('order-123');
   });
 
+  it('simulatePaymentRejection posts the rejection for the order id and unwraps the result', async () => {
+    mockedSimulatePaymentRejectionAction.mockResolvedValue({ ok: true, data: { status: 'rejected' } });
+
+    await expect(ConsultationService.simulatePaymentRejection('order-123')).resolves.toEqual({ status: 'rejected' });
+
+    expect(mockedSimulatePaymentRejectionAction).toHaveBeenCalledWith('order-123');
+  });
+
   it('sendAnamnesisTurn posts the chat turn payload to consultations/chat', async () => {
     const input: InputChatDto = { messages: [], anamnesis: { goals: null, clinical: null, dietary: null, lifestyle: null } };
     mockedSendAnamnesisTurnAction.mockResolvedValue({
@@ -86,7 +98,7 @@ describe('ConsultationService', () => {
   it('getOrderStatus performs a GET against the status endpoint interpolated with the order id', async () => {
     mockedGetOrderStatusAction.mockResolvedValue({
       ok: true,
-      data: { paymentStatus: 'PAID', generationStatus: 'COMPLETED', planJson: null, pdfUrl: null, thumbnailUrl: null },
+      data: { paymentStatus: 'PAID', expirationDate: null, generationStatus: 'COMPLETED', planJson: null, pdfUrl: null, thumbnailUrl: null },
     });
 
     await ConsultationService.getOrderStatus('order-456');

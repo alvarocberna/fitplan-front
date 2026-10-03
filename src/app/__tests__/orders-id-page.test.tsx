@@ -27,6 +27,7 @@ function renderPage() {
 function status(overrides: Partial<OrderStatusDto>): OrderStatusDto {
   return {
     paymentStatus: 'PAID',
+    expirationDate: null,
     generationStatus: 'GENERATING',
     planJson: null,
     pdfUrl: null,
@@ -130,6 +131,33 @@ describe('OrderPage', () => {
 
     expect(screen.getByText('Tu pago está a salvo')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Descargar/ })).not.toBeInTheDocument();
+
+    await tick(8000);
+    expect(getOrderStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the rejected-payment state with a retry link and stops polling when paymentStatus is REJECTED', async () => {
+    getOrderStatus.mockResolvedValue(status({ paymentStatus: 'REJECTED', generationStatus: 'NOT_STARTED' }));
+    renderPage();
+    await tick(0);
+
+    expect(screen.getByText('Tu pago fue rechazado')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Reintentar pago' })).toHaveAttribute('href', '/pago/order-1');
+
+    await tick(8000);
+    expect(getOrderStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the expired state and stops polling when paymentStatus is EXPIRED', async () => {
+    getOrderStatus.mockResolvedValue(status({ paymentStatus: 'EXPIRED', generationStatus: 'NOT_STARTED' }));
+    renderPage();
+    await tick(0);
+
+    expect(screen.getByText('Esta orden expiró')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Iniciar una nueva consulta' })).toHaveAttribute(
+      'href',
+      '/consulta/anamnesis'
+    );
 
     await tick(8000);
     expect(getOrderStatus).toHaveBeenCalledTimes(1);

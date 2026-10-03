@@ -76,6 +76,21 @@ proveedor. El botón "Pagar" llama a `POST dev/orders/{orderId}/simulate-payment
 un proveedor de pago (Mercado Pago, Flow, Stripe, etc.) al confirmar un cobro. Tras la respuesta, redirige a
 `/ordenes/{ordenId}`.
 
+Al entrar, la página consulta el estado de la orden (`getOrderStatusAction`):
+
+- **`REJECTED`** (el último pago fue rechazado): muestra el aviso "Tu pago fue rechazado" y deja reintentar.
+  El botón "Simular rechazo" (`simulatePaymentRejectionAction` → `POST dev/orders/{orderId}/simulate-payment-rejection`)
+  reproduce ese caso.
+- **`EXPIRED`** (pasaron 24 h sin pagarse): muestra "Esta orden expiró" sin botón de pago, con un enlace para
+  empezar de nuevo (`/consulta/anamnesis`, o `/planes-estandar` con `?tipo=predefinido`). El backend borra la
+  consulta de una orden expirada. Si la orden vence con la página abierta, el pago falla (409) y se muestra
+  este mismo estado.
+- **`PAID`**: no vuelve a cobrar; redirige como si se acabara de pagar.
+
+`/ordenes/{ordenId}` también corta el polling ante `REJECTED` (enlace "Reintentar pago" a `/pago/{ordenId}`) y
+`EXPIRED`. En `/inicio`, una consulta con el pago rechazado lleva el tag "Pago rechazado" (`planStatus:
+'payment_rejected'`) y conserva el botón "Pagar consulta".
+
 > Cuando se integre una pasarela real, esta página se reemplaza por la redirección al checkout de ese
 > proveedor, y la confirmación llegará por su webhook real en vez del botón "Pagar".
 
@@ -140,8 +155,9 @@ Vive en otro repo (`../nutricionista-virtual-back`). Su contrato está documenta
 | POST / PATCH | `me/measurements`, `me/measurements/:id` | `recordMeasurementAction` / `updateMeasurementAction` | registrar (`/mediciones/nueva`) y corregir (`/mediciones/[id]/editar`) una medición. Bioimpedancia: grasa corporal y masa muscular obligatorias, grasa visceral y masa ósea opcionales, cada una en % o kg (un solo valor); el backend calcula la otra unidad y el IMC |
 | POST | `consultations/chat` | `sendAnamnesisTurnAction` | turno de chat de anamnesis |
 | POST | `consultations` | `createOrderAction` | crea la consulta y su orden (`paymentStatus: 'PENDING'`) |
-| GET | `orders/:id/status` | `getOrderStatusAction` | polling de estado de pago/generación, `planJson`, `pdfUrl`, `thumbnailUrl` |
+| GET | `orders/:id/status` | `getOrderStatusAction` | polling de estado de pago (`PENDING`/`PAID`/`REJECTED`/`EXPIRED`)/generación, `expirationDate`, `planJson`, `pdfUrl`, `thumbnailUrl` |
 | POST | `dev/orders/:id/simulate-payment` | `simulatePaymentAction` | simula la confirmación de pago (stand-in del webhook real) |
+| POST | `dev/orders/:id/simulate-payment-rejection` | `simulatePaymentRejectionAction` | simula un pago rechazado (la orden queda `REJECTED`, reintentable) |
 | GET | `plans/standard/previews`, `plans/standard/:code` | `getPlanPreviewsAction`, `getPredefinedProductAction` | catálogo público de planes estándar |
 | POST | `plans/standard/:code/purchase` | `createPredefinedOrderAction` | compra de un plan estándar (sin body) |
 

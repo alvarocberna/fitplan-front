@@ -1,6 +1,12 @@
 import { test, expect } from './fixtures';
 import { seedConsultationContext } from './helpers/seed-context';
-import { getBackendCalls, mockCreateOrder, mockSimulatePayment } from './helpers/mock-backend';
+import {
+  getBackendCalls,
+  mockCreateOrder,
+  mockOrderStatusSequence,
+  mockSimulatePayment,
+  mockSimulatePaymentRejection,
+} from './helpers/mock-backend';
 
 const VALID_PERSONAL_INFO = { firstName: 'Ana' };
 const VALID_ANAMNESIS = { goals: null, clinical: null, dietary: null, lifestyle: null };
@@ -54,6 +60,35 @@ test.describe('Consultation - simulated payment', () => {
     await expect(page).toHaveURL(/\/ordenes\/order-e2e-123$/);
     const payCall = (await getBackendCalls()).find((c) => c.path === '/dev/orders/order-e2e-123/simulate-payment');
     expect(payCall?.method).toBe('POST');
+  });
+
+  test('a rejected payment keeps the user on the page and can be retried', async ({ page }) => {
+    await mockSimulatePaymentRejection();
+    await mockSimulatePayment();
+    await page.goto('/pago/order-e2e-123');
+
+    await page.getByRole('button', { name: 'Simular rechazo' }).click();
+
+    await expect(page.getByText('Tu pago fue rechazado')).toBeVisible();
+    await expect(page).toHaveURL(/\/pago\/order-e2e-123$/);
+    const rejectCall = (await getBackendCalls()).find(
+      (c) => c.path === '/dev/orders/order-e2e-123/simulate-payment-rejection',
+    );
+    expect(rejectCall?.method).toBe('POST');
+
+    await page.getByRole('button', { name: 'Pagar' }).click();
+    await expect(page).toHaveURL(/\/ordenes\/order-e2e-123$/);
+  });
+
+  test('an expired order cannot be paid and offers starting a new consultation', async ({ page }) => {
+    await mockOrderStatusSequence([
+      { paymentStatus: 'EXPIRED', expirationDate: '2026-01-02T00:00:00.000Z', generationStatus: 'NOT_STARTED', planJson: null, pdfUrl: null, thumbnailUrl: null },
+    ]);
+    await page.goto('/pago/order-e2e-123');
+
+    await expect(page.getByText('Esta orden expiró')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Pagar' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Iniciar una nueva consulta' })).toBeVisible();
   });
 
   test('shows an error toast and stays on the page when payment simulation fails', async ({ page }) => {
