@@ -5,10 +5,13 @@
 /* definimos variables en root para que estén disponibles de forma global */
 :root {
   --background: #f6f6fd;
-  /* --color-primary: #0cb9df; */
-  --color-primary: #0baed2;
-  /* --color-primary: #10b968; */
-  --color-secondary: #036479;
+  /* --color-primary: #0baed2; */
+  /* --color-primary: #6866fa; */
+  --color-primary: #01b49c;
+  /* --color-secondary: #036479; */
+  /* --color-secondary: #3838c5; */
+    --color-secondary: #009091;
+
 
   /* --color-sesion-background: #f3f6ff; */
   --color-sesion-background: #f8fafb;

@@ -9,6 +9,8 @@ export * from './home/components/standard-plan-description.component';
 export * from './home/components/hero.component';
 export * from './home/components/nuvi-view-green.component';
 export * from './home/components/nuvi-view-blue.component';
+export * from './home/components/nuvi-view-indigo.component';
+export * from './home/components/nuvi-view-teal.component';
 //consultation
 export * from './consultation/components/chat-anamnesis';
 export * from './consultation/components/form-measurements';

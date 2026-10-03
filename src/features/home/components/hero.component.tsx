@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserDoctor, faClipboardList, faCapsules, faDumbbell } from '@fortawesome/free-solid-svg-icons'
 //FEATURES
 import { NuviViewGreen } from "./nuvi-view-green.component";
-import { NuviViewBlue } from "./nuvi-view-blue.component";
+import { NuviViewTeal } from "./nuvi-view-teal.component";
 
 const features = [
   { text: 'Agente de IA especializado en nutrición', description: 'Entrenado por expertos en nutrición deportiva', icon: faUserDoctor },
@@ -92,7 +92,7 @@ export function Hero({ startHref }: { startHref: string }) {
       </div>
 
       <div className="relative w-1/2 h-full flex items-center justify-center">
-        <NuviViewBlue />
+        <NuviViewTeal />
       </div>
     </div>
   )
