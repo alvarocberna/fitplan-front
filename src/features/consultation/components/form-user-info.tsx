@@ -3,12 +3,10 @@
 import { useRouter } from "next/navigation";
 //react
 import { useForm, SubmitHandler } from "react-hook-form"
-//toast
-import { toast } from 'react-toastify'
 //features
 import { FormPersonalInfoInterface } from "@/features";
 //shared
-import {useConsultation, InputOutlined} from '@/shared';
+import {useConsultation, InputOutlined, notifyError, unwrap} from '@/shared';
 import { updateProfileAction, type PerfilStatus } from '@/shared/auth/profile.actions';
 
 
@@ -49,8 +47,11 @@ export function FormUserInfo({ profile }: FormUserInfoProps) {
             athlete,
         })
 
-        if (!result.ok) {
-            toast.error(result.message)
+        try {
+            unwrap(result)
+        } catch (error) {
+            //sesión vencida -> login; el resto, toast con el mensaje del backend
+            notifyError(error, 'No se pudo guardar tu información')
             return
         }
 

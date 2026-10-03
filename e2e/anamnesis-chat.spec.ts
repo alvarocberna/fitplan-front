@@ -44,7 +44,8 @@ test.describe('Consultation - anamnesis chat', () => {
     await textarea.fill('Hola');
     await textarea.press('Enter');
 
-    await expect(page.getByText('Error al enviar el mensaje')).toBeVisible();
+    // el toast muestra el mensaje del backend (p. ej. "El asistente no está disponible…")
+    await expect(page.getByText('Error interno')).toBeVisible();
     await expect(textarea).toBeEnabled();
     await expect(page).toHaveURL(/\/consulta\/anamnesis$/);
   });

@@ -31,9 +31,14 @@ export default async function StartConsultation() {
     const result = await syncProfileAction()
     // Si falla la sincronización (token inválido, backend caído), se cae a informacion-personal
     // por seguridad — nunca a anamnesis sin confirmar que el perfil está completo.
-    href = result.ok && result.data.profileComplete
-      ? '/inicio'
-      : '/consulta/informacion-personal'
+    if (!result.ok && result.code === 'unauthenticated') {
+      // la cookie de sesión sigue viva pero el token ya no se puede refrescar: hay que volver a entrar
+      href = '/login?error=session_expired'
+    } else {
+      href = result.ok && result.data.profileComplete
+        ? '/inicio'
+        : '/consulta/informacion-personal'
+    }
   }
 
   return (

@@ -160,7 +160,7 @@ describe('MeasurementForm', () => {
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
     await waitFor(() =>
-      expect(toast.error).toHaveBeenCalledWith('Los kg de masa muscular deben ser menores que el peso'),
+      expect(toast.error).toHaveBeenCalledWith('Los kg de masa muscular deben ser menores que el peso', expect.anything()),
     );
     expect(pushMock).not.toHaveBeenCalled();
   });

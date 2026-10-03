@@ -9,7 +9,7 @@ import { faStar } from '@fortawesome/free-solid-svg-icons';
 //FEATURES
 import { TestimonialsServicePublic } from '@/features';
 //SHARED
-import { SectionContainerPublic } from '@/shared'
+import { SectionContainerPublic, notifyError } from '@/shared'
 
 interface TestimonialForm {
     nombre: string;
@@ -42,8 +42,8 @@ export function TestimonialFormPublic({ withoutContainer }: { withoutContainer?:
             reset();
             setCalificacion(null);
             setSubmitted(true);
-        } catch (error: any) {
-            toast.error(error.message || 'Error al enviar el testimonio');
+        } catch (error) {
+            notifyError(error, 'Error al enviar el testimonio');
         }
     };
 

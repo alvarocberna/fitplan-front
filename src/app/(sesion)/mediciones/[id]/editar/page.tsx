@@ -6,9 +6,11 @@ import { Card } from '@/shared'
 //features
 import { MeasurementForm, MeasurementsService } from '@/features'
 
+import { withSession } from '@/shared/auth/with-session'
+
 export default async function EditMeasurementPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    const measurement = await MeasurementsService.getMeasurement(id)
+    const measurement = await withSession(() => MeasurementsService.getMeasurement(id))
     if (!measurement) notFound()
 
     return (

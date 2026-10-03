@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
 import { Card, SubsectionHead, SubsectionTitle } from '@/shared'
+import { useReportError } from '@/shared/errors/use-report-error'
 
 // Boundary de error acotado a las rutas de sesión (/inicio, /perfil, ...). Al vivir en la misma
 // carpeta que (sesion)/layout.tsx, Next.js preserva ese layout (y su <NavbarSesion/>) cuando una
@@ -14,9 +14,7 @@ export default function SesionError({
     error: Error & { digest?: string }
     reset: () => void
 }) {
-    useEffect(() => {
-        console.error('[app error]', error.digest ?? '(sin digest)', error)
-    }, [error])
+    useReportError(error, 'sesion')
 
     return (
         <div className="max-w-2xl flex flex-col mx-auto px-4">
@@ -24,7 +22,8 @@ export default function SesionError({
                 <SubsectionHead>
                     <SubsectionTitle mb={2} title="Algo salió mal" />
                     <p className="text-zinc-900 text-md text-center">
-                        Ocurrió un error inesperado. Ya fue registrado y estamos al tanto.
+                        Ocurrió un error inesperado. Intenta nuevamente; si el problema persiste, contáctanos
+                        {error.digest ? ' indicando la referencia.' : '.'}
                     </p>
                     {error.digest && (
                         <p className="text-sm text-gray-500 text-center mt-2">

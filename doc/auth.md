@@ -173,11 +173,12 @@ ese barrel y necesite código `server-only` va a pisar el mismo problema.
 - `src/shared/api/action-result.ts` — `ActionResult<T>`/`runAction()` compartido por todos los
   archivos de arriba. Las acciones **no lanzan** errores (siguen la guía oficial de Next para
   Server Functions: *"avoid using try/catch blocks and throw errors. Instead, model expected
-  errors as return values"*), devuelven `{ok: true, data} | {ok: false, message}` — evita que Next
-  redacte el mensaje de error en producción. `ConsultationService`/las páginas que llaman a estas
-  acciones "desenvuelven" el resultado (`unwrap`), reconstruyendo un `throw new Error(message)`
-  del lado del cliente si `ok: false` — así el resto de la app sigue viendo el mismo
-  comportamiento de siempre (un `try/catch` con `error.message`).
+  errors as return values"*), devuelven `{ok: true, data} | {ok: false, message, status?, code?, requestId?}`
+  — evita que Next redacte el mensaje de error en producción. Un 401 del backend sale con
+  `code: 'unauthenticated'`. Los servicios "desenvuelven" el resultado con el `unwrap` compartido
+  (`src/shared/api/unwrap.ts`), que lanza `ActionError` o, sin sesión válida, `SessionRequiredError`:
+  los Client Components lo pasan a `notifyError` (lleva a `/login?error=session_expired`) y las páginas
+  de `(sesion)` cargan sus datos dentro de `withSession`. Detalle en `doc/error-handling.md`.
 
 Esto significa que el `Guard` del backend (`CognitoAuthGuard`) nunca ve una request directa del
 navegador — todas llegan server-to-server desde el propio servidor de Next.js.

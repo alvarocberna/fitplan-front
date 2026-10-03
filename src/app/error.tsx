@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
 import { Card, SubsectionHead, SubsectionTitle } from '@/shared'
+import { useReportError } from '@/shared/errors/use-report-error'
 
 // Boundary de error genérico: evita que un throw no controlado en cualquier
 // ruta (o sus componentes servidor) llegue al cliente con stack trace/rutas
-// de archivo. El detalle completo se loguea solo en consola/servidor; al
-// usuario se le muestra únicamente `digest`, el id que Next.js genera para
-// correlacionar con los logs.
+// de archivo. El detalle completo se registra en la consola y se reporta al
+// servidor (useReportError); al usuario se le muestra únicamente `digest`, el
+// id que Next.js genera para correlacionar con los logs.
 export default function Error({
     error,
     reset,
@@ -15,9 +15,7 @@ export default function Error({
     error: Error & { digest?: string }
     reset: () => void
 }) {
-    useEffect(() => {
-        console.error('[app error]', error.digest ?? '(sin digest)', error)
-    }, [error])
+    useReportError(error, 'app')
 
     return (
         <div className="w-full min-h-screen py-24">
@@ -26,7 +24,8 @@ export default function Error({
                     <SubsectionHead>
                         <SubsectionTitle mb={2} title="Algo salió mal" />
                         <p className="text-zinc-900 text-md text-center">
-                            Ocurrió un error inesperado. Ya fue registrado y estamos al tanto.
+                            Ocurrió un error inesperado. Intenta nuevamente; si el problema persiste, contáctanos
+                            {error.digest ? ' indicando la referencia.' : '.'}
                         </p>
                         {error.digest && (
                             <p className="text-sm text-gray-500 text-center mt-2">

@@ -11,16 +11,22 @@ import {
     NO_MACROS,
 } from '@/features'
 
+import { withSession } from '@/shared/auth/with-session'
+
 export default async function DashboardPage() {
-    const [summary, consultations, plans, measurements, latestPlanProjection] = await Promise.all([
-        DashboardService.getSummary(),
-        DashboardService.getConsultations(),
-        DashboardService.getPlans(),
-        MeasurementsService.getMeasurements(),
-        DashboardService.getLatestPlanProjection(),
-    ])
-    // último plan (la lista viene del más nuevo al más antiguo), con el mismo detalle que /planes/[orderId]
-    const lastPlan = plans[0] ? await DashboardService.getPlan(plans[0].orderId) : null
+    //sesión vencida -> /login (withSession); cualquier otro fallo -> error.tsx de (sesion)
+    const { summary, consultations, measurements, latestPlanProjection, lastPlan } = await withSession(async () => {
+        const [summary, consultations, plans, measurements, latestPlanProjection] = await Promise.all([
+            DashboardService.getSummary(),
+            DashboardService.getConsultations(),
+            DashboardService.getPlans(),
+            MeasurementsService.getMeasurements(),
+            DashboardService.getLatestPlanProjection(),
+        ])
+        // último plan (la lista viene del más nuevo al más antiguo), con el mismo detalle que /planes/[orderId]
+        const lastPlan = plans[0] ? await DashboardService.getPlan(plans[0].orderId) : null
+        return { summary, consultations, measurements, latestPlanProjection, lastPlan }
+    })
 
     return (
         <div className="w-[90%] mx-auto">

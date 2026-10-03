@@ -1,11 +1,12 @@
 //features
 import { MeasurementsChart, MeasurementsList, MeasurementsService, DashboardService } from '@/features'
 
+import { withSession } from '@/shared/auth/with-session'
+
 export default async function MedicionesPage() {
-    const [measurements, latestPlan] = await Promise.all([
-        MeasurementsService.getMeasurements(),
-        DashboardService.getLatestPlanProjection(),
-    ])
+    const [measurements, latestPlan] = await withSession(() =>
+        Promise.all([MeasurementsService.getMeasurements(), DashboardService.getLatestPlanProjection()]),
+    )
 
     return (
         <div className="w-[90%] mx-auto">

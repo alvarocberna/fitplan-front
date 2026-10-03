@@ -7,7 +7,9 @@ export async function GET(request: Request) {
   const domain = process.env.COGNITO_DOMAIN
   const clientId = process.env.COGNITO_CLIENT_ID
   if (!domain || !clientId) {
-    throw new Error('Faltan las variables de entorno COGNITO_DOMAIN o COGNITO_CLIENT_ID')
+    // La sesión local ya se borró: aunque no se pueda cerrar la de Cognito, el usuario vuelve al home.
+    console.error('Logout de Cognito omitido: faltan las variables de entorno COGNITO_DOMAIN o COGNITO_CLIENT_ID')
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   const logoutUrl = new URL('/logout', domain)

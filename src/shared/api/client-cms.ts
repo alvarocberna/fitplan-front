@@ -1,5 +1,40 @@
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
+const CMS_NETWORK_ERROR_MESSAGE = 'No pudimos conectar con el servidor. Revisa tu conexión e intenta nuevamente.';
+const CMS_GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intenta nuevamente.';
+
+// Error de una llamada al backend CMS. `status` es el HTTP status (0 si no hubo respuesta), para que
+// quien lo atrapa pueda distinguir, p. ej., un 404 de un fallo de red.
+export class CmsApiError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message);
+    this.name = 'CmsApiError';
+  }
+}
+
+// fetch solo rechaza cuando no hubo respuesta (CMS caído, sin red): se traduce a un mensaje legible.
+async function fetchCms(input: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(input, init);
+  } catch {
+    throw new CmsApiError(CMS_NETWORK_ERROR_MESSAGE, 0);
+  }
+}
+
+// Convierte una respuesta no-2xx en CmsApiError. Solo se muestra el `message` del CMS si es un texto;
+// un cuerpo que no es JSON (o un 5xx sin mensaje) usa el genérico, nunca "Error HTTP 502".
+async function toCmsError(res: Response): Promise<CmsApiError> {
+  let errorData: any = null;
+  try {
+    errorData = await res.json();
+  } catch {
+    // cuerpo no-JSON
+  }
+  const candidate = Array.isArray(errorData?.message) ? errorData.message[0] : errorData?.message;
+  const message = typeof candidate === 'string' && candidate.trim() ? candidate : CMS_GENERIC_ERROR_MESSAGE;
+  return new CmsApiError(message, res.status);
+}
+
 /** Lee el CSRF token de la cookie; si no existe, lo solicita al backend. */
 async function ensureCsrfToken(): Promise<string | null> {
   if (typeof document === 'undefined') return null;
@@ -27,20 +62,11 @@ const getBaseUrl = () => {
   return process.env.NEXT_PUBLIC_BACKEND_CMS_URL || 'http://localhost:3001';
 };
 
-const tokenLog = (msg: string) => {
-  const time = new Date().toLocaleTimeString('es-CL', { hour12: false });
-  console.log(`[auth] ${time} — ${msg}`);
-};
-
 let refreshPromise: Promise<boolean> | null = null;
 
 async function refreshSession(): Promise<boolean> {
-  if (refreshPromise) {
-    tokenLog('refresh ya en curso, esperando resultado...');
-    return refreshPromise;
-  }
-
-  tokenLog('iniciando refresh de sesión');
+  // una sola llamada de refresh compartida entre requests concurrentes
+  if (refreshPromise) return refreshPromise;
 
   const refreshHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
   const csrfForRefresh = await ensureCsrfToken();
@@ -51,10 +77,9 @@ async function refreshSession(): Promise<boolean> {
     credentials: 'include',
     headers: refreshHeaders,
   })
-    .then(res => {
-      tokenLog(res.ok ? 'refresh exitoso — nueva sesión activa' : `refresh fallido — status ${res.status}`);
-      return res.ok;
-    })
+    .then(res => res.ok)
+    // un fallo de red del propio refresh equivale a "no se pudo refrescar": no debe propagarse
+    .catch(() => false)
     .finally(() => { refreshPromise = null; });
 
   return refreshPromise;
@@ -75,7 +100,7 @@ export async function apiFetchCMS<T>(
     if (csrf) headers['X-CSRF-Token'] = csrf;
   }
 
-  const res = await fetch(`${baseUrl}/${endpoint}`, {
+  const res = await fetchCms(`${baseUrl}/${endpoint}`, {
     method,
     credentials,
     headers,
@@ -90,24 +115,12 @@ export async function apiFetchCMS<T>(
       return apiFetchCMS<T>(endpoint, method, data, credentials, true);
     }
 
-    throw new Error('Sesión expirada');
+    throw new CmsApiError('Sesión expirada', 401);
   }
 
   // ❌ errores HTTP
   if (!res.ok) {
-    let errorData: any;
-
-    try {
-      errorData = await res.json();
-    } catch {
-      errorData = { message: `Error HTTP ${res.status}: ${res.statusText}` };
-    }
-
-    throw new Error(
-      errorData?.message ||
-        errorData?.error ||
-        `Error HTTP ${res.status}`
-    );
+    throw await toCmsError(res);
   }
 
   // ✅ 204 No Content
@@ -139,7 +152,7 @@ export async function apiFetchFormData<T>(
     if (csrf) headers['X-CSRF-Token'] = csrf;
   }
 
-  const res = await fetch(`${baseUrl}/${endpoint}`, {
+  const res = await fetchCms(`${baseUrl}/${endpoint}`, {
     method,
     credentials,
     headers: Object.keys(headers).length ? headers : undefined,
@@ -160,23 +173,11 @@ export async function apiFetchFormData<T>(
       );
     }
 
-    throw new Error('Sesión expirada');
+    throw new CmsApiError('Sesión expirada', 401);
   }
 
   if (!res.ok) {
-    let errorData: any;
-
-    try {
-      errorData = await res.json();
-    } catch {
-      errorData = { message: `Error HTTP ${res.status}: ${res.statusText}` };
-    }
-
-    throw new Error(
-      errorData?.message ||
-        errorData?.error ||
-        `Error HTTP ${res.status}`
-    );
+    throw await toCmsError(res);
   }
 
   if (res.status === 204) {

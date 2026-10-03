@@ -5,15 +5,25 @@ import { useParams } from 'next/navigation'
 //react
 import { useEffect, useRef, useState } from 'react'
 //shared
-import { Card, PlanFileCard, SubsectionHead, SubsectionTitle, useConsultation } from '@/shared'
+import { Card, PlanFileCard, SubsectionHead, SubsectionTitle, useConsultation, isNotFoundError, isSessionRequiredError, notifyError } from '@/shared'
 //features
 import { ConsultationService, GenerationStatus, OrderStatusDto, PaymentStatus } from '@/features'
 
 const POLLING_INTERVAL_MS = 4000
 // a partir de este tiempo sin terminar, se muestra un mensaje de "esto está tardando más de lo normal"
 const DELAY_THRESHOLD_MS = 45_000
+// consultas fallidas seguidas tras las que se deja de insistir y se le ofrece al usuario reintentar
+const MAX_CONSECUTIVE_FAILURES = 5
 
-type ViewState = 'loading' | 'generating' | 'completed' | 'error' | 'payment_rejected' | 'expired'
+type ViewState =
+    | 'loading'
+    | 'generating'
+    | 'completed'
+    | 'error'
+    | 'payment_rejected'
+    | 'expired'
+    | 'not_found'
+    | 'unreachable'
 
 export default function OrderPage() {
     const { id: orderId } = useParams<{ id: string }>()
@@ -23,6 +33,8 @@ export default function OrderPage() {
     // URLs firmadas del plan ya generado (descarga del PDF y miniatura de la página 1)
     const [plan, setPlan] = useState<{ pdfUrl: string; thumbnailUrl: string | null } | null>(null)
     const [isDelayed, setIsDelayed] = useState(false)
+    // se incrementa con "Reintentar" para volver a arrancar el polling tras varios fallos seguidos
+    const [pollingRun, setPollingRun] = useState(0)
 
     //referencia para calcular cuánto tiempo lleva generando, sin re-crear el intervalo en cada render
     const startRef = useRef(Date.now())
@@ -33,12 +45,14 @@ export default function OrderPage() {
         // (mount -> cleanup -> mount) deja `stopped` en `true` para siempre desde el primer
         // cleanup, y el polling del segundo montaje real nunca vuelve a ejecutarse.
         let cancelled = false
+        let consecutiveFailures = 0
 
         const checkStatus = async () => {
             if (cancelled) return
             try {
                 const data: OrderStatusDto = await ConsultationService.getOrderStatus(orderId)
                 if (cancelled) return
+                consecutiveFailures = 0
 
                 if (data.generationStatus === GenerationStatus.COMPLETED && data.pdfUrl) {
                     cancelled = true
@@ -71,9 +85,31 @@ export default function OrderPage() {
                 //NOT_STARTED (aún no llega la confirmación de pago) o GENERATING
                 setViewState('generating')
                 if (Date.now() - startRef.current > DELAY_THRESHOLD_MS) setIsDelayed(true)
-            } catch {
-                //error de red/servidor puntual: se ignora y se reintenta en el próximo tick,
-                //el estado de pago del usuario no se ve afectado por esto
+            } catch (error) {
+                if (cancelled) return
+
+                //la orden no existe o no es del usuario: seguir consultando no va a cambiar la respuesta
+                if (isNotFoundError(error)) {
+                    cancelled = true
+                    setViewState('not_found')
+                    return
+                }
+
+                //la sesión venció: se lo lleva a iniciar sesión (puede volver después con el mismo enlace)
+                if (isSessionRequiredError(error)) {
+                    cancelled = true
+                    notifyError(error, '')
+                    return
+                }
+
+                //error de red/servidor puntual: se reintenta en el próximo tick; el estado de pago del
+                //usuario no se ve afectado por esto. Si se repite, se deja de insistir.
+                consecutiveFailures++
+                if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                    cancelled = true
+                    setViewState('unreachable')
+                    return
+                }
                 if (Date.now() - startRef.current > DELAY_THRESHOLD_MS) setIsDelayed(true)
             }
         }
@@ -84,7 +120,12 @@ export default function OrderPage() {
             cancelled = true
             clearInterval(intervalId)
         }
-    }, [orderId])
+    }, [orderId, pollingRun])
+
+    const onRetry = () => {
+        setViewState('loading')
+        setPollingRun((run) => run + 1)
+    }
 
     return (
         <div className='w-full py-4'>
@@ -145,13 +186,46 @@ export default function OrderPage() {
                         </SubsectionHead>
                     )}
 
+                    {viewState === 'not_found' && (
+                        <SubsectionHead>
+                            <SubsectionTitle mb={2} title="Orden no encontrada" />
+                            <p className="text-zinc-900 text-md">
+                                La orden que buscas no existe o no está disponible para tu cuenta.
+                            </p>
+                            <div className="pt-6">
+                                <Link href="/inicio" className="btn primary-btn h-10! px-6 no-underline">
+                                    Volver al inicio
+                                </Link>
+                            </div>
+                        </SubsectionHead>
+                    )}
+
+                    {viewState === 'unreachable' && (
+                        <SubsectionHead>
+                            <SubsectionTitle mb={2} title="No pudimos consultar el estado de tu orden" />
+                            <p role="alert" className="text-zinc-900 text-md">
+                                Tenemos problemas para comunicarnos con el servidor. Si ya pagaste, tu pago quedó
+                                registrado y tu plan se sigue generando: no es necesario que vuelvas a pagar.
+                            </p>
+                            <div className="pt-6">
+                                <button type="button" onClick={onRetry} className="btn primary-btn h-10! px-6">
+                                    Reintentar
+                                </button>
+                            </div>
+                        </SubsectionHead>
+                    )}
+
                     {viewState === 'error' && (
                         <SubsectionHead>
                             <SubsectionTitle mb={2} title="Tu pago está a salvo" />
                             <p className="text-zinc-900 text-md">
                                 Tuvimos un problema generando tu plan nutricional. Tu pago quedó registrado
-                                correctamente y nuestro equipo ya fue notificado para resolverlo: no es necesario que
-                                vuelvas a pagar. Te contactaremos por correo apenas esté listo.
+                                correctamente: no es necesario que vuelvas a pagar. Estamos trabajando para
+                                resolverlo; cuando esté listo lo verás en tu inicio y te llegará por correo. Si
+                                necesitas ayuda, contáctanos indicando el número de tu orden.
+                            </p>
+                            <p className="text-sm text-gray-500 mt-2">
+                                Orden: <span className="font-mono">{orderId}</span>
                             </p>
                         </SubsectionHead>
                     )}

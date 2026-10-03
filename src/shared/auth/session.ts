@@ -40,8 +40,11 @@ async function encrypt(payload: SessionPayload) {
 // verificación (firma inválida, formato corrupto, algoritmo no permitido). jose valida la
 // firma antes que las claims, así que un token manipulado/corrupto nunca cae en JWTExpired.
 async function decrypt(token: string): Promise<SessionPayload | 'expired' | null> {
+  // Fuera del try a propósito: si falta SESSION_SECRET es un error de configuración y debe verse
+  // (lanza), no convertirse en "no hay sesión" y redirigir a todo el mundo a /login en silencio.
+  const secretKey = getSecretKey()
   try {
-    const { payload } = await jwtVerify<SessionPayload>(token, getSecretKey(), {
+    const { payload } = await jwtVerify<SessionPayload>(token, secretKey, {
       algorithms: ['HS256'],
     })
     return payload

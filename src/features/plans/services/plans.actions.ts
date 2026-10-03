@@ -28,7 +28,7 @@ export async function getPlanPreviewsAction(): Promise<ActionResult<PlanPreviewD
 export async function createPredefinedOrderAction(code: string): Promise<ActionResult<{ orderId: string }>> {
   const accessToken = await getValidAccessToken()
   if (!accessToken) {
-    return { ok: false, message: 'Inicia sesión para continuar con el pago', code: 'unauthenticated' }
+    return { ok: false, message: 'Inicia sesión para continuar con el pago', code: 'unauthenticated', status: 401 }
   }
   return runAction(() => apiFetch<{ orderId: string }>(`plans/standard/${encodeURIComponent(code)}/purchase`, 'POST', undefined, accessToken))
 }

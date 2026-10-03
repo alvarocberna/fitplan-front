@@ -79,7 +79,7 @@ describe('GenerateOrderButton', () => {
 
     await user.click(screen.getByRole('button'));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Servidor caído'));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Servidor caído', expect.anything()));
     expect(screen.getByRole('button')).not.toBeDisabled();
   });
 
@@ -91,6 +91,6 @@ describe('GenerateOrderButton', () => {
 
     await user.click(screen.getByRole('button'));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al iniciar la consulta'));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al iniciar la consulta', expect.anything()));
   });
 });

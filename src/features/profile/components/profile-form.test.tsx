@@ -69,7 +69,7 @@ describe('ProfileForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
-    await waitFor(() => expect(toastErrorMock).toHaveBeenCalledWith('Error al actualizar'));
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalledWith('Error al actualizar', expect.anything()));
     expect(toastSuccessMock).not.toHaveBeenCalled();
   });
 

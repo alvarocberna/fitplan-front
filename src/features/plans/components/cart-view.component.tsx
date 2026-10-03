@@ -4,12 +4,10 @@ import { useState } from 'react'
 //next
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-//toast
-import { toast } from 'react-toastify'
 //shared
-import { PLANS, usePlanSelection } from '@/shared'
+import { PLANS, usePlanSelection, notifyError, isSessionRequiredError } from '@/shared'
 //features - plans
-import { PlansService, SessionRequiredError } from '../services/plans.service'
+import { PlansService } from '../services/plans.service'
 import { usePredefinedProduct } from '../hooks/use-predefined-product'
 import { formatPrice } from '../format-price'
 import { PlanPreviewImage } from './plan-preview-image.component'
@@ -46,10 +44,10 @@ export function CartView({ isAuthenticated }: CartViewProps) {
             router.push(`/pago/${orderId}?tipo=predefinido`)
         } catch (error) {
             //la sesión pudo expirar desde que cargó la página: se pide iniciarla de nuevo en vez de fallar sin más
-            if (error instanceof SessionRequiredError) {
+            if (isSessionRequiredError(error)) {
                 setShowLogin(true)
             } else {
-                toast.error(error instanceof Error ? error.message : 'No se pudo iniciar el pago')
+                notifyError(error, 'No se pudo iniciar el pago')
             }
             setIsPaying(false)
         }

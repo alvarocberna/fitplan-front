@@ -3,6 +3,8 @@ import {Card, SubsectionHead, SubsectionTitle, LoginOptions} from '@/shared'
 
 const ERROR_MESSAGES: Record<string, string> = {
   callback_failed: 'No pudimos completar tu inicio de sesión. Intenta de nuevo.',
+  session_expired: 'Tu sesión expiró. Inicia sesión nuevamente para continuar.',
+  login_unavailable: 'El inicio de sesión no está disponible en este momento. Intenta de nuevo en unos minutos.',
 }
 
 export default async function ConsultaLogin({

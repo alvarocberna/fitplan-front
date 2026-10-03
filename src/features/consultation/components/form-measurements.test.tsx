@@ -168,7 +168,7 @@ describe('FormMeasurements', () => {
 
   it('shows a toast and stays on the form when the evaluation fails', async () => {
     seedContext(VALID_PERSONAL_INFO, VALID_ANAMNESIS);
-    evaluateGoalFeasibility.mockRejectedValue(new Error('backend caido'));
+    evaluateGoalFeasibility.mockRejectedValue(new Error('No pudimos evaluar tu objetivo, intenta nuevamente'));
     const user = userEvent.setup();
     renderForm();
     await waitForHydratedRadios();
@@ -176,7 +176,7 @@ describe('FormMeasurements', () => {
     await fillAndSubmit(user);
 
     await waitFor(() =>
-      expect(toast.error).toHaveBeenCalledWith('No pudimos evaluar tu objetivo, intenta nuevamente'),
+      expect(toast.error).toHaveBeenCalledWith('No pudimos evaluar tu objetivo, intenta nuevamente', expect.anything()),
     );
     expect(pushMock).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Finalizar consulta' })).toBeInTheDocument();
@@ -192,5 +192,32 @@ describe('FormMeasurements', () => {
 
     expect(pushMock).not.toHaveBeenCalled();
     expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('explains why the form was not submitted: required messages under each empty field', async () => {
+    seedContext(VALID_PERSONAL_INFO, VALID_ANAMNESIS);
+    const user = userEvent.setup();
+    renderForm();
+    await waitForHydratedRadios();
+
+    await user.click(screen.getByRole('button', { name: 'Finalizar consulta' }));
+
+    expect(await screen.findAllByText('Campo requerido')).toHaveLength(2);
+    expect(screen.getByText('Selecciona tu contextura corporal')).toBeInTheDocument();
+    expect(evaluateGoalFeasibility).not.toHaveBeenCalled();
+  });
+
+  it('rejects weight and height outside the accepted range, with a message', async () => {
+    seedContext(VALID_PERSONAL_INFO, VALID_ANAMNESIS);
+    const user = userEvent.setup();
+    renderForm();
+    await waitForHydratedRadios();
+
+    await fillAndSubmit(user, '5', '300');
+
+    expect(await screen.findByText('El peso debe estar entre 20 y 300')).toBeInTheDocument();
+    expect(screen.getByText('La talla debe estar entre 100 y 250')).toBeInTheDocument();
+    expect(evaluateGoalFeasibility).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
   });
 });

@@ -1,3 +1,5 @@
+//next
+import { redirect } from 'next/navigation'
 //shared
 import {GeneralContainer, SubsectionTitle, SubsectionHead, Card, SubsectionBody} from '@/shared'
 import { syncProfileAction } from '@/shared/auth/profile.actions'
@@ -8,6 +10,8 @@ import {FormUserInfo} from '@/features'
 
 export default async function NewPatient(){
     const result = await syncProfileAction()
+    //sesión vencida: no tiene sentido mostrar un formulario que no se va a poder guardar
+    if (!result.ok && result.code === 'unauthenticated') redirect('/login?error=session_expired')
     const profile = result.ok ? result.data : null
 
     return(

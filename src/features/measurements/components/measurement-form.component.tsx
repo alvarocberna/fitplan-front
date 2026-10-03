@@ -6,7 +6,7 @@ import { useForm, SubmitHandler, UseFormRegister } from 'react-hook-form'
 //toast
 import { toast } from 'react-toastify'
 //shared
-import { InputOutlined } from '@/shared'
+import { InputOutlined, notifyError } from '@/shared'
 //features - measurements
 import { MeasurementsService } from '../services/measurements.service'
 import {
@@ -126,7 +126,7 @@ export function MeasurementForm({ measurement }: MeasurementFormProps) {
             router.push(`/mediciones/${saved.measurementId}`)
             router.refresh()
         } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'No se pudo guardar la medición')
+            notifyError(err, 'No se pudo guardar la medición')
         }
     }
 

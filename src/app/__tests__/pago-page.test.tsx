@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import SimulatedPaymentPage from '@/app/(sesion)/pago/[orderId]/page';
 import { ConsultationService } from '@/features';
 import type { OrderStatusDto } from '@/features';
-import { PlanSelectionProvider } from '@/shared';
+import { PlanSelectionProvider, ActionError, SessionRequiredError } from '@/shared';
 
 const pushMock = vi.fn();
 let searchParams = new URLSearchParams();
@@ -106,7 +106,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
 
     await user.click(screen.getByRole('button', { name: 'Pagar' }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al procesar el pago'));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al procesar el pago', expect.anything()));
     expect(pushMock).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Pagar' })).toBeEnabled();
   });
@@ -186,5 +186,28 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     expect(await screen.findByText('Esta orden expiró')).toBeInTheDocument();
     expect(toast.error).not.toHaveBeenCalled();
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it('orden inexistente o ajena (404 al leer el estado): muestra "Orden no encontrada" y no ofrece pagar', async () => {
+    getOrderStatus.mockRejectedValue(new ActionError('Orden no encontrada', 404, 'NOT_FOUND'));
+    renderPage();
+
+    expect(await screen.findByText('Orden no encontrada')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Pagar' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/inicio');
+  });
+
+  it('sesión vencida al pagar: lleva a iniciar sesión en vez de mostrar un toast', async () => {
+    const assign = vi.fn();
+    vi.stubGlobal('location', { ...window.location, assign });
+    simulatePayment.mockRejectedValue(new SessionRequiredError('Tu sesión expiró'));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/login?error=session_expired'));
+    expect(toast.error).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });

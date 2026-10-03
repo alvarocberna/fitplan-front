@@ -6,18 +6,25 @@ import { RETURN_TO_COOKIE, sanitizeReturnTo } from '@/shared/auth/return-to'
 const ALLOWED_SCREEN_HINTS = new Set(['signup'])
 const ALLOWED_IDENTITY_PROVIDERS = new Set(['Google'])
 
-export async function GET(request: Request) {
-  const redirectUri = process.env.COGNITO_REDIRECT_URI
-  if (!redirectUri) {
-    throw new Error('Falta la variable de entorno COGNITO_REDIRECT_URI')
-  }
+const LOGIN_UNAVAILABLE_REDIRECT = '/login?error=login_unavailable'
 
-  const config = await getCognitoConfig()
+export async function GET(request: Request) {
+  // Los error.tsx no cubren route handlers: sin este manejo, una configuración faltante o un Cognito
+  // caído (el discovery de getCognitoConfig) le mostraría al usuario un 500 crudo.
+  const redirectUri = process.env.COGNITO_REDIRECT_URI
+  let config: Awaited<ReturnType<typeof getCognitoConfig>>
+  try {
+    if (!redirectUri) throw new Error('Falta la variable de entorno COGNITO_REDIRECT_URI')
+    config = await getCognitoConfig()
+  } catch (err) {
+    console.error('No se pudo iniciar el login con Cognito:', err)
+    return NextResponse.redirect(new URL(LOGIN_UNAVAILABLE_REDIRECT, request.url))
+  }
   const state = randomState()
   const nonce = randomNonce()
 
   const authParams: Record<string, string> = {
-    redirect_uri: redirectUri,
+    redirect_uri: redirectUri as string, // validado arriba
     scope: 'email openid phone',
     state,
     nonce,

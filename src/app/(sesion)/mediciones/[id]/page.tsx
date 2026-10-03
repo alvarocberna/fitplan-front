@@ -3,9 +3,11 @@ import { notFound } from 'next/navigation'
 //features
 import { MeasurementDetail, MeasurementsService } from '@/features'
 
+import { withSession } from '@/shared/auth/with-session'
+
 export default async function MeasurementDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    const measurement = await MeasurementsService.getMeasurement(id)
+    const measurement = await withSession(() => MeasurementsService.getMeasurement(id))
     //inexistente o ajena: el backend responde 404 en ambos casos
     if (!measurement) notFound()
 

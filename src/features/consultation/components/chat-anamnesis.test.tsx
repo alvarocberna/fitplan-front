@@ -79,14 +79,17 @@ describe('ChatAnamnesis', () => {
   });
 
   it('shows an error toast and keeps the optimistic user message when the service call fails', async () => {
-    sendAnamnesisTurn.mockRejectedValue(new Error('network down'));
+    sendAnamnesisTurn.mockRejectedValue(new Error('El asistente no está disponible en este momento.'));
     const user = userEvent.setup();
     renderChat();
 
     await user.type(screen.getByPlaceholderText(/Escribe tu respuesta/), 'Hola');
     await user.keyboard('{Enter}');
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al enviar el mensaje'));
+    // se muestra el mensaje del error (viene en español desde el backend / apiFetch)
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith('El asistente no está disponible en este momento.', expect.anything()),
+    );
     expect(screen.getByText('Hola')).toBeInTheDocument();
     // el textarea se limpió de forma optimista, pero ya no está en isLoading: puede volver a escribirse y enviarse
     await user.type(screen.getByPlaceholderText(/Escribe tu respuesta/), 'De nuevo');

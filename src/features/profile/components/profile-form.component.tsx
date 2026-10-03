@@ -4,7 +4,7 @@ import { useForm, SubmitHandler } from "react-hook-form"
 //toast
 import { toast } from 'react-toastify'
 //shared
-import { InputOutlined } from '@/shared'
+import { InputOutlined, notifyError } from '@/shared'
 //features - profile
 import { ProfileService } from '../services/profile.service'
 import { UserProfileDto } from '../dtos/user-profile.dto'
@@ -41,7 +41,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             })
             toast.success('Perfil actualizado correctamente')
         } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'No se pudo actualizar el perfil')
+            notifyError(err, 'No se pudo actualizar el perfil')
         }
     }
 

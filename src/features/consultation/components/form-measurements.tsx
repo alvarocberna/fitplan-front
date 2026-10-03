@@ -7,7 +7,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 //toast
 import { toast } from 'react-toastify'
 //shared
-import { SubsectionTitle, InputOutlined, useConsultation} from '@/shared'
+import { SubsectionTitle, InputOutlined, useConsultation, notifyError} from '@/shared'
 //features
 import { ConsultationService, FormMeasurementsInterface, GoalNotFeasible, SomatotypeSelector } from '@/features';
 
@@ -18,7 +18,7 @@ export function FormMeasurements(){
     //llamamos al estado de PersonalInfo y Anamnesis desde el context
     const { personalInfo, anamnesis, setMeasurements, isHydrated } = useConsultation();
     //hook useForm destructuring
-    const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormMeasurementsInterface>()
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormMeasurementsInterface>()
     //mensaje de CU-CON-03 cuando el objetivo no es factible (reemplaza al formulario)
     const [notFeasibleMessage, setNotFeasibleMessage] = useState<string | null>(null)
 
@@ -42,8 +42,8 @@ export function FormMeasurements(){
                 setNotFeasibleMessage(feasibility.message ?? 'Lo siento, tu objetivo no es adecuado para tu estado nutricional actual.');
                 return;
             }
-        } catch {
-            toast.error('No pudimos evaluar tu objetivo, intenta nuevamente');
+        } catch (error) {
+            notifyError(error, 'No pudimos evaluar tu objetivo, intenta nuevamente');
             return;
         }
 
@@ -51,22 +51,37 @@ export function FormMeasurements(){
         router.push('/consulta/generar-orden');
     }
 
+    //mismos rangos que valida el backend y el formulario de mediciones (MeasurementForm)
+    const requiredNumber = (min: number, max: number, label: string) => ({
+        required: 'Campo requerido',
+        valueAsNumber: true,
+        validate: (value: number) =>
+            (value >= min && value <= max) || `${label} debe estar entre ${min} y ${max}`,
+    })
+
     if (notFeasibleMessage) {
         return <GoalNotFeasible message={notFeasibleMessage}/>
     }
 
     return(
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full" noValidate>
             <div className='m-auto w-full'>
                 <SubsectionTitle title="Mediciones básicas" bold={false}/>
                 <div className="grid grid-cols-2 gap-x-2 mb-6">
-                    <InputOutlined label="Peso" name="weight" type="number" register={register} rules={{ required: true, valueAsNumber: true }}/>
-                    <InputOutlined label="Talla" name="height" type="number" register={register} rules={{ required: true, valueAsNumber: true }}/>
+                    <div>
+                        <InputOutlined label="Peso" name="weight" type="number" register={register} rules={requiredNumber(20, 300, 'El peso')}/>
+                        {errors.weight && <span role="alert" className="text-red-400 text-sm">{errors.weight.message}</span>}
+                    </div>
+                    <div>
+                        <InputOutlined label="Talla" name="height" type="number" register={register} rules={requiredNumber(100, 250, 'La talla')}/>
+                        {errors.height && <span role="alert" className="text-red-400 text-sm">{errors.height.message}</span>}
+                    </div>
                     {/* <InputOutlined label="Talla sentado" name="measurements.sittingHeight" type="number" register={register} rules={{ required: true, valueAsNumber: true }}/> */}
                     {/* <InputOutlined label="Envergadura" name="measurements.armSpan" type="number" register={register} rules={{ required: true, valueAsNumber: true }}/> */}
                 </div>
                 <SubsectionTitle title="Contextura corporal" mb={4} bold={false}/>
                 <SomatotypeSelector register={register} gender={personalInfo?.gender} loading={!isHydrated}/>
+                {errors.somatotype && <span role="alert" className="text-red-400 text-sm">Selecciona tu contextura corporal</span>}
                 {/* <TitleSubSec title="Pliegues"/>
                 <div className="grid grid-cols-2 gap-x-2 mb-6">
                     <InputOutlined label="Tricep" name="measurements.triceps" type="number" register={register} rules={{ required: true, valueAsNumber: true }}/>

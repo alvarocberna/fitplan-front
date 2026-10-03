@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useReportError } from '@/shared/errors/use-report-error'
 
 // Único caso que src/app/error.tsx no cubre: un throw en el propio root
 // layout. Next.js exige que este archivo defina <html>/<body> porque
@@ -13,9 +13,8 @@ export default function GlobalError({
     error: Error & { digest?: string }
     reset: () => void
 }) {
-    useEffect(() => {
-        console.error('[global error]', error.digest ?? '(sin digest)', error)
-    }, [error])
+    //import directo (no el barrel @/shared): este archivo no debe arrastrar componentes compartidos
+    useReportError(error, 'global')
 
     return (
         <html lang="es">
@@ -37,7 +36,8 @@ export default function GlobalError({
                         Algo salió mal
                     </h1>
                     <p style={{ color: '#3f3f46', maxWidth: '32rem' }}>
-                        Ocurrió un error inesperado. Ya fue registrado y estamos al tanto.
+                        Ocurrió un error inesperado. Intenta nuevamente; si el problema persiste, contáctanos
+                        {error.digest ? ' indicando la referencia.' : '.'}
                     </p>
                     {error.digest && (
                         <p style={{ fontSize: '0.875rem', color: '#71717a' }}>

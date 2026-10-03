@@ -6,17 +6,13 @@ import {
     sendAnamnesisTurnAction,
     getOrderStatusAction,
     evaluateGoalFeasibilityAction,
-    type ActionResult,
 } from './consultation.actions'
+//shared
+import { unwrap } from '@/shared/api/unwrap'
 import { CompleteConsultationDto } from "../dtos/consultation.dto";
 import { InputChatDto, OutputChatDto } from "../dtos/anamnesis-chat.dto";
 import { OrderStatusDto } from "../dtos/order.dto";
 import { GoalFeasibilityDto, GoalFeasibilityRequestDto } from "../dtos/goal-feasibility.dto";
-
-function unwrap<T>(result: ActionResult<T>): T {
-    if (!result.ok) throw new Error(result.message)
-    return result.data
-}
 
 export class ConsultationService{
 

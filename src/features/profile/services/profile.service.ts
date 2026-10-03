@@ -2,14 +2,10 @@
 import {
     getUserProfileAction,
     updateUserProfileAction,
-    type ActionResult,
 } from './profile.actions'
+//shared
+import { unwrap } from '@/shared/api/unwrap'
 import { UserProfileDto, UpdateUserProfileDto } from '../dtos/user-profile.dto'
-
-function unwrap<T>(result: ActionResult<T>): T {
-    if (!result.ok) throw new Error(result.message)
-    return result.data
-}
 
 export class ProfileService {
 

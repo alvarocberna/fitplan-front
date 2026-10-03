@@ -155,7 +155,7 @@ describe('CartView', () => {
 
     await user.click(screen.getByRole('button', { name: 'Pagar' }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Plan no disponible'));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Plan no disponible', expect.anything()));
     expect(pushMock).not.toHaveBeenCalled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });

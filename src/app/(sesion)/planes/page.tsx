@@ -1,8 +1,10 @@
 //features
 import { MyPlansList, DashboardService } from '@/features'
 
+import { withSession } from '@/shared/auth/with-session'
+
 export default async function PlanesPage() {
-    const plans = await DashboardService.getPlans()
+    const plans = await withSession(() => DashboardService.getPlans())
 
     return (
         <div className="w-[90%] mx-auto">

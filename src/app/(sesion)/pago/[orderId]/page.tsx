@@ -4,12 +4,10 @@ import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 //react
 import { Suspense, useEffect, useState } from 'react'
-//toast
-import { toast } from 'react-toastify'
 //features
 import { ConsultationService, PaymentStatus } from '@/features'
 //shared
-import { usePlanSelection } from '@/shared'
+import { usePlanSelection, isNotFoundError, isSessionRequiredError, notifyError } from '@/shared'
 
 // Pasarela de pago SIMULADA: no procesa ningún pago real, solo da la sensación de un checkout
 // mientras no exista una integración con un proveedor real (Mercado Pago, Flow, Stripe, etc.).
@@ -33,7 +31,7 @@ function SimulatedPayment() {
     const { clearCart } = usePlanSelection()
     const [isPaying, setIsPaying] = useState(false)
     //'payable' también cubre el caso de no poder leer el estado: el backend valida igual al pagar
-    const [orderState, setOrderState] = useState<'payable' | 'rejected' | 'expired'>('payable')
+    const [orderState, setOrderState] = useState<'payable' | 'rejected' | 'expired' | 'not_found'>('payable')
 
     const goToPaidOrder = () => {
         if (isPredefined) {
@@ -46,13 +44,25 @@ function SimulatedPayment() {
         }
     }
 
-    //devuelve el estado de pago de la orden, o null si no se pudo leer
-    const readPaymentStatus = async (): Promise<PaymentStatus | null> => {
+    //devuelve el estado de pago de la orden, 'not_found' si no existe o no es del usuario, o null si no
+    //se pudo leer (error puntual: se trata como pagable, el backend valida igual al pagar). Una sesión
+    //vencida lleva a iniciar sesión.
+    const readPaymentStatus = async (): Promise<PaymentStatus | 'not_found' | null> => {
         try {
             return (await ConsultationService.getOrderStatus(orderId)).paymentStatus
-        } catch {
+        } catch (error) {
+            if (isNotFoundError(error)) return 'not_found'
+            if (isSessionRequiredError(error)) notifyError(error, '')
             return null
         }
+    }
+
+    //tras un pago/rechazo fallido: si la orden venció o dejó de existir se muestra esa vista; si no, el error
+    const handlePaymentError = async (error: unknown) => {
+        const paymentStatus = await readPaymentStatus()
+        if (paymentStatus === PaymentStatus.EXPIRED) setOrderState('expired')
+        else if (paymentStatus === 'not_found') setOrderState('not_found')
+        else notifyError(error, 'Error al procesar el pago')
     }
 
     //al entrar: una orden expirada no se puede pagar, una rechazada se puede reintentar y una pagada
@@ -62,6 +72,7 @@ function SimulatedPayment() {
         readPaymentStatus().then((paymentStatus) => {
             if (cancelled) return
             if (paymentStatus === PaymentStatus.EXPIRED) setOrderState('expired')
+            else if (paymentStatus === 'not_found') setOrderState('not_found')
             else if (paymentStatus === PaymentStatus.REJECTED) setOrderState('rejected')
             else if (paymentStatus === PaymentStatus.PAID) goToPaidOrder()
         })
@@ -76,13 +87,9 @@ function SimulatedPayment() {
             //dispara la misma lógica que ejecutaría el webhook real de la pasarela
             await ConsultationService.simulatePayment(orderId)
             goToPaidOrder()
-        } catch (error: any) {
+        } catch (error) {
             //el backend rechaza el pago de una orden cuyo plazo venció mientras esta página estaba abierta
-            if ((await readPaymentStatus()) === PaymentStatus.EXPIRED) {
-                setOrderState('expired')
-            } else {
-                toast.error(error.message || 'Error al procesar el pago')
-            }
+            await handlePaymentError(error)
             setIsPaying(false)
         }
     }
@@ -92,14 +99,32 @@ function SimulatedPayment() {
         try {
             await ConsultationService.simulatePaymentRejection(orderId)
             setOrderState('rejected')
-        } catch (error: any) {
-            if ((await readPaymentStatus()) === PaymentStatus.EXPIRED) {
-                setOrderState('expired')
-            } else {
-                toast.error(error.message || 'Error al procesar el pago')
-            }
+        } catch (error) {
+            await handlePaymentError(error)
         }
         setIsPaying(false)
+    }
+
+    if (orderState === 'not_found') {
+        return (
+            <div className="w-full flex justify-center px-6 py-4">
+                <div className="w-full max-w-md border border-zinc-300 rounded-2xl p-8 flex flex-col gap-6 text-left">
+                    <div>
+                        <h1 className="text-xl font-bold text-zinc-800">Orden no encontrada</h1>
+                        <p className="text-sm text-zinc-500 mt-1">
+                            La orden que intentas pagar no existe o no está disponible para tu cuenta.
+                        </p>
+                    </div>
+                    <Link
+                        href="/inicio"
+                        className="w-full py-2.5 rounded-full text-white text-center font-semibold hover:opacity-90 transition-opacity no-underline"
+                        style={{ backgroundColor: 'var(--color-primary)' }}
+                    >
+                        Volver al inicio
+                    </Link>
+                </div>
+            </div>
+        )
     }
 
     if (orderState === 'expired') {

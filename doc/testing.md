@@ -119,8 +119,14 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 
 ## Qué cubren los tests unitarios
 
-- **`src/shared/api/client.ts` (`apiFetch`)**: construcción de URL/headers/body, respuesta 204, éxito, y los distintos casos de
-  error HTTP (mensaje del body, campo `error` alternativo, body no-JSON, body sin campos reconocidos).
+- **`src/shared/api/client.ts` (`apiFetch`)**: construcción de URL/headers/body (incluido `x-request-id`), respuesta 204, éxito, y los casos de
+  error: contrato del backend (`message`/`status`/`code`/`requestId`/`errors`), mensajes por defecto en español cuando el
+  body no sirve, fallo de red (`NETWORK_ERROR`), timeout y 2xx que no es JSON.
+- **Manejo de errores compartido** (ver `doc/error-handling.md`): `action-result.test.ts` (`runAction`: 401 →
+  `unauthenticated`, log de 5xx, no filtra errores inesperados), `unwrap.test.ts`, `notify-error.test.ts` (toast vs. login),
+  `with-session.test.ts`, `session.test.ts` (`SESSION_SECRET` faltante lanza), `login-logout.route.test.ts`, y
+  `src/app/__tests__/error-boundaries.test.tsx` (los tres `error.tsx`: no muestran el mensaje del error, reportan al
+  servidor, reintentan).
 - **`src/shared/api/client-cms.ts` (`apiFetchCMS` / `apiFetchFormData`)** — la pieza de mayor riesgo del repo, sin cobertura
   previa: manejo de CSRF (cookie existente vs. fetch del token, solo en métodos mutantes), reintento único ante un 401 vía
   `/auth/refresh`, el caso en que el refresh falla, y el caso límite donde dos 401 simultáneos no quedan realmente deduplicados
@@ -138,7 +144,8 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
 - **`GenerateOrderButton`** y **`DownloadPlanPdf`**: guardas de datos incompletos, payload exacto enviado al backend, y los
   estados de carga/nombre de archivo del PDF (con `@react-pdf/renderer` parcialmente mockeado).
 - **`/ordenes/[id]`**: el ciclo completo de polling con fake timers — cada 4s, el aviso de demora a los 45s, la detención del
-  polling al completarse o fallar, resiliencia ante un error de red puntual, y la limpieza del intervalo al desmontar. Al
+  polling al completarse o fallar, resiliencia ante un error de red puntual, las salidas del polling (404 → "Orden no
+  encontrada", sesión vencida → login, 5 fallos seguidos → vista con "Reintentar") y la limpieza del intervalo al desmontar. Al
   completarse verifica la miniatura (`img` con la `thumbnailUrl`), el enlace "Descargar" hacia `pdfUrl`, que no haya
   `<iframe>`, y el placeholder cuando el plan no tiene miniatura.
 - **`src/proxy.ts` (`PROTECTED_PATHS`)**: `/inicio` y `/perfil` tienen su propio describe (mismo patrón:

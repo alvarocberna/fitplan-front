@@ -16,11 +16,10 @@ export class ArticlesServicePublic{
         return await apiFetchCMS<ArticleEntityPublic>(`articulos/project/ver/${articleId}?proyecto_id=${projectId}`, 'GET')
     }
 
-    public static async getArticleBySlug(slug: string): Promise<ArticleEntityPublic>{
+    // null si no hay un artículo con ese slug (la página responde 404)
+    public static async getArticleBySlug(slug: string): Promise<ArticleEntityPublic | null>{
         const articles = await this.getArticles();
-        const found = articles.articulo.find(art => art.slug === slug);
-        if (!found) throw new Error('Artículo no encontrado');
-        return found;
+        return articles.articulo.find(art => art.slug === slug) ?? null;
     }
 
 }

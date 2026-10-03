@@ -28,3 +28,6 @@ export * from './components/navbar-sesion.component';
 export * from './components/topbar-sesion.component';
 export * from './components/sesion-shell.component';
 export * from './components/footer.component';
+//ERRORES
+export * from './api/unwrap';
+export * from './errors/notify-error';

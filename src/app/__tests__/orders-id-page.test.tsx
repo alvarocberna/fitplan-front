@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import OrderPage from '@/app/(sesion)/ordenes/[id]/page';
-import { ConsultationProvider } from '@/shared';
+import { ConsultationProvider, ActionError, SessionRequiredError } from '@/shared';
 import { ConsultationService } from '@/features';
 import type { OrderStatusDto } from '@/features';
 
@@ -163,18 +163,83 @@ describe('OrderPage', () => {
     expect(getOrderStatus).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps polling without crashing when a status check rejects, and still raises the delay notice past 45s', async () => {
-    getOrderStatus.mockRejectedValue(new Error('network blip'));
+  it('keeps polling without crashing when a status check rejects once, and recovers on the next tick', async () => {
+    getOrderStatus
+      .mockRejectedValueOnce(new Error('network blip'))
+      .mockResolvedValue(status({ generationStatus: 'COMPLETED', pdfUrl: 'https://signed-url.example/plan.pdf' }));
     renderPage();
     await tick(0);
     expect(screen.getByText(/Estamos generando tu plan nutricional/)).toBeInTheDocument();
 
     await tick(4000);
     expect(getOrderStatus).toHaveBeenCalledTimes(2);
+    expect(screen.getByText('¡Tu plan nutricional está listo!')).toBeInTheDocument();
+  });
 
-    await tick(44_000);
+  it('after 5 consecutive failed checks stops polling and offers to retry', async () => {
+    getOrderStatus.mockRejectedValue(new Error('network blip'));
+    renderPage();
+    await tick(0);
+    await tick(4000 * 3);
+    expect(getOrderStatus).toHaveBeenCalledTimes(4);
+    expect(screen.getByText(/Estamos generando tu plan nutricional/)).toBeInTheDocument();
+
     await tick(4000);
-    expect(screen.getByText(/tardando más de lo normal/)).toBeInTheDocument();
+    expect(getOrderStatus).toHaveBeenCalledTimes(5);
+    expect(screen.getByText('No pudimos consultar el estado de tu orden')).toBeInTheDocument();
+
+    // ya no insiste solo
+    await tick(12_000);
+    expect(getOrderStatus).toHaveBeenCalledTimes(5);
+
+    // "Reintentar" vuelve a arrancar el polling
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'GENERATING' }));
+    await act(async () => {
+      screen.getByRole('button', { name: 'Reintentar' }).click();
+    });
+    await tick(0);
+    expect(getOrderStatus).toHaveBeenCalledTimes(6);
+    expect(screen.getByText(/Estamos generando tu plan nutricional/)).toBeInTheDocument();
+  });
+
+  it('a successful check resets the consecutive-failure count', async () => {
+    getOrderStatus
+      .mockRejectedValueOnce(new Error('blip'))
+      .mockRejectedValueOnce(new Error('blip'))
+      .mockRejectedValueOnce(new Error('blip'))
+      .mockRejectedValueOnce(new Error('blip'))
+      .mockResolvedValueOnce(status({ generationStatus: 'GENERATING' }))
+      .mockRejectedValue(new Error('blip'));
+    renderPage();
+    await tick(0);
+    await tick(4000 * 8); // 4 fallos, 1 éxito, 4 fallos más: nunca 5 seguidos
+
+    expect(screen.queryByText('No pudimos consultar el estado de tu orden')).not.toBeInTheDocument();
+  });
+
+  it('shows "Orden no encontrada" and stops polling when the order does not exist or is not the user\'s (404)', async () => {
+    getOrderStatus.mockRejectedValue(new ActionError('Orden no encontrada', 404, 'NOT_FOUND'));
+    renderPage();
+    await tick(0);
+
+    expect(screen.getByText('Orden no encontrada')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/inicio');
+
+    await tick(8000);
+    expect(getOrderStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends the user to login and stops polling when the session expired', async () => {
+    const assign = vi.fn();
+    vi.stubGlobal('location', { ...window.location, assign });
+    getOrderStatus.mockRejectedValue(new SessionRequiredError('Tu sesión expiró'));
+    renderPage();
+    await tick(0);
+
+    expect(assign).toHaveBeenCalledWith('/login?error=session_expired');
+    await tick(8000);
+    expect(getOrderStatus).toHaveBeenCalledTimes(1);
+    vi.unstubAllGlobals();
   });
 
   it('clears the polling interval on unmount', async () => {

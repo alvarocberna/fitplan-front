@@ -1,13 +1,12 @@
 'use client'
 //react
 import { useState, useEffect, useRef } from 'react'
-import { toast } from 'react-toastify'
 //next
 import { useRouter } from 'next/navigation'
 //features
 import { ConsultationService, AnamnesisDto, ChatMessageDto } from '@/features'
 //shared
-import { useConsultation } from '@/shared';
+import { useConsultation, notifyError } from '@/shared';
 
 
 // mensaje mostrado en el chat: además de role/content (lo que viaja al backend como
@@ -57,8 +56,9 @@ export function ChatAnamnesis() {
             setMessages(prev => [...prev, { role: 'assistant', content: res.reply, titleReply: res.titleReply }])
             setCurrentAnamnesis(res.anamnesis)
             setIsComplete(res.isComplete)
-        } catch {
-            toast.error('Error al enviar el mensaje')
+        } catch (error) {
+            //el mensaje del usuario queda en pantalla: puede reintentar enviando de nuevo
+            notifyError(error, 'No pudimos enviar tu mensaje. Intenta nuevamente.')
         } finally {
             setIsLoading(false)
         }

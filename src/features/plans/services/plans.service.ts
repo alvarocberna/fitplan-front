@@ -4,27 +4,17 @@ import {
     createPredefinedOrderAction,
     getPlanPreviewsAction,
     getPersonalizedProductAction,
-    type ActionResult,
 } from './plans.actions'
+//shared
+import { unwrap, SessionRequiredError } from '@/shared/api/unwrap'
 import { PredefinedProductDto } from '../dtos/predefined-product.dto'
 import { PlanPreviewDto } from '../dtos/plan-preview.dto'
 import { PersonalizedProductDto } from '../dtos/personalized-product.dto'
 
-//se lanza cuando la acción falló por no haber sesión válida: la UI abre el modal de registro/login
-export class SessionRequiredError extends Error {
-    constructor(message: string) {
-        super(message)
-        this.name = 'SessionRequiredError'
-    }
-}
 
-function unwrap<T>(result: ActionResult<T>): T {
-    if (!result.ok) {
-        if (result.code === 'unauthenticated') throw new SessionRequiredError(result.message)
-        throw new Error(result.message)
-    }
-    return result.data
-}
+//SessionRequiredError se lanza cuando la acción falló por no haber sesión válida: la UI abre el modal
+//de registro/login. Vive en shared (lo lanza el unwrap común); se re-exporta acá por compatibilidad.
+export { SessionRequiredError }
 
 export class PlansService {
 

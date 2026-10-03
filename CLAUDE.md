@@ -91,9 +91,16 @@ Gating is by `src/proxy.ts`, which redirects to `/login` without a valid session
 put the page under `(sesion)`; `isSesionRoute` (proxy) is deliberately separate from
 `isFocusRoute` / `usesSesionLayout` (presentation only).
 
-`apiFetch` throws `ApiError` (with the HTTP `status`) and `runAction` forwards that `status` in the failed
-`ActionResult`, so a service can tell a 404 apart (e.g. `DashboardService.getConsultation` returns `null` →
-the page calls `notFound()`).
+**Error handling** (full picture in `doc/error-handling.md` — read it before adding a `try/catch`):
+`apiFetch` throws `ApiError` (`status`, `code`, `requestId`; `message` is always user-facing Spanish, also for
+network failures and timeouts) → `runAction` returns it as `{ ok: false, message, status, code }` (a backend 401
+becomes `code: 'unauthenticated'`) → services use the shared `unwrap` / `unwrapOrNull` (`src/shared/api/unwrap.ts`),
+which throw `ActionError` or `SessionRequiredError` (`unwrapOrNull` maps a 404 to `null` → the page calls
+`notFound()`). Client Components report a caught error with `notifyError(error, fallback)`
+(`src/shared/errors/notify-error.ts`: session expired → `/login?error=session_expired`, otherwise a toast) — don't
+call `toast.error(error.message)` directly. Server Components of `(sesion)` load data inside `withSession(...)`
+(`src/shared/auth/with-session.ts`, server-only) so an expired session redirects to login instead of hitting
+`error.tsx`. The three boundaries report to the server through `useReportError`.
 
 ### Paid consultation flow (the core product)
 
@@ -122,7 +129,7 @@ Key steps:
 - **Physical assessment** (`FormMeasurements`): on submit it saves `measurements` and calls `ConsultationService.evaluateGoalFeasibility` (`POST consultations/goal-feasibility`, CU-CON-03). If the goal is not feasible (e.g. losing weight with BMI ≤ 20) the form is replaced by `GoalNotFeasible`: the backend's message plus "Salir" (→ `/inicio`) and "Nueva consulta" (→ `/consulta/anamnesis`), both discarding `anamnesis` and `measurements` from the context (`personalInfo` is kept). Otherwise it goes on to `/consulta/generar-orden`. The context setters/resets update `stateRef` synchronously (`persist`), so two mutations in the same event don't overwrite each other in `localStorage`.
 - **Generate order**: builds a `CompleteConsultationDto` from context and calls `ConsultationService.createOrder`, creating an `orden` row backend-side with `estado_pago: 'PENDING'`. Requires a session with a **complete** profile — the backend resolves the `user` from the token and 400s if the profile isn't complete (shouldn't happen in practice, since the frontend already gates on this earlier, but it's enforced server-side too). The AI plan is **not** generated yet — that's deferred until payment confirms, to avoid spending compute on abandoned checkouts.
 - **Payment** (`/pago/[orderId]`): a simulated gateway (card fields are decorative/disabled). "Pagar" calls `ConsultationService.simulatePayment`, which triggers backend-side the same logic a real payment webhook would. This page is a stand-in for a future real-gateway checkout + webhook. On mount it reads the order status: `REJECTED` shows a "pago rechazado" notice and allows retrying ("Simular rechazo" → `ConsultationService.simulatePaymentRejection` reproduces it), `EXPIRED` (24h unpaid; the backend deletes the consultation) replaces the checkout with an "Esta orden expiró" view linking to `/consulta/anamnesis` (or `/planes-estandar` with `?tipo=predefinido`), and `PAID` redirects without charging again. A failed payment re-reads the status to detect an order that expired while the page was open.
-- **Order status** (`/ordenes/[id]`): polls `ConsultationService.getOrderStatus` every 4s, reading `estado_pago` / `estado_generacion` / `plan_json`. Shows a delay notice past 45s while generating, renders a thumbnail of the plan's first page plus a "Descargar plan" button for the full PDF and an "Ir a inicio" button (→ `/inicio`) (`PlanFileCard`, `src/shared/components/`, the same PDF card as the plan detail `/planes/[orderId]`; it shows "Ir a inicio" only on `/ordenes/*`, via `usePathname`; the backend generates the PDF and thumbnail and returns signed `pdfUrl`/`thumbnailUrl`) once `COMPLETED`, or a reassuring error state — the polling URL is meant to be revisited later. `paymentStatus` `REJECTED` (link back to `/pago/[id]`) and `EXPIRED` also stop the polling with their own views.
+- **Order status** (`/ordenes/[id]`): polls `ConsultationService.getOrderStatus` every 4s, reading `estado_pago` / `estado_generacion` / `plan_json`. Shows a delay notice past 45s while generating, renders a thumbnail of the plan's first page plus a "Descargar plan" button for the full PDF and an "Ir a inicio" button (→ `/inicio`) (`PlanFileCard`, `src/shared/components/`, the same PDF card as the plan detail `/planes/[orderId]`; it shows "Ir a inicio" only on `/ordenes/*`, via `usePathname`; the backend generates the PDF and thumbnail and returns signed `pdfUrl`/`thumbnailUrl`) once `COMPLETED`, or a reassuring error state (payment is safe, order number shown) — the polling URL is meant to be revisited later. The polling also stops on a 404 ("Orden no encontrada"), on an expired session (→ `/login`) and after 5 consecutive failed checks (view with a "Reintentar" button). `paymentStatus` `REJECTED` (link back to `/pago/[id]`) and `EXPIRED` also stop the polling with their own views.
 
 Backend data model (separate repo, NestJS + PostgreSQL): a single `orden` entity holding the submitted consultation data, `estado_pago` (`PENDING|PAID|REJECTED|EXPIRED`), `estado_generacion` (`no_iniciado|generando|completado|error`), and `plan_json`.
 
@@ -154,8 +161,8 @@ S3 naming: `../doc/flows/purchase-flow-predefined-plan.md`.
   (`post_login_return_to`); `/api/cognito/callback` consumes it. Only routes in the allowlist of `src/shared/auth/return-to.ts`
   are accepted (no open redirect). The callback still runs the profile sync, which creates the identity the backend needs.
 - Code: `src/features/plans/` (components, `hooks/use-predefined-product.ts`, `services/plans.{actions,service}.ts`).
-  `ActionResult` gained an optional `code: 'unauthenticated'` so the UI can tell "no session" from a generic error
-  (`SessionRequiredError`).
+  `ActionResult` carries `code` (`'unauthenticated'` when there is no valid session → `SessionRequiredError`,
+  which `CartView` turns into the `LoginModal`).
 
 ### CMS-backed content (articles, testimonials, home)
 

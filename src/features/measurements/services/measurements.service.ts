@@ -4,19 +4,15 @@ import {
     getMyMeasurementAction,
     recordMeasurementAction,
     updateMeasurementAction,
-    type ActionResult,
 } from './measurements.actions'
+//shared
+import { unwrap, unwrapOrNull } from '@/shared/api/unwrap'
 import {
     MeasurementDetailDto,
     MeasurementSummaryDto,
     RecordMeasurementDto,
     UpdateMeasurementDto,
 } from '../dtos/measurement.dto'
-
-function unwrap<T>(result: ActionResult<T>): T {
-    if (!result.ok) throw new Error(result.message)
-    return result.data
-}
 
 export class MeasurementsService {
 
@@ -27,9 +23,7 @@ export class MeasurementsService {
 
     // null si la medición no existe o no es del usuario (el backend responde 404 en ambos casos).
     public static async getMeasurement(measurementId: string): Promise<MeasurementDetailDto | null> {
-        const result = await getMyMeasurementAction(measurementId)
-        if (!result.ok && result.status === 404) return null
-        return unwrap(result)
+        return unwrapOrNull(await getMyMeasurementAction(measurementId))
     }
 
     public static async recordMeasurement(data: RecordMeasurementDto): Promise<MeasurementDetailDto> {

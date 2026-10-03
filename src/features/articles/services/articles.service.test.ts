@@ -37,9 +37,9 @@ describe('ArticlesServicePublic', () => {
     expect(result).toBe(match);
   });
 
-  it('getArticleBySlug throws when no article matches the given slug', async () => {
+  it('getArticleBySlug returns null when no article matches the given slug (the page answers 404)', async () => {
     mockedFetch.mockResolvedValue({ articulo: [{ slug: 'otro-articulo' }] } as any);
 
-    await expect(ArticlesServicePublic.getArticleBySlug('inexistente')).rejects.toThrow('Artículo no encontrado');
+    await expect(ArticlesServicePublic.getArticleBySlug('inexistente')).resolves.toBeNull();
   });
 });

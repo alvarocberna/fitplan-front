@@ -136,3 +136,8 @@ export async function mockConsultationsList(consultations: Array<Record<string, 
 export async function mockConsultationDetail(detail: Record<string, unknown> & { consultationId: string }) {
   await setMock('consultationDetail', { detail });
 }
+
+// GET orders/:id/status responde 404: la orden no existe o no es del usuario.
+export async function mockOrderNotFound() {
+  await setMock('orderStatus', { notFound: true });
+}

@@ -211,3 +211,71 @@ describe('apiFetchFormData', () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });
+describe('errores de apiFetchCMS', () => {
+  it('throws a CmsApiError carrying the HTTP status and the CMS message', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(404, { message: 'Testimonio no encontrado' })));
+    const { apiFetchCMS, CmsApiError } = await import('./client-cms');
+
+    const error = await apiFetchCMS('foo', 'GET').catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(CmsApiError);
+    expect(error).toMatchObject({ message: 'Testimonio no encontrado', status: 404 });
+  });
+
+  it('uses a readable message (never "Error HTTP 502") when the error body is not JSON', async () => {
+    const htmlResponse = {
+      ok: false,
+      status: 502,
+      statusText: 'Bad Gateway',
+      json: async () => {
+        throw new Error('not json');
+      },
+    } as unknown as Response;
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(htmlResponse));
+    const { apiFetchCMS } = await import('./client-cms');
+
+    await expect(apiFetchCMS('foo', 'GET')).rejects.toThrow('Ocurrió un error inesperado. Intenta nuevamente.');
+  });
+
+  it('turns a network failure into a CmsApiError with status 0 and a readable message', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    const { apiFetchCMS } = await import('./client-cms');
+
+    const error = await apiFetchCMS('foo', 'GET').catch((e: unknown) => e);
+
+    expect(error).toMatchObject({ name: 'CmsApiError', status: 0 });
+    expect((error as Error).message).toContain('No pudimos conectar');
+  });
+
+  it('treats a network failure of the refresh call itself as "session expired" instead of leaking it', async () => {
+    document.cookie = 'csrf_token=abc123';
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(401, {}))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch')); // /auth/refresh sin red
+    vi.stubGlobal('fetch', fetchMock);
+    const { apiFetchCMS } = await import('./client-cms');
+
+    await expect(apiFetchCMS('foo', 'GET')).rejects.toMatchObject({ message: 'Sesión expirada', status: 401 });
+  });
+
+  it('does not write debug traces to the console while refreshing', async () => {
+    document.cookie = 'csrf_token=abc123';
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(jsonResponse(401, {}))
+        .mockResolvedValueOnce(jsonResponse(200, { ok: true }))
+        .mockResolvedValueOnce(jsonResponse(200, { ok: true })),
+    );
+    const { apiFetchCMS } = await import('./client-cms');
+
+    await apiFetchCMS('foo', 'GET');
+
+    expect(log).not.toHaveBeenCalled();
+    log.mockRestore();
+  });
+});
+

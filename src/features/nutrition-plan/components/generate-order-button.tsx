@@ -8,7 +8,7 @@ import { toast } from 'react-toastify'
 //features
 import { ConsultationService, CompleteConsultationDto } from '@/features';
 //shared
-import { useConsultation } from '@/shared';
+import { useConsultation, notifyError } from '@/shared';
 
 
 export function GenerateOrderButton(){
@@ -39,8 +39,8 @@ export function GenerateOrderButton(){
             //redirige a la pasarela de pago. Hoy es una pasarela simulada (/pago/[orderId]);
             //cuando se integre un proveedor real, esta es la línea que cambia por la URL de checkout real.
             router.push(`/pago/${orderId}`);
-        } catch (error: any) {
-            toast.error(error.message || 'Error al iniciar la consulta');
+        } catch (error) {
+            notifyError(error, 'Error al iniciar la consulta');
             setIsCreatingOrder(false);
         }
     }

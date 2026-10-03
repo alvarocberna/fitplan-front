@@ -28,8 +28,27 @@ const E2E_ACCESS_TOKEN = process.env.E2E_ACCESS_TOKEN ?? 'e2e-access-token'
 let mocks = {}
 let calls = []
 
+const ERROR_CODES = { 400: 'BAD_REQUEST', 401: 'UNAUTHENTICATED', 404: 'NOT_FOUND', 409: 'CONFLICT' }
+
+// Un error ({ message } con status >= 400) se responde con el contrato del backend real
+// (AllExceptionsFilter): { statusCode, code, message, requestId, timestamp, path }. El requestId es el
+// que mandó el llamador en x-request-id, igual que en el backend.
 function send(res, status, body) {
-  res.writeHead(status, { 'Content-Type': 'application/json' })
+  const req = res.req
+  const requestId = req?.headers['x-request-id']
+  const headers = { 'Content-Type': 'application/json' }
+  if (typeof requestId === 'string') headers['x-request-id'] = requestId
+  if (status >= 400 && body && typeof body.message === 'string') {
+    body = {
+      statusCode: status,
+      code: body.code ?? ERROR_CODES[status] ?? (status >= 500 ? 'INTERNAL_ERROR' : 'BAD_REQUEST'),
+      message: body.message,
+      ...(typeof requestId === 'string' && { requestId }),
+      timestamp: new Date().toISOString(),
+      path: req?.url,
+    }
+  }
+  res.writeHead(status, headers)
   res.end(body === undefined ? undefined : JSON.stringify(body))
 }
 
@@ -48,9 +67,11 @@ function nextInSequence(mock) {
   return item
 }
 
-// Aplica una respuesta configurada: { fail: true, status?, message? } => error; si no => body.
+// Aplica una respuesta configurada: { fail: true, status?, message?, code? } => error; si no => body.
 function respond(res, config, body) {
-  if (config?.fail) return send(res, config.status ?? 500, { message: config.message ?? 'Error del backend de prueba' })
+  if (config?.fail) {
+    return send(res, config.status ?? 500, { message: config.message ?? 'Error del backend de prueba', code: config.code })
+  }
   return send(res, 200, body)
 }
 
@@ -280,6 +301,8 @@ const server = http.createServer(async (req, res) => {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       const mock = mocks.orderStatus
       if (!mock) return send(res, 501, { message: 'orders/:id/status sin mock' })
+      // { notFound: true } => la orden no existe o no es del usuario (404, regla R2)
+      if (mock.notFound) return send(res, 404, { message: 'Orden no encontrada' })
       return send(res, 200, nextInSequence(mock))
     }
 
