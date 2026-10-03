@@ -7,17 +7,24 @@ import { faUser, faNotesMedical, faRulerVertical, faCreditCard, faClipboardCheck
 import {Card, SubsectionHead, SubsectionTitle} from '@/shared'
 import { getSession } from '@/shared/auth/session'
 import { syncProfileAction } from '@/shared/auth/profile.actions'
+//features - plans (la action se importa directo: es server-only y no va por el barrel)
+import { getPersonalizedProductAction } from '@/features/plans/services/plans.actions'
+import { formatPrice } from '@/features/plans/format-price'
 
-const steps = [
+//pasos de la consulta; el del pago lleva el precio del backend (sin monto si no se pudo obtener)
+const buildSteps = (price: string | null) => [
   { title: 'Información personal:', text: 'Completa tus datos básicos.', icon: faUser },
   { title: 'Chat con Nuvi:', text: 'Conversa con Nuvi para que pueda conocer tus objetivos deportivos y requerimientos.', icon: faNotesMedical },
   { title: 'Datos físicos:', text: 'Ingresa tu información física, como peso y talla.', icon: faRulerVertical },
-  { title: 'Pago seguro:', text: 'Realiza el pago de US$5 para generar tu plan.', icon: faCreditCard },
+  { title: 'Pago seguro:', text: price ? `Realiza el pago de ${price} para generar tu plan.` : 'Realiza el pago para generar tu plan.', icon: faCreditCard },
   { title: '¡Tu plan está listo!', text: 'Descárgalo tu plan y recíbelo también por correo electrónico.', icon: faClipboardCheck },
 ]
 
 export default async function StartConsultation() {
   const { isAuthenticated } = await getSession()
+
+  const product = await getPersonalizedProductAction()
+  const steps = buildSteps(product.ok ? formatPrice(product.data.price, product.data.currency) : null)
 
   let href = '/login'
   if (isAuthenticated) {

@@ -18,7 +18,8 @@ test.describe('Consultation - generate order', () => {
     await mockCreateOrder({ orderId: 'order-e2e-123' });
     await page.goto('/consulta/generar-orden');
 
-    await expect(page.getByText('$5').first()).toBeVisible();
+    // el precio viene del backend (GET plans/personalized), no está fijo en el frontend
+    await expect(page.getByText('$4.990').first()).toBeVisible();
     await page.getByRole('button', { name: 'Realizar pago' }).click();
 
     await expect(page).toHaveURL(/\/pago\/order-e2e-123$/);

@@ -1,18 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PlansService, SessionRequiredError } from './plans.service';
-import { getPredefinedProductAction, createPredefinedOrderAction } from './plans.actions';
+import { getPredefinedProductAction, createPredefinedOrderAction, getPersonalizedProductAction } from './plans.actions';
 
 vi.mock('./plans.actions', () => ({
   getPredefinedProductAction: vi.fn(),
   createPredefinedOrderAction: vi.fn(),
+  getPersonalizedProductAction: vi.fn(),
 }));
 
 const mockedGetProduct = vi.mocked(getPredefinedProductAction);
 const mockedCreateOrder = vi.mocked(createPredefinedOrderAction);
+const mockedGetPersonalized = vi.mocked(getPersonalizedProductAction);
 
 beforeEach(() => {
   mockedGetProduct.mockReset();
   mockedCreateOrder.mockReset();
+  mockedGetPersonalized.mockReset();
 });
 
 describe('PlansService', () => {
@@ -35,6 +38,19 @@ describe('PlansService', () => {
     mockedGetProduct.mockResolvedValue({ ok: false, message: 'Plan x no disponible' });
 
     await expect(PlansService.getPredefinedProduct('x')).rejects.toThrow('Plan x no disponible');
+  });
+
+  it('getPersonalizedProduct devuelve la ficha (precio) del plan personalizado', async () => {
+    const product = { name: 'Plan Nutricional Personalizado', description: 'd', price: 4990, currency: 'CLP' };
+    mockedGetPersonalized.mockResolvedValue({ ok: true, data: product });
+
+    await expect(PlansService.getPersonalizedProduct()).resolves.toEqual(product);
+  });
+
+  it('getPersonalizedProduct lanza un Error con el mensaje si la acción falla', async () => {
+    mockedGetPersonalized.mockResolvedValue({ ok: false, message: 'Plan personalizado no disponible' });
+
+    await expect(PlansService.getPersonalizedProduct()).rejects.toThrow('Plan personalizado no disponible');
   });
 
   it('createPredefinedOrder devuelve el orderId', async () => {

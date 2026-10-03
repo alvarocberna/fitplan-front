@@ -154,6 +154,19 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ---- planes predefinidos ----
+    // ficha pública del plan personalizado (sin auth): el precio de la consulta. Responde por defecto
+    // (sin mock) porque la consultan /consulta/inicio y /consulta/generar-orden en casi todos los flujos.
+    if (path === '/plans/personalized' && method === 'GET') {
+      const mock = mocks.personalizedProduct
+      if (mock?.unavailable) return send(res, 404, { message: 'Plan personalizado no disponible' })
+      return send(res, 200, {
+        name: 'Plan Nutricional Personalizado',
+        description: 'Plan de prueba',
+        price: mock?.price ?? 4990,
+        currency: 'CLP',
+      })
+    }
+
     // ficha pública de una versión (sin auth, como en el backend real): responde con el code pedido
     if (/^\/plans\/standard\/[^/]+$/.test(path) && method === 'GET') {
       const mock = mocks.predefinedProduct

@@ -2,15 +2,16 @@
 //next
 import Image from 'next/image'
 //features
-import { GenerateOrderButton } from '@/features'
+import { GenerateOrderButton, formatPrice, usePersonalizedProduct } from '@/features'
 //shared
 import { useConsultation } from '@/shared'
 
-// Precio de la consulta nutricional personalizada (ver home/consultation-description.component.tsx)
-const CONSULTATION_PRICE = 5
-
 export default function GenerateOrderPage() {
     const { personalInfo } = useConsultation()
+    //precio de la consulta: el del producto del backend, que es el monto con que se crea la orden.
+    //'—' mientras carga o si no se pudo obtener.
+    const { product } = usePersonalizedProduct()
+    const price = product ? formatPrice(product.price, product.currency) : '—'
 
     return (
         <div className="w-full flex flex-col items-center text-center px-6 py-4">
@@ -46,7 +47,7 @@ export default function GenerateOrderPage() {
                             </div>
                             {/* price */}
                             <p className="w-20 text-right font-semibold text-zinc-800">
-                                ${CONSULTATION_PRICE}
+                                {price}
                             </p>
                         </div>
                     </div>
@@ -58,13 +59,13 @@ export default function GenerateOrderPage() {
                         <div className="flex flex-col gap-2 text-sm text-zinc-600">
                             <div className="flex items-center justify-between">
                                 <span>Subtotal</span>
-                                <span>${CONSULTATION_PRICE}</span>
+                                <span>{price}</span>
                             </div>
                         </div>
 
                         <div className="border-t border-zinc-300 pt-4 flex items-center justify-between">
                             <span className="font-semibold text-zinc-800">Total</span>
-                            <span className="text-xl font-bold text-zinc-800">${CONSULTATION_PRICE}</span>
+                            <span className="text-xl font-bold text-zinc-800">{price}</span>
                         </div>
 
                         <GenerateOrderButton />

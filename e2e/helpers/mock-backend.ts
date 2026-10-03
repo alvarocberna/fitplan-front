@@ -77,6 +77,12 @@ export async function mockOrderStatusSequence(sequence: Array<Record<string, unk
   await setMock('orderStatus', { sequence });
 }
 
+// plans/personalized (público): precio de la consulta. Sin llamar a esto responde 4990 CLP;
+// `unavailable` responde 404 (producto no cargado en el backend).
+export async function mockPersonalizedProduct(options: { price?: number; unavailable?: boolean } = {}) {
+  await setMock('personalizedProduct', options);
+}
+
 // plans/standard/:code (público). Responde con la ficha del code pedido; los codes en
 // `unavailableCodes` responden 404 (versión inexistente o inactiva).
 export async function mockPredefinedProduct(options: { price?: number; unavailableCodes?: string[] } = {}) {

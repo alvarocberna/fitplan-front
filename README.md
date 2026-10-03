@@ -62,7 +62,7 @@ antropométricos definidos en el DTO pero comentados/deshabilitados en la UI). A
 el estado local, la consulta completa se envía recién en el paso siguiente.
 
 ### 4. Generar orden — `/consulta/generar-orden`
-Página de resumen/checkout (precio fijo `PRECIO_CONSULTA`). El botón `BtnGenerarOrden`:
+Página de resumen/checkout. El precio no está fijo en el frontend: lo trae `usePersonalizedProduct` desde `GET plans/personalized` (el producto del que el backend toma el monto de la orden) y se muestra con `formatPrice`; `—` mientras carga o si no se pudo obtener. El botón `BtnGenerarOrden`:
 1. Arma `ConsultaCompletaDto` (`informacion_personal` + `anamnesis` + `mediciones`) desde el context.
 2. Llama a `POST /consultations` (`createOrderAction`), que crea la consulta y su orden en el backend con
    `paymentStatus: 'PENDING'`. **La IA todavía no genera el plan en este punto** — eso se difiere hasta que
@@ -159,6 +159,7 @@ Vive en otro repo (`../nutricionista-virtual-back`). Su contrato está documenta
 | POST | `dev/orders/:id/simulate-payment` | `simulatePaymentAction` | simula la confirmación de pago (stand-in del webhook real) |
 | POST | `dev/orders/:id/simulate-payment-rejection` | `simulatePaymentRejectionAction` | simula un pago rechazado (la orden queda `REJECTED`, reintentable) |
 | GET | `plans/standard/previews`, `plans/standard/:code` | `getPlanPreviewsAction`, `getPredefinedProductAction` | catálogo público de planes estándar |
+| GET | `plans/personalized` | `getPersonalizedProductAction` | precio del plan personalizado (lo muestran `/consulta/inicio` y `/consulta/generar-orden`; es el monto con que el backend crea la orden) |
 | POST | `plans/standard/:code/purchase` | `createPredefinedOrderAction` | compra de un plan estándar (sin body) |
 
 ## Deuda técnica

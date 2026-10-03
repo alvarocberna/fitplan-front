@@ -5,12 +5,18 @@ import { runAction, type ActionResult } from '@/shared/api/action-result'
 import { getValidAccessToken } from '@/shared/auth/tokens'
 import { PredefinedProductDto } from '../dtos/predefined-product.dto'
 import { PlanPreviewDto } from '../dtos/plan-preview.dto'
+import { PersonalizedProductDto } from '../dtos/personalized-product.dto'
 
 export type { ActionResult }
 
 //ficha pública de la versión (precio y miniatura): no requiere sesión
 export async function getPredefinedProductAction(code: string): Promise<ActionResult<PredefinedProductDto>> {
   return runAction(() => apiFetch<PredefinedProductDto>(`plans/standard/${encodeURIComponent(code)}`))
+}
+
+//ficha pública del plan personalizado (precio de la consulta): no requiere sesión
+export async function getPersonalizedProductAction(): Promise<ActionResult<PersonalizedProductDto>> {
+  return runAction(() => apiFetch<PersonalizedProductDto>('plans/personalized'))
 }
 
 //las (hasta) 4 fichas de vista previa (una por familia) para el carrusel del home: no requiere sesión
