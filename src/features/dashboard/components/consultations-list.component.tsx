@@ -44,8 +44,10 @@ function ConsultationCard({ consultation }: { consultation: ConsultationSummaryD
     return (
         <li
             aria-label={`Consulta N°${consultationNumber}`}
-            className="relative w-full bg-white border border-white rounded-[12px] shadow-lg p-4 grid grid-cols-[auto_minmax(0,1fr)] md:grid-cols-[auto_minmax(0,1fr)_auto] gap-4 text-left hover:shadow-xl transition-shadow"
+            className="relative w-full bg-white border border-white rounded-[12px] shadow-lg p-4 grid grid-cols-[auto_minmax(0,1fr)] md:grid-cols-[auto_minmax(0,1fr)_auto] gap-x-4 gap-y-3 md:gap-y-1 text-left hover:shadow-xl transition-shadow"
         >
+            {/* Distribución. Móvil: fila 1 = fecha | título; debajo, a todo el ancho, el detalle (objetivo, régimen,
+                macronutrientes) y luego los botones. Desde md: fecha | título + detalle | botones. */}
             {/* "stretched link" a nivel del card (no dentro de la col. 3: su `md:relative` lo encerraría): todo el
                 card abre el detalle */}
             <Link
@@ -54,18 +56,20 @@ function ConsultationCard({ consultation }: { consultation: ConsultationSummaryD
                 className="absolute inset-0 rounded-[12px]"
             />
 
-            {/* col. 1: fecha y número de la consulta, en el lugar del ícono de MyPlansList */}
-            <div className="rounded-xl px-3 py-2 flex flex-col items-center justify-center self-start text-center" style={ICON_CIRCLE_STYLE}>
+            {/* fecha y número de la consulta, en el lugar del ícono de MyPlansList */}
+            <div className="md:row-span-2 rounded-xl px-3 py-2 flex flex-col items-center justify-center self-start text-center" style={ICON_CIRCLE_STYLE}>
                 <p className="text-sm font-semibold">{formatDate(consultationDate)}</p>
                 <p className="text-xs text-zinc-600">Consulta N°{consultationNumber}</p>
             </div>
 
-            {/* col. 2: título, objetivo, régimen y macronutrientes */}
-            <div className="flex flex-col gap-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-zinc-900">Consulta nutricional</p>
-                    <PlanStatusBadge status={planStatus} />
-                </div>
+            {/* título y estado: junto a la fecha */}
+            <div className="flex flex-wrap items-center gap-2 min-w-0 self-center md:self-auto">
+                <p className="font-semibold text-zinc-900">Consulta nutricional</p>
+                <PlanStatusBadge status={planStatus} />
+            </div>
+
+            {/* objetivo, régimen y macronutrientes: en móvil bajo la fila de fecha y título, a todo el ancho */}
+            <div className="col-span-2 md:col-span-1 md:col-start-2 flex flex-col gap-1 min-w-0">
                 <p className="text-sm text-zinc-700">
                     <span className="text-zinc-500">Objetivo: </span>
                     {mainGoal ?? 'Sin objetivo registrado'}
@@ -80,10 +84,10 @@ function ConsultationCard({ consultation }: { consultation: ConsultationSummaryD
                 <MacrosRow values={plan} />
             </div>
 
-            {/* col. 3: desde md, separada por una línea vertical, estirada al alto del card. Su `md:relative`
+            {/* botones: en móvil al final; desde md en la 3.ª columna, separada por una línea vertical, estirada al alto del card. Su `md:relative`
                 (para la línea) la pinta sobre el enlace del card: `pointer-events-none` deja pasar el clic */}
             <div
-                className={`col-span-2 md:col-span-1 flex flex-row md:flex-col md:justify-center gap-2 md:self-stretch md:pl-4 pointer-events-none ${DIVIDER_MD}`}
+                className={`col-span-2 md:col-span-1 md:col-start-3 md:row-start-1 md:row-span-2 mt-1 md:mt-0 flex flex-row md:flex-col md:justify-center gap-2 md:self-stretch md:pl-4 pointer-events-none ${DIVIDER_MD}`}
             >
                 {/* solo visual: el clic lo recibe el enlace que cubre el card */}
                 <span aria-hidden="true" className="btn primary-btn h-10! px-6">

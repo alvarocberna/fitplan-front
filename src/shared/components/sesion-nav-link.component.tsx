@@ -16,8 +16,7 @@ export interface SesionNavItem {
     icon: NavIcon;
 }
 
-// Opciones de navegación del área con sesión, compartidas por el sidebar (md+) y la barra superior
-// (móvil). "Cerrar sesión" no está aquí: no es una ruta, es el endpoint de logout.
+// Opciones de navegación del área con sesión (NavbarSesion: sidebar en md+, panel deslizable en móvil). "Cerrar sesión" no está aquí: no es una ruta, es el endpoint de logout.
 export const SESION_NAV_ITEMS: SesionNavItem[] = [
     { href: "/inicio", label: "Inicio", icon: Squares2X2Icon },
     { href: "/planes", label: "Planes", icon: DocumentTextIcon },

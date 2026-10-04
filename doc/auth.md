@@ -245,8 +245,11 @@ el ancho actual del sidebar y cuyo padding superior (`pt-19 md:pt-23`) deja libr
 
 - **Barra superior (`TopbarSesion`)**: fija, 100% de ancho, `h-15` (60px). A la izquierda el logo de
   texto "Nuvi" (link a `/inicio`); a la derecha el botón "Nueva consulta" (link a `/consulta/anamnesis`). En
-  móvil (<md) también aloja las opciones de navegación (Inicio, Planes, Mediciones, Perfil y Cerrar sesión, en variante
-  `compact`: ícono sobre la etiqueta), porque el sidebar no se renderiza en esa resolución.
+  móvil (<md) muestra además, antes del logo, el botón "menú" (`Abrir menú` / `Cerrar menú`) que abre y cierra el panel
+  de navegación (`NavbarSesion`), donde están Inicio, Planes, Mediciones, Perfil y Cerrar sesión. En móvil ese panel
+  está fuera de la pantalla hasta que se abre, siempre con los links (`w-56`), y se cierra también al elegir una opción,
+  al tocar el fondo o con Escape; su estado (`mobileMenuOpen`, en `SesionShell`) es independiente del acoplado/desacoplado
+  de escritorio.
 - **Sidebar (`NavbarSesion`, solo md+)**: `hidden md:flex`, fijo a la izquierda debajo de la barra
   superior (`top-15`, alto `calc(100vh - 3.75rem)`). Sus opciones son, en orden, Inicio (etiqueta
   visible de `/inicio`; el href sigue siendo `/inicio`), Planes (`/planes`), Mediciones (`/mediciones`),

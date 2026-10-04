@@ -143,7 +143,7 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   "Siguiente" al completarse la anamnesis.
 - **`GenerateOrderButton`** y **`DownloadPlanPdf`**: guardas de datos incompletos, payload exacto enviado al backend, y los
   estados de carga/nombre de archivo del PDF (con `@react-pdf/renderer` parcialmente mockeado).
-- **`/ordenes/[id]`**: el ciclo completo de polling con fake timers — cada 4s, el aviso de demora a los 45s, la detención del
+- **`/ordenes/[id]`**: el ciclo completo de polling con fake timers — cada 4s, la barra de avance simulada (nunca llega a 90 % y sobrevive a una recarga), el aviso de demora a los 4 min, la detención del
   polling al completarse o fallar, resiliencia ante un error de red puntual, las salidas del polling (404 → "Orden no
   encontrada", sesión vencida → login, 5 fallos seguidos → vista con "Reintentar") y la limpieza del intervalo al desmontar. Al
   completarse verifica la miniatura (`img` con la `thumbnailUrl`), el enlace "Descargar" hacia `pdfUrl`, que no haya
@@ -213,9 +213,10 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   hover/focus del botón que ilumina su borde y el borde derecho del `<nav>` con `var(--color-primary)`, que los links llevan
   `hidden` al colapsar y el `<nav>` `w-14` en vez de `w-56`.
 - **`TopbarSesion`** (barra superior `<header>` fija, `h-15`): logo "Nuvi" hacia `/inicio`, botón "Nueva consulta" hacia
-  `/consulta/anamnesis` (siempre visible, fuera del menú móvil), y el `<nav aria-label="Menú de usuario">` (`flex md:hidden`)
-  con Perfil, Inicio y Cerrar sesión (mismos hrefs que el sidebar), con el link activo por pathname en color primary y **sin**
-  rectángulo lateral (variante `compact`).
+  `/consulta/anamnesis` (siempre visible), y el botón "menú" de móvil (`md:hidden`, `aria-controls="sesion-nav"`): solo existe
+  con `onMenuToggle`, lo invoca al hacer click y cambia etiqueta, `aria-expanded` e ícono según `menuOpen`. La barra ya no
+  aloja los links de sesión. `NavbarSesion` cubre el panel móvil: fuera de pantalla e `invisible` cerrado, con fondo al
+  abrirse, links siempre visibles aunque el sidebar de escritorio esté acoplado, y cierre por fondo, Escape u opción elegida.
 - **`SesionNavLink` / `SESION_NAV_ITEMS`** (`sesion-nav-link.component.tsx`, compartidos por sidebar y barra superior): la lista
   de ítems (Perfil, Inicio), activo = color primary + indicador (solo en la variante no-compact), inactivo sin ninguno, y que
   `className` se aplica al link.
@@ -226,10 +227,10 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   `<main>` (`pt-19 md:pt-23`). Además renderiza un único `Footer` (`contentinfo`) como hermano de `<main>` (posterior a él en el
   DOM), dentro de un wrapper con el mismo padding lateral que `<main>` (`md:pl-56` desacoplado / `md:pl-14` acoplado, porque el
   sidebar es `fixed` y taparía el borde izquierdo del footer), que cambia al hacer toggle y se reinicia al cambiar de sección.
-  Gotcha: jsdom no aplica CSS, así que los enlaces Inicio/Perfil/Cerrar sesión aparecen **dos veces**
-  en el DOM (sidebar + menú móvil `md:hidden` de la barra superior): los tests acotan por contenedor (`within(sidebar)`, donde
-  el sidebar es el `<nav>` que contiene el botón de acoplar; o `within(getByRole('navigation', { name: 'Menú de usuario' }))`)
-  en vez de `getByRole('link', { name: 'Inicio' })` a secas, que falla por "múltiples elementos".
+  También cubre el menú móvil de punta a punta (el botón de la barra abre y cierra el panel, se cierra al elegir una
+  opción o tocar el fondo, y no altera el acoplado de escritorio). Los enlaces de sesión están **una sola vez** en el DOM
+  (el mismo `<nav>` es sidebar y panel móvil); los tests igual acotan con `within(sidebar)`, donde el sidebar es el `<nav>`
+  que contiene el botón de acoplar, porque el `Footer` repite algunos nombres de enlace.
 - **`sesion-routes.ts`**: `isSesionRoute` (`/inicio`, `/planes`, `/mediciones`, `/perfil` y sus subrutas como `/inicio/consultas/abc`, sin falsos positivos
   tipo `/iniciox`; la usa el proxy; `/pago/*` y `/ordenes/*` dan false), `isSessionGatedPrefix` (`/pago` y `/ordenes`, raíz y subrutas, sin falsos positivos tipo `/pagos`, `/pago-x`,
   `/ordenesx`; `/consulta` no entra), `isFocusRoute` (prefijos `/consulta`, `/pago` y `/ordenes` sin falsos positivos tipo
@@ -275,15 +276,17 @@ individuales no verían (traspaso de `localStorage`, remonte de `ConsultationPro
    llame al backend si faltan datos de pasos anteriores.
 5. **Pago simulado**: pago exitoso y redirección al estado de la orden, y error de la simulación de pago.
 6. **Estado de la orden**: polling hasta completarse (miniatura + enlace "Descargar" hacia la URL firmada del PDF, sin
-   `<iframe>`, con `nutritionPlanMock` como `planJson`), placeholder cuando el plan no tiene miniatura, aviso de demora
-   pasados 45s, y el estado de error reasegurante.
+   `<iframe>`, con `nutritionPlanMock` como `planJson`), placeholder cuando el plan no tiene miniatura, barra de avance mientras
+   genera, aviso de demora pasados 4 min (sembrando el inicio en `sessionStorage` para no esperar el tiempo real), y el
+   estado de error reasegurante.
 7. **Protección de rutas y layout de sesión** (`session-routes.spec.ts`): sin sesión, `/consulta/*`, `/pago/*`, `/ordenes/*`,
    `/inicio` y `/perfil` redirigen a `/login` y `/consulta` (raíz) sigue pública; con sesión, `/consulta/*`, `/pago/*` y
    `/ordenes/*` muestran la barra superior (logo "Nuvi" y "Nueva consulta", siempre visible), el sidebar de sesión acoplado, sin
    el navbar de la landing, y el botón lo desacopla y lo vuelve a acoplar (sin afectar a la barra superior). En un viewport
-   móvil (390px) el sidebar desaparece y Perfil/Inicio/Cerrar sesión pasan al menú de la barra superior. Los selectores se acotan
-   al sidebar (`<nav>` que contiene el botón de acoplar), a la barra superior (`banner`) o al menú móvil
-   (`navigation` "Menú de usuario"), y usan `exact: true` para "Inicio". Como `SesionShell` monta el `Footer` (que repite los links `/#...` de la landing), la
+   móvil (390px) las opciones están ocultas hasta abrir el panel con el botón "Abrir menú" de la barra superior, y se
+   vuelven a ocultar con "Cerrar menú". Los selectores se acotan
+   al sidebar (`<nav>` que contiene el botón de acoplar), a la barra superior (`banner`) o al panel
+   (`nav#sesion-nav`), y usan `exact: true` para "Inicio". Como `SesionShell` monta el `Footer` (que repite los links `/#...` de la landing), la
    ausencia del navbar de la landing se verifica con su CTA `a[href="/login"]` (count 0) y no con `a[href="/#plan-personal"]`;
    además se comprueba que haya un único `contentinfo`.
 

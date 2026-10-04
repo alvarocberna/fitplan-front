@@ -47,6 +47,8 @@ async function tick(ms: number) {
 beforeEach(() => {
   vi.useFakeTimers();
   getOrderStatus.mockReset();
+  // el inicio del avance de la generación se guarda por orden en sessionStorage
+  sessionStorage.clear();
 });
 
 afterEach(() => {
@@ -74,17 +76,47 @@ describe('OrderPage', () => {
     expect(getOrderStatus).toHaveBeenCalledTimes(3);
   });
 
-  it('shows a delay notice once generation has been running past 45 seconds', async () => {
+  it('while generating shows a simulated progress bar and how long it usually takes', async () => {
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'GENERATING' }));
+    renderPage();
+    // primera consulta en curso: todavía el spinner, sin barra
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+
+    await tick(0);
+    const bar = screen.getByRole('progressbar');
+    expect(screen.getByText(/suele tardar entre 2 y 3 minutos/)).toBeInTheDocument();
+    const initial = Number(bar.getAttribute('aria-valuenow'));
+
+    await tick(120_000);
+    const afterTwoMinutes = Number(bar.getAttribute('aria-valuenow'));
+    expect(afterTwoMinutes).toBeGreaterThan(initial);
+    expect(afterTwoMinutes).toBeLessThan(90);
+  });
+
+  it('keeps the progress after a page reload instead of starting over', async () => {
+    getOrderStatus.mockResolvedValue(status({ generationStatus: 'GENERATING' }));
+    const first = renderPage();
+    await tick(120_000);
+    const before = Number(screen.getByRole('progressbar').getAttribute('aria-valuenow'));
+    first.unmount();
+
+    renderPage();
+    await tick(0);
+
+    expect(Number(screen.getByRole('progressbar').getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(before);
+  });
+
+  it('shows a delay notice once generation has been running past 4 minutes', async () => {
     getOrderStatus.mockResolvedValue(status({ generationStatus: 'GENERATING' }));
     renderPage();
     await tick(0);
-    expect(screen.queryByText(/tardando más de lo normal/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/más de lo habitual/)).not.toBeInTheDocument();
 
-    await tick(44_000);
-    expect(screen.queryByText(/tardando más de lo normal/)).not.toBeInTheDocument();
+    await tick(236_000);
+    expect(screen.queryByText(/más de lo habitual/)).not.toBeInTheDocument();
 
-    await tick(4000);
-    expect(screen.getByText(/tardando más de lo normal/)).toBeInTheDocument();
+    await tick(8000);
+    expect(screen.getByText(/más de lo habitual/)).toBeInTheDocument();
   });
 
   it('stops polling, shows the thumbnail and the download button, and persists the plan once generation completes', async () => {

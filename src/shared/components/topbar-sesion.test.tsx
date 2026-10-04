@@ -1,12 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { TopbarSesion } from './topbar-sesion.component';
 
 const usePathnameMock = vi.fn();
 vi.mock('next/navigation', () => ({ usePathname: () => usePathnameMock() }));
-
-// jsdom no aplica CSS: los enlaces del menú móvil (md:hidden) están en el DOM junto al resto.
-const mobileNav = () => screen.getByRole('navigation', { name: 'Menú de usuario' });
 
 describe('TopbarSesion', () => {
   it('renders a fixed full-width header of h-15', () => {
@@ -23,13 +20,18 @@ describe('TopbarSesion', () => {
     expect(screen.getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/inicio');
   });
 
-  it('renders the "Nueva consulta" button pointing to /consulta/anamnesis, outside the mobile menu', () => {
+  it('renders the "Nueva consulta" button pointing to /consulta/anamnesis', () => {
     usePathnameMock.mockReturnValue('/inicio');
     render(<TopbarSesion />);
 
-    const button = screen.getByRole('link', { name: 'Nueva consulta' });
-    expect(button).toHaveAttribute('href', '/consulta/anamnesis');
-    expect(mobileNav()).not.toContainElement(button);
+    expect(screen.getByRole('link', { name: 'Nueva consulta' })).toHaveAttribute('href', '/consulta/anamnesis');
+  });
+
+  it('no longer hosts the session links: they live in the navigation panel (NavbarSesion)', () => {
+    usePathnameMock.mockReturnValue('/inicio');
+    render(<TopbarSesion onMenuToggle={vi.fn()} />);
+
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['Nuvi', 'Nueva consulta']);
   });
 
   it('keeps "Nueva consulta" visible on every route (never hidden by the collapse or active state)', () => {
@@ -44,74 +46,53 @@ describe('TopbarSesion', () => {
     }
   });
 
-  describe('menú de usuario (móvil)', () => {
-    it('is a flex md:hidden nav, so it only shows on small screens', () => {
+  describe('botón de menú (móvil)', () => {
+    it('is not rendered without onMenuToggle', () => {
       usePathnameMock.mockReturnValue('/inicio');
       render(<TopbarSesion />);
 
-      expect(mobileNav()).toHaveClass('flex', 'md:hidden');
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
 
-    it('lists Inicio, Planes, Mediciones, Perfil and Cerrar sesión, in that order, with the right hrefs', () => {
+    it('only shows on small screens (md:hidden) and controls the navigation panel', () => {
       usePathnameMock.mockReturnValue('/inicio');
-      render(<TopbarSesion />);
+      render(<TopbarSesion onMenuToggle={vi.fn()} />);
 
-      const links = within(mobileNav()).getAllByRole('link');
-      expect(links.map((link) => link.textContent)).toEqual(['Inicio', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']);
-      expect(links.map((link) => link.getAttribute('href'))).toEqual([
-        '/inicio',
-        '/planes',
-        '/mediciones',
-        '/perfil',
-        '/api/cognito/logout',
-      ]);
+      const button = screen.getByRole('button', { name: 'Abrir menú' });
+      expect(button).toHaveClass('md:hidden');
+      expect(button).toHaveAttribute('aria-controls', 'sesion-nav');
+      expect(button).toHaveAttribute('aria-expanded', 'false');
     });
 
-    it('highlights the link matching the pathname with the primary color (Inicio on /inicio)', () => {
+    it('calls onMenuToggle when clicked', () => {
       usePathnameMock.mockReturnValue('/inicio');
-      render(<TopbarSesion />);
+      const onMenuToggle = vi.fn();
+      render(<TopbarSesion onMenuToggle={onMenuToggle} />);
 
-      const nav = within(mobileNav());
-      expect(nav.getByRole('link', { name: 'Inicio' })).toHaveStyle({ color: 'var(--color-primary)' });
-      expect(nav.getByRole('link', { name: 'Perfil' })).not.toHaveStyle({ color: 'var(--color-primary)' });
-      expect(nav.getByRole('link', { name: 'Cerrar sesión' })).not.toHaveStyle({ color: 'var(--color-primary)' });
+      fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }));
+
+      expect(onMenuToggle).toHaveBeenCalledTimes(1);
     });
 
-    it('highlights Perfil on /perfil', () => {
-      usePathnameMock.mockReturnValue('/perfil');
-      render(<TopbarSesion />);
-
-      const nav = within(mobileNav());
-      expect(nav.getByRole('link', { name: 'Perfil' })).toHaveStyle({ color: 'var(--color-primary)' });
-      expect(nav.getByRole('link', { name: 'Inicio' })).not.toHaveStyle({ color: 'var(--color-primary)' });
-    });
-
-    it.each([
-      ['/planes', 'Planes'],
-      ['/mediciones', 'Mediciones'],
-    ])('highlights the matching link on %s', (pathname, name) => {
-      usePathnameMock.mockReturnValue(pathname);
-      render(<TopbarSesion />);
-
-      const nav = within(mobileNav());
-      expect(nav.getByRole('link', { name })).toHaveStyle({ color: 'var(--color-primary)' });
-      expect(nav.getByRole('link', { name: 'Inicio' })).not.toHaveStyle({ color: 'var(--color-primary)' });
-    });
-
-    it('highlights nothing on routes that are not in the menu', () => {
-      usePathnameMock.mockReturnValue('/consulta/anamnesis');
-      render(<TopbarSesion />);
-
-      for (const link of within(mobileNav()).getAllByRole('link')) {
-        expect(link).not.toHaveStyle({ color: 'var(--color-primary)' });
-      }
-    });
-
-    it('never renders the side rectangle (compact variant), even for the active link', () => {
+    it('offers to close the menu (aria-expanded=true, different icon) while it is open', () => {
       usePathnameMock.mockReturnValue('/inicio');
-      render(<TopbarSesion />);
+      const { rerender } = render(<TopbarSesion onMenuToggle={vi.fn()} />);
+      const closedIcon = screen.getByRole('button', { name: 'Abrir menú' }).querySelector('svg')?.innerHTML;
 
-      expect(screen.queryByTestId('nav-active-indicator')).not.toBeInTheDocument();
+      rerender(<TopbarSesion menuOpen onMenuToggle={vi.fn()} />);
+
+      const button = screen.getByRole('button', { name: 'Cerrar menú' });
+      expect(button).toHaveAttribute('aria-expanded', 'true');
+      expect(button.querySelector('svg')?.innerHTML).not.toBe(closedIcon);
+    });
+
+    it('sits before the logo', () => {
+      usePathnameMock.mockReturnValue('/inicio');
+      render(<TopbarSesion onMenuToggle={vi.fn()} />);
+
+      const button = screen.getByRole('button', { name: 'Abrir menú' });
+      const logo = screen.getByRole('link', { name: 'Nuvi' });
+      expect(button.compareDocumentPosition(logo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
   });
 });

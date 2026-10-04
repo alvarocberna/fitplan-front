@@ -152,7 +152,7 @@ export function Guideline() {
                     </div>
 
                     {/* Botones móvil: debajo de la card, solo en xs */}
-                    <div className="flex md:hidden justify-center mt-4" style={{ gap: '50px' }}>
+                    <div className="flex md:hidden justify-center mt-[26px]" style={{ gap: '50px' }}>
                         <button onClick={goPrev} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                             <FontAwesomeIcon style={{ width: '35px', fontSize: '35px', color: 'var(--color-primary)' }} icon={faCircleChevronLeft} />
                             <span className="visually-hidden"></span>

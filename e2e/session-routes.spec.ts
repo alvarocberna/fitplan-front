@@ -84,18 +84,27 @@ test.describe('Session layout (con sesión)', () => {
     await expect(newConsultation).toBeVisible();
   });
 
-  test('on small screens the sidebar is gone and its options move to the topbar menu', async ({ page }) => {
+  test('on small screens the navigation is a panel opened and closed with the menu button of the topbar', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await page.goto('/pago/aaaaaaaa-0000-4000-8000-000000000123');
 
+    // el botón de acoplar/desacoplar es solo de escritorio
     await expect(page.getByRole('button', { name: /menú lateral/ })).toBeHidden();
-
-    const userMenu = page.getByRole('navigation', { name: 'Menú de usuario' });
-    await expect(userMenu.getByRole('link', { name: 'Perfil' })).toBeVisible();
-    await expect(userMenu.getByRole('link', { name: 'Inicio', exact: true })).toHaveAttribute('href', '/inicio');
-    await expect(userMenu.getByRole('link', { name: 'Planes', exact: true })).toHaveAttribute('href', '/planes');
-    await expect(userMenu.getByRole('link', { name: 'Mediciones', exact: true })).toHaveAttribute('href', '/mediciones');
-    await expect(userMenu.getByRole('link', { name: 'Cerrar sesión' })).toBeVisible();
     await expect(topbarOf(page).getByRole('link', { name: 'Nueva consulta' })).toBeVisible();
+
+    const menu = page.locator('nav#sesion-nav');
+    // cerrado por defecto: las opciones no se ven
+    await expect(menu.getByRole('link', { name: 'Perfil' })).toBeHidden();
+
+    await page.getByRole('button', { name: 'Abrir menú' }).click();
+    await expect(menu.getByRole('link', { name: 'Perfil' })).toBeVisible();
+    await expect(menu.getByRole('link', { name: 'Inicio', exact: true })).toHaveAttribute('href', '/inicio');
+    await expect(menu.getByRole('link', { name: 'Planes', exact: true })).toHaveAttribute('href', '/planes');
+    await expect(menu.getByRole('link', { name: 'Mediciones', exact: true })).toHaveAttribute('href', '/mediciones');
+    await expect(menu.getByRole('link', { name: 'Cerrar sesión' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Cerrar menú' }).click();
+    await expect(menu.getByRole('link', { name: 'Perfil' })).toBeHidden();
   });
+
 });

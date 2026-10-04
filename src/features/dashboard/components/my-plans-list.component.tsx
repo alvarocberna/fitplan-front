@@ -39,8 +39,10 @@ function PlanCard({ plan, latest }: { plan: MyPlanSummaryDto; latest: boolean })
     return (
         <li
             aria-label={name}
-            className="relative overflow-hidden w-full bg-white border border-white rounded-[12px] shadow-lg p-4 pl-6 grid grid-cols-[auto_minmax(0,1fr)] md:grid-cols-[auto_minmax(0,1fr)_auto] gap-4 text-left"
+            className="relative overflow-hidden w-full bg-white border border-white rounded-[12px] shadow-lg p-4 pl-6 grid grid-cols-[auto_minmax(0,1fr)] md:grid-cols-[auto_minmax(0,1fr)_auto] gap-x-4 gap-y-3 md:gap-y-1 text-left"
         >
+            {/* Distribución. Móvil: fila 1 = ícono | título; debajo, a todo el ancho, fecha de compra, régimen y
+                macronutrientes (cada uno en su fila) y luego los botones. Desde md: ícono | título + detalle | botones. */}
             {latest && (
                 <span
                     aria-hidden="true"
@@ -52,17 +54,20 @@ function PlanCard({ plan, latest }: { plan: MyPlanSummaryDto; latest: boolean })
 
             <span
                 aria-hidden="true"
-                className="h-14 w-14 rounded-xl flex items-center justify-center self-start"
+                className="md:row-span-2 h-14 w-14 rounded-xl flex items-center justify-center self-start"
                 style={ICON_CIRCLE_STYLE}
             >
                 <FontAwesomeIcon icon={PLAN_ICON} className="h-6 w-6" />
             </span>
 
-            <div className="flex flex-col gap-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-zinc-900">{name}</p>
-                    <PlanTypeBadge type={type} />
-                </div>
+            {/* título y tipo: junto al ícono */}
+            <div className="flex flex-wrap items-center gap-2 min-w-0 self-center md:self-auto">
+                <p className="font-semibold text-zinc-900">{name}</p>
+                <PlanTypeBadge type={type} />
+            </div>
+
+            {/* fecha de compra, régimen y macronutrientes: en móvil bajo la fila del ícono y el título, a todo el ancho */}
+            <div className="col-span-2 md:col-span-1 md:col-start-2 flex flex-col gap-1 min-w-0">
                 <p className="text-sm text-zinc-500">Comprado el {formatDate(purchasedAt)}</p>
                 <p className="text-sm text-zinc-700">
                     <span className="text-zinc-500">Régimen: </span>
@@ -77,7 +82,7 @@ function PlanCard({ plan, latest }: { plan: MyPlanSummaryDto; latest: boolean })
             {/* desde md, separada de la información por una línea vertical; se estira al alto del card para que
                 la línea lo acompañe, con los botones centrados */}
             <div
-                className={`col-span-2 md:col-span-1 flex flex-row md:flex-col md:justify-center gap-2 md:self-stretch md:pl-4 ${DIVIDER_MD}`}
+                className={`col-span-2 md:col-span-1 md:col-start-3 md:row-start-1 md:row-span-2 mt-1 md:mt-0 flex flex-row md:flex-col md:justify-center gap-2 md:self-stretch md:pl-4 ${DIVIDER_MD}`}
             >
                 <Link
                     href={`/planes/${orderId}`}

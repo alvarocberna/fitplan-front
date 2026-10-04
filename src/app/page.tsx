@@ -14,7 +14,7 @@ export default async function Home() {
       <NuviDescription/>
       <ConsultationDescription/>
       <PersonalPlanDescription/>
-      <StandardPlanDescription/>
+      {/* <StandardPlanDescription/> */}
     </div>
   );
 }

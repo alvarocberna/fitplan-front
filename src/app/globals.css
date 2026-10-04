@@ -197,3 +197,9 @@ body {
   background-color: #f4e8ff;
   transition: 0.3s;
 }
+
+/* brillo que recorre la barra de avance de la generación del plan (PlanGenerationProgress) */
+@keyframes progressShimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(200%); }
+}

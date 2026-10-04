@@ -30,7 +30,8 @@ export function Hero({ startHref }: { startHref: string }) {
         priority
         className="object-cover -z-20"
       />
-      <div className="absolute inset-y-0 left-0 h-full w-[50%] -z-10" >
+      {/* forma blanca del lado izquierdo: solo desde md */}
+      <div className="hidden md:block absolute inset-y-0 left-0 h-full w-[50%] -z-10" >
         <Image
           src="/images/img-1-back.png"
           alt=""
@@ -38,9 +39,10 @@ export function Hero({ startHref }: { startHref: string }) {
           priority
         />
       </div>
-      <div className="absolute inset-0 bg-white/20 -z-10" />
+      {/* velo blanco sobre la foto: algo más opaco en móvil, donde no está la forma blanca detrás del texto */}
+      <div className="absolute inset-0 bg-white/40 md:bg-white/20 -z-10" />
 
-      <div className="relative w-1/2 h-full flex flex-col items-center justify-center text-center" >
+      <div className="relative w-full md:w-1/2 h-full flex flex-col items-center justify-center text-center" >
         <div className="w-full md:w-[80%] lg:w-[80%] xl:w-[80%] flex flex-col items-start mt-0 md:mt-8" 
         >
           {/* title */}
@@ -91,7 +93,8 @@ export function Hero({ startHref }: { startHref: string }) {
         </div>
       </div>
 
-      <div className="relative w-1/2 h-full flex items-center justify-center">
+      {/* círculo con el rostro: solo desde md */}
+      <div className="relative hidden md:flex w-1/2 h-full items-center justify-center">
         <NuviViewTeal />
       </div>
     </div>

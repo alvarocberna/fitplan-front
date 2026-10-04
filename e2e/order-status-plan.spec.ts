@@ -48,13 +48,33 @@ test.describe('Order status & plan', () => {
     await expect(page.getByRole('link', { name: /Descargar/ })).toHaveAttribute('href', PDF_URL);
   });
 
-  test('shows a delay notice once generation has been running past 45 seconds', async ({ page }) => {
-    test.setTimeout(70_000);
+  test('shows the simulated progress bar and how long generation usually takes', async ({ page }) => {
     await mockOrderStatusSequence([GENERATING]);
 
     await page.goto('/ordenes/aaaaaaaa-0000-4000-8000-000000000123');
 
-    await expect(page.getByText(/tardando más de lo normal/)).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByRole('progressbar')).toBeVisible();
+    await expect(page.getByText(/suele tardar entre 2 y 3 minutos/)).toBeVisible();
+  });
+
+  test('shows a delay notice once generation has been running past 4 minutes', async ({ page }) => {
+    await mockOrderStatusSequence([GENERATING]);
+    // la página recuerda en sessionStorage cuándo empezó a generar: se simula que fue hace 5 minutos
+    // (como si el usuario hubiera recargado), para no esperar el tiempo real
+    await page.addInitScript(() => {
+      sessionStorage.setItem(
+        'plan_generation_started_aaaaaaaa-0000-4000-8000-000000000123',
+        String(Date.now() - 5 * 60_000),
+      );
+    });
+
+    await page.goto('/ordenes/aaaaaaaa-0000-4000-8000-000000000123');
+
+    await expect(page.getByText(/más de lo habitual/)).toBeVisible();
+    // el avance retomado nunca llega al 90%
+    const progress = Number(await page.getByRole('progressbar').getAttribute('aria-valuenow'));
+    expect(progress).toBeGreaterThan(80);
+    expect(progress).toBeLessThan(90);
   });
 
   test('shows a reassuring error state and no download button when generation fails', async ({ page }) => {

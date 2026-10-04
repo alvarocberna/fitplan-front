@@ -141,7 +141,8 @@ Helpers para quien atrapa: `isSessionRequiredError(error)`, `isNotFoundError(err
   - **Error puntual** → se reintenta en el siguiente tick. Tras **5 fallos consecutivos** se detiene y muestra
     "No pudimos consultar el estado de tu orden" con un botón "Reintentar" que reinicia el polling. Una
     consulta exitosa reinicia la cuenta.
-  - Pasados 45 s generando aparece el aviso "esto está tardando más de lo normal".
+  - Pasados 4 min generando aparece el aviso "está tardando un poco más de lo habitual" (lo normal son 2-3 min,
+    que es lo que anuncia la barra de avance).
 - **`FormMeasurements`**: objetivo no factible → `GoalNotFeasible` (`role="alert"`) con el mensaje del backend.
 - **Hooks de `plans`** (`usePredefinedProduct`, `usePersonalizedProduct`, `usePlanPreviews`): exponen un estado
   (`unavailable` / `error`) en vez de propagar; el llamador muestra un aviso o cae a un respaldo estático.

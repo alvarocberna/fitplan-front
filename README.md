@@ -97,8 +97,13 @@ Al entrar, la página consulta el estado de la orden (`getOrderStatusAction`):
 ### 6. Orden — `/ordenes/[id]`
 Hace polling a `GET orders/{id}/status` (`getOrderStatusAction`) cada 4s
 (`INTERVALO_POLLING_MS`), leyendo `EstadoOrdenDto { estado_pago, estado_generacion, plan_json, pdf_url }`:
-- `NOT_STARTED` / `GENERATING` → spinner ("Estamos generando tu plan nutricional..."). Pasados 45s
-  (`UMBRAL_DEMORA_MS`) se muestra un aviso de demora, aclarando que el pago ya quedó registrado.
+- `NOT_STARTED` / `GENERATING` → barra de avance `PlanGenerationProgress`
+  (`features/consultation/components/plan-generation-progress.tsx`) con el aviso "suele tardar entre 2 y 3
+  minutos". El avance es **simulado** (no refleja el proceso real del backend): sigue la curva
+  `90 × (1 − e^(−t/60 s))`, así que se acerca al 90 % sin alcanzarlo nunca, para no quedar "completa" con el plan
+  aún sin llegar. El inicio se guarda por orden en `sessionStorage` (`plan_generation_started_<orderId>`): una
+  recarga no reinicia la barra. Mientras llega la primera respuesta del estado se muestra un spinner. Pasados
+  4 min (`DELAY_THRESHOLD_MS`) se suma un aviso de demora, aclarando que el pago ya quedó registrado.
 - `COMPLETED` (con `pdf_url`) → detiene el polling y muestra `PlanFileCard`
   (`src/shared/components/plan-file-card.component.tsx`, la misma card del PDF que usa `/planes/[orderId]`): la miniatura
   de la página 1 del plan (`thumbnailUrl`, URL firmada de S3 de corta duración; placeholder si es `null`) y un

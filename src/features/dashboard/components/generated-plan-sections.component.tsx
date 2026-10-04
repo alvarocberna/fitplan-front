@@ -95,15 +95,16 @@ function portionLabel(group: string, portions: number): string {
     return `${group} ${portions} ${portions === 1 ? 'porción' : 'porciones'}`
 }
 
-// Columnas de "Resumen Plan Nutricional", compartidas por el card de títulos y los de cada tiempo de comida:
-// tiempo | alimentos | aporte nutricional.
-const MEAL_TIME_COLUMNS = 'grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)_minmax(0,3fr)] gap-4'
+// Distribución de "Resumen Plan Nutricional", compartida por el card de títulos y los de cada tiempo de comida.
+// Desde sm, 3 columnas: tiempo | alimentos | aporte nutricional. En móvil, una sola columna: las tres partes
+// quedan en filas, una debajo de la otra. (Sin `grid`: cada uso decide su display.)
+const MEAL_TIME_COLUMNS = 'grid-cols-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)_minmax(0,3fr)] gap-3 sm:gap-4'
 
-// Card de títulos de "Resumen Plan Nutricional".
+// Card de títulos de "Resumen Plan Nutricional". Solo desde sm: en móvil no hay columnas que titular.
 function MealTimeSummaryHeader() {
     return (
         <div
-            className={`${MEAL_TIME_COLUMNS} border border-zinc-200 bg-zinc-50 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500`}
+            className={`hidden sm:grid ${MEAL_TIME_COLUMNS} border border-zinc-200 bg-zinc-50 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500`}
         >
             <span>Tiempo</span>
             <span>Alimentos</span>
@@ -112,28 +113,31 @@ function MealTimeSummaryHeader() {
     )
 }
 
-// Sub-card de "Resumen Plan Nutricional" en 3 columnas: el tiempo de comida y debajo su hora; las porciones de cada
+// Sub-card de "Resumen Plan Nutricional" en 3 columnas (3 filas en móvil): el tiempo de comida y debajo su hora; las porciones de cada
 // grupo con valor; y el aporte nutricional del tiempo (calorías, proteínas, carbohidratos y lípidos, en 2×2).
 function MealTimeSummary({ mealTime }: { mealTime: MyPlanMealTimeDto }) {
     const label = MEAL_TIME_LABELS[mealTime.time] ?? mealTime.time
     const groups = portionGroupsOf(mealTime)
+    // móvil: línea horizontal que separa una fila de la anterior (desde sm son columnas, sin línea)
+    const rowDivider = 'border-t border-zinc-200 pt-3 sm:border-t-0 sm:pt-0'
 
     return (
-        <li aria-label={`Resumen de ${label}`} className={`${MEAL_TIME_COLUMNS} border border-zinc-200 rounded-2xl p-4 text-left text-sm`}>
-            <div className="flex flex-col gap-1">
+        <li aria-label={`Resumen de ${label}`} className={`grid ${MEAL_TIME_COLUMNS} border border-zinc-200 rounded-2xl p-4 text-left text-sm`}>
+            {/* móvil: nombre y hora en la misma fila; desde sm, la hora debajo del nombre */}
+            <div className="flex flex-row items-baseline justify-between gap-2 sm:flex-col sm:justify-start sm:gap-1">
                 <p className="font-semibold text-zinc-900">{label}</p>
                 <p className="text-zinc-500">{mealTime.hour ?? NO_DATA}</p>
             </div>
             {groups.length > 0 ? (
-                <ul className="flex flex-col gap-1 text-zinc-700">
+                <ul className={`flex flex-col gap-1 text-zinc-700 ${rowDivider}`}>
                     {groups.map((group) => (
                         <li key={group}>{portionLabel(PORTION_GROUP_LABELS[group], mealTime.portions[group]!)}</li>
                     ))}
                 </ul>
             ) : (
-                <p className="text-zinc-500">Sin porciones registradas</p>
+                <p className={`text-zinc-500 ${rowDivider}`}>Sin porciones registradas</p>
             )}
-            <dl aria-label={`Aporte nutricional de ${label}`} className="grid grid-cols-2 gap-x-4 gap-y-2 self-start">
+            <dl aria-label={`Aporte nutricional de ${label}`} className={`grid grid-cols-2 gap-x-4 gap-y-2 sm:self-start ${rowDivider}`}>
                 {MACRO_ROWS.map(({ key, label: macroLabel, unit }) => (
                     <div key={key} className="flex flex-col">
                         <dt className="text-xs text-zinc-500">{macroLabel}</dt>
@@ -214,11 +218,12 @@ function Supplement({ supplement }: { supplement: MyPlanSupplementDto }) {
             </div>
 
             {/* `requirement` no trae unidad (g o mg según el suplemento): la dosis ya la incluye en el texto */}
-            <dl className="grid grid-cols-4 gap-4">
-                <LabeledValue label="Dosis" icon={DOSE_ICON} className="col-span-1">
+            {/* móvil: Dosis y Toma cada una en su fila; desde sm, en una fila (1/4 y 3/4) */}
+            <dl className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <LabeledValue label="Dosis" icon={DOSE_ICON} className="sm:col-span-1">
                     {supplement.doseInstructions ?? NO_DATA}
                 </LabeledValue>
-                <LabeledValue label="Toma" icon={INTAKE_TIME_ICON} className="col-span-3">
+                <LabeledValue label="Toma" icon={INTAKE_TIME_ICON} className="sm:col-span-3">
                     {supplement.intakeInstructions ?? NO_DATA}
                 </LabeledValue>
             </dl>

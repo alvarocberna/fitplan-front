@@ -1,41 +1,47 @@
 'use client'
 //next
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 //icons
-import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 //shared
-import { SESION_NAV_ITEMS, SesionNavLink } from "./sesion-nav-link.component";
-import { clearClientState } from "../auth/clear-client-state";
+import { SESION_NAV_ID } from "./navbar-sesion.component";
+
+interface TopbarSesionProps {
+    // Estado del panel de navegación en móvil (NavbarSesion) y cómo alternarlo.
+    menuOpen?: boolean;
+    onMenuToggle?: () => void;
+}
 
 // Barra superior fija del área con sesión (h-15 = 60px, ancho completo): logo "Nuvi" (→ /inicio) a la izquierda y
-// el botón "Nueva consulta" a la derecha. En pantallas chicas también aloja las opciones del sidebar
-// (Inicio, Planes, Mediciones, Perfil, Cerrar sesión), porque NavbarSesion solo se muestra en md+.
-export function TopbarSesion() {
-    const pathname = usePathname();
+// el botón "Nueva consulta" a la derecha. En pantallas chicas muestra además, antes del logo, el botón "menú"
+// que abre/cierra el panel de navegación (NavbarSesion), donde viven Inicio, Planes, Mediciones, Perfil y
+// Cerrar sesión.
+export function TopbarSesion({ menuOpen = false, onMenuToggle }: TopbarSesionProps) {
+    const MenuIcon = menuOpen ? XMarkIcon : Bars3Icon;
+    const menuLabel = menuOpen ? "Cerrar menú" : "Abrir menú";
 
     return (
         <header
             className="fixed left-0 top-0 z-20 w-full h-15 flex items-center justify-between gap-2 px-4 md:px-8
             bg-white/80 backdrop-blur-md border-b border-zinc-200"
         >
-            <Link href="/inicio" className="text-2xl font-bold" style={{ color: "var(--color-secondary)" }}>
-                Nuvi
-            </Link>
-
-            <nav aria-label="Menú de usuario" className="flex md:hidden items-center gap-1">
-                {SESION_NAV_ITEMS.map((item) => (
-                    <SesionNavLink key={item.href} {...item} isActive={pathname === item.href} compact />
-                ))}
-                <SesionNavLink
-                    href="/api/cognito/logout"
-                    hardNavigation
-                    onClick={clearClientState}
-                    label="Cerrar sesión"
-                    icon={ArrowRightOnRectangleIcon}
-                    compact
-                />
-            </nav>
+            <div className="flex items-center gap-2">
+                {onMenuToggle && (
+                    <button
+                        type="button"
+                        onClick={onMenuToggle}
+                        aria-label={menuLabel}
+                        aria-expanded={menuOpen}
+                        aria-controls={SESION_NAV_ID}
+                        className="md:hidden flex items-center justify-center w-10 h-10 -ml-2 rounded-lg cursor-pointer text-zinc-700 hover:bg-zinc-100"
+                    >
+                        <MenuIcon className="w-6 h-6" />
+                    </button>
+                )}
+                <Link href="/inicio" className="text-2xl font-bold" style={{ color: "var(--color-secondary)" }}>
+                    Nuvi
+                </Link>
+            </div>
 
             <Link
                 href="/consulta/anamnesis"

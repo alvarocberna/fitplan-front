@@ -8,9 +8,8 @@ vi.mock('next/navigation', () => ({ usePathname: () => usePathnameMock() }));
 const DOCK = 'Acoplar menú lateral';
 const UNDOCK = 'Desacoplar menú lateral';
 
-// El sidebar (md+) es el <nav> que contiene el botón de acoplar/desacoplar. jsdom no aplica CSS, así
-// que además de él está en el DOM el menú móvil de la barra superior con los mismos enlaces
-// (Inicio/Planes/Mediciones/Perfil/Cerrar sesión): hay que acotar los selectores a uno de los dos.
+// El menú de navegación (sidebar en md+, panel deslizable en móvil) es el <nav> que contiene el botón
+// de acoplar/desacoplar.
 function sidebar() {
   const nav = screen.getByRole('button', { name: /menú lateral/ }).closest('nav');
   if (!nav) throw new Error('sidebar <nav> not found');
@@ -69,20 +68,57 @@ describe('SesionShell', () => {
 
     it('hides the sidebar links when docked and shows them when undocked', () => {
       const { unmount } = renderAt('/consulta/inicio');
-      expect(within(sidebar()).getByRole('link', { name: 'Inicio' })).toHaveClass('hidden');
+      expect(within(sidebar()).getByRole('link', { name: 'Inicio' })).toHaveClass('md:hidden');
       unmount();
 
       renderAt('/inicio');
-      expect(within(sidebar()).getByRole('link', { name: 'Inicio' })).not.toHaveClass('hidden');
+      expect(within(sidebar()).getByRole('link', { name: 'Inicio' })).not.toHaveClass('md:hidden');
     });
 
-    it('never hides the topbar links when docking the sidebar (the mobile menu is independent)', () => {
+    it('docking the sidebar only hides the links from md: the mobile panel keeps them', () => {
       renderAt('/consulta/inicio');
 
-      const mobileMenu = within(screen.getByRole('navigation', { name: 'Menú de usuario' }));
       for (const name of ['Inicio', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
-        expect(mobileMenu.getByRole('link', { name })).not.toHaveClass('hidden');
+        expect(within(sidebar()).getByRole('link', { name })).not.toHaveClass('hidden');
       }
+    });
+  });
+
+  describe('menú de navegación en móvil', () => {
+    it('starts closed and opens/closes with the menu button of the topbar', () => {
+      renderAt('/inicio');
+      expect(sidebar()).toHaveClass('-translate-x-full', 'invisible');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }));
+      expect(sidebar()).toHaveClass('translate-x-0', 'visible');
+      expect(screen.getByRole('button', { name: 'Cerrar menú' })).toHaveAttribute('aria-expanded', 'true');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cerrar menú' }));
+      expect(sidebar()).toHaveClass('-translate-x-full', 'invisible');
+    });
+
+    it('closes when an option is chosen or the backdrop is tapped', () => {
+      renderAt('/inicio');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }));
+      const link = within(sidebar()).getByRole('link', { name: 'Perfil' });
+      link.addEventListener('click', (e) => e.preventDefault());
+      fireEvent.click(link);
+      expect(sidebar()).toHaveClass('-translate-x-full');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }));
+      fireEvent.click(screen.getByTestId('sesion-nav-backdrop'));
+      expect(sidebar()).toHaveClass('-translate-x-full');
+    });
+
+    it('does not change the docked/undocked state of the desktop sidebar', () => {
+      renderAt('/inicio');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Cerrar menú' }));
+
+      expect(screen.getByRole('button', { name: DOCK })).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('main')).toHaveClass('md:pl-56');
     });
   });
 
@@ -108,12 +144,12 @@ describe('SesionShell', () => {
       expect(screen.getByRole('main')).toHaveClass('pt-19', 'md:pt-23');
     });
 
-    it('exposes the session links twice in the DOM (sidebar + mobile menu); CSS decides which one shows', () => {
+    it('exposes the session links once (the same <nav> is the sidebar and the mobile panel)', () => {
       renderAt('/inicio');
 
-      expect(screen.getAllByRole('link', { name: 'Inicio' })).toHaveLength(2);
-      expect(screen.getAllByRole('link', { name: 'Perfil' })).toHaveLength(2);
-      expect(screen.getAllByRole('link', { name: 'Cerrar sesión' })).toHaveLength(2);
+      expect(screen.getAllByRole('link', { name: 'Inicio' })).toHaveLength(1);
+      expect(screen.getAllByRole('link', { name: 'Perfil' })).toHaveLength(1);
+      expect(screen.getAllByRole('link', { name: 'Cerrar sesión' })).toHaveLength(1);
       // "Nueva consulta" solo existe en la barra superior
       expect(screen.getAllByRole('link', { name: 'Nueva consulta' })).toHaveLength(1);
     });

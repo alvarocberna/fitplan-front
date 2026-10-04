@@ -31,12 +31,80 @@ describe('NavbarSesion', () => {
     expect(screen.queryByRole('link', { name: 'Nueva consulta' })).not.toBeInTheDocument();
   });
 
-  it('is md+ only: hidden by default and flex from md, docked under the topbar (top-15)', () => {
+  it('is fixed to the left, under the topbar (top-15), and always visible from md', () => {
     usePathnameMock.mockReturnValue('/inicio');
     const { container } = render(<NavbarSesion />);
 
     const nav = container.querySelector('nav');
-    expect(nav).toHaveClass('hidden', 'md:flex', 'fixed', 'left-0', 'top-15');
+    expect(nav).toHaveClass('fixed', 'left-0', 'top-15', 'md:translate-x-0', 'md:visible');
+    expect(nav).toHaveAttribute('id', 'sesion-nav');
+  });
+
+  describe('panel móvil', () => {
+    const nav = (container: HTMLElement) => container.querySelector('nav') as HTMLElement;
+
+    it('is off-screen and not reachable (invisible) while closed', () => {
+      usePathnameMock.mockReturnValue('/inicio');
+      const { container } = render(<NavbarSesion />);
+
+      expect(nav(container)).toHaveClass('-translate-x-full', 'invisible');
+      expect(screen.queryByTestId('sesion-nav-backdrop')).not.toBeInTheDocument();
+    });
+
+    it('slides in with a backdrop when open', () => {
+      usePathnameMock.mockReturnValue('/inicio');
+      const { container } = render(<NavbarSesion mobileOpen onMobileClose={vi.fn()} />);
+
+      expect(nav(container)).toHaveClass('translate-x-0', 'visible');
+      expect(nav(container)).not.toHaveClass('-translate-x-full', 'invisible');
+      // el fondo solo existe en móvil
+      expect(screen.getByTestId('sesion-nav-backdrop')).toHaveClass('md:hidden');
+    });
+
+    it('always shows the links at full width, even when the desktop sidebar is docked', () => {
+      usePathnameMock.mockReturnValue('/consulta/anamnesis');
+      const { container } = render(<NavbarSesion collapsed mobileOpen onToggle={vi.fn()} onMobileClose={vi.fn()} />);
+
+      expect(nav(container)).toHaveClass('w-56', 'md:w-14');
+      for (const name of ['Inicio', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
+        expect(screen.getByRole('link', { name })).not.toHaveClass('hidden');
+      }
+    });
+
+    it('closes when the backdrop is tapped', () => {
+      usePathnameMock.mockReturnValue('/inicio');
+      const onMobileClose = vi.fn();
+      render(<NavbarSesion mobileOpen onMobileClose={onMobileClose} />);
+
+      fireEvent.click(screen.getByTestId('sesion-nav-backdrop'));
+
+      expect(onMobileClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('closes on Escape, only while open', () => {
+      usePathnameMock.mockReturnValue('/inicio');
+      const onMobileClose = vi.fn();
+      const { rerender } = render(<NavbarSesion onMobileClose={onMobileClose} />);
+
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(onMobileClose).not.toHaveBeenCalled();
+
+      rerender(<NavbarSesion mobileOpen onMobileClose={onMobileClose} />);
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(onMobileClose).toHaveBeenCalledTimes(1);
+    });
+
+    it.each(['Inicio', 'Planes', 'Mediciones', 'Perfil'])('closes when the "%s" option is chosen', (name) => {
+      usePathnameMock.mockReturnValue('/inicio');
+      const onMobileClose = vi.fn();
+      render(<NavbarSesion mobileOpen onMobileClose={onMobileClose} />);
+
+      const link = screen.getByRole('link', { name });
+      link.addEventListener('click', (e) => e.preventDefault());
+      fireEvent.click(link);
+
+      expect(onMobileClose).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('link activo', () => {
@@ -164,13 +232,12 @@ describe('NavbarSesion', () => {
       expect(screen.queryByRole('button', { name: 'Acoplar menú lateral' })).not.toBeInTheDocument();
     });
 
-    it('renders the toggle as a small 16x32px button over the right border (no md-only classes)', () => {
+    it('renders the toggle as a small 16x32px button over the right border, only from md', () => {
       usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion onToggle={vi.fn()} />);
 
       const button = screen.getByRole('button', { name: 'Acoplar menú lateral' });
-      expect(button).toHaveClass('flex', 'absolute', 'right-0', 'top-1/2', 'w-4', 'h-8', 'cursor-pointer');
-      expect(button).not.toHaveClass('hidden');
+      expect(button).toHaveClass('hidden', 'md:flex', 'absolute', 'right-0', 'top-1/2', 'w-4', 'h-8', 'cursor-pointer');
     });
 
     it('draws an icon inside the toggle in both states (chevron left / chevron right)', () => {
@@ -198,28 +265,27 @@ describe('NavbarSesion', () => {
       render(<NavbarSesion collapsed={false} onToggle={vi.fn()} />);
 
       for (const name of ['Inicio', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
-        expect(screen.getByRole('link', { name })).not.toHaveClass('hidden');
+        expect(screen.getByRole('link', { name })).not.toHaveClass('md:hidden');
       }
     });
 
-    it('hides every link (hidden) when collapsed, leaving only the toggle', () => {
+    it('hides every link from md (md:hidden) when collapsed, leaving only the toggle', () => {
       usePathnameMock.mockReturnValue('/inicio');
       render(<NavbarSesion collapsed onToggle={vi.fn()} />);
 
       for (const name of ['Inicio', 'Planes', 'Mediciones', 'Perfil', 'Cerrar sesión']) {
-        expect(screen.getByRole('link', { name })).toHaveClass('hidden');
+        expect(screen.getByRole('link', { name })).toHaveClass('md:hidden');
       }
     });
 
-    it('narrows the sidebar (w-14) when collapsed and widens it (w-56) otherwise', () => {
+    it('narrows the sidebar from md (md:w-14) when collapsed and keeps it wide (w-56) otherwise', () => {
       usePathnameMock.mockReturnValue('/inicio');
       const { container, rerender } = render(<NavbarSesion collapsed onToggle={vi.fn()} />);
-      expect(container.querySelector('nav')).toHaveClass('w-14');
-      expect(container.querySelector('nav')).not.toHaveClass('w-56');
+      expect(container.querySelector('nav')).toHaveClass('md:w-14');
 
       rerender(<NavbarSesion collapsed={false} onToggle={vi.fn()} />);
       expect(container.querySelector('nav')).toHaveClass('w-56');
-      expect(container.querySelector('nav')).not.toHaveClass('w-14');
+      expect(container.querySelector('nav')).not.toHaveClass('md:w-14');
     });
 
     describe('click (burbujea al <nav>)', () => {
@@ -283,10 +349,10 @@ describe('NavbarSesion', () => {
       it('has cursor-pointer on the nav only when onToggle is provided', () => {
         usePathnameMock.mockReturnValue('/inicio');
         const { container, rerender } = render(<NavbarSesion onToggle={vi.fn()} />);
-        expect(container.querySelector('nav')).toHaveClass('cursor-pointer');
+        expect(container.querySelector('nav')).toHaveClass('md:cursor-pointer');
 
         rerender(<NavbarSesion />);
-        expect(container.querySelector('nav')).not.toHaveClass('cursor-pointer');
+        expect(container.querySelector('nav')).not.toHaveClass('md:cursor-pointer');
       });
 
       it('without onToggle, clicking the nav does not throw and there is no cursor-pointer', () => {
@@ -295,7 +361,7 @@ describe('NavbarSesion', () => {
         const nav = container.querySelector('nav')!;
 
         expect(() => fireEvent.click(nav)).not.toThrow();
-        expect(nav).not.toHaveClass('cursor-pointer');
+        expect(nav).not.toHaveClass('md:cursor-pointer');
       });
     });
 

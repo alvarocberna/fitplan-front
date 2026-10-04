@@ -25,9 +25,24 @@ const features: { icon: IconDefinition; title: string; description: string }[] =
 },
 ]
 
+// Botón "Comenzar". Se renderiza dos veces porque cambia de lugar según el ancho (bajo el texto en
+// escritorio, bajo las características en móvil); `className` decide en cuál se ve.
+function StartLink({ className }: { className: string }) {
+  return (
+    <Link
+      href="/consulta/inicio"
+      className={`px-6 py-2 rounded-lg items-center text-white shadow-lg ${className}`}
+      style={{ backgroundColor: 'var(--color-primary)' }}
+    >
+      Comenzar
+      <FontAwesomeIcon icon={faArrowRight} className="color-white ms-4" style={{width: '18px', height: '18px'}} />
+    </Link>
+  )
+}
+
 export function NuviDescription() {
   return (
-    <div id="nuvi-saber-mas" className="w-full min-h-screen flex items-center justify-center text-center px-6 mb-20">
+    <div id="nuvi-saber-mas" className="w-full min-h-screen pt-[50px] md:pt-0 flex items-center justify-center text-center px-6 mb-20">
       {/* inner container */}
       <div className="w-[90%] md:w-[80%] mx-auto flex flex-col md:flex-row justify-between">
         {/* left */}
@@ -40,21 +55,15 @@ export function NuviDescription() {
             trabajando con deportistas de alto rendimiento. Nuvi cuenta con un modelo inteligente con la capacidad de analizar 
             datos, razonar y planificar pautas nutricionales específicas para cada disciplina deportiva y objetivo. 
           </p>
-          <Link
-            href="/consulta/inicio"
-            className="self-start px-6 py-2 rounded-lg flex items-center text-white shadow-lg"
-            style={{ backgroundColor: 'var(--color-primary)' }}
-          >
-            Comenzar
-            <FontAwesomeIcon icon={faArrowRight} className="color-white ms-4" style={{width: '18px', height: '18px'}} />
-          </Link>
+          {/* escritorio: el botón va bajo el texto. En móvil se muestra el de más abajo, tras las características */}
+          <StartLink className="hidden md:flex self-start w-fit" />
         </div>
         {/* right */}
         <div className="w-full md:w-[50%]">
           {features.map((feature, index) => (
             <div key={index} className="flex items-start mb-6">
-              <div className="w-18 h-18 shrink-0 flex rounded-md me-5" style={{border: '1px solid var(--color-primary)'}}>
-                <FontAwesomeIcon icon={feature.icon} className="m-auto" style={{width: '40px', height: '40px', color: 'var(--color-primary)'}} />
+              <div className="w-13.5 h-13.5 md:w-18 md:h-18 shrink-0 flex rounded-md me-5" style={{border: '1px solid var(--color-primary)'}}>
+                <FontAwesomeIcon icon={feature.icon} className="m-auto w-7.5! h-7.5! md:w-10! md:h-10!" style={{color: 'var(--color-primary)'}} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-lg text-left text-zinc-800 mb-1">
@@ -66,6 +75,8 @@ export function NuviDescription() {
               </div>
             </div>
           ))}
+          {/* móvil: el botón va debajo de las características */}
+          <StartLink className="flex md:hidden w-full justify-center mb-5" />
         </div>
       </div>
     </div>

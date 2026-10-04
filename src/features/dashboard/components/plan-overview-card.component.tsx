@@ -6,7 +6,7 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { MacrosDto, MyPlanDetailDto } from '../dtos/my-plan.dto'
 import { INTAKE_FIELDS, NO_DATA, formatDateOnly, planDurationLabel } from '../format'
 import { ICON_CIRCLE_STYLE, MACRO_ICONS, type IntakeKey } from '../plan-icons'
-import { DIVIDER, MACRO_COLUMN_CLASSES } from '../plan-dividers'
+import { DIVIDER_SM, MACRO_COLUMN_CLASSES } from '../plan-dividers'
 import { CardTitle } from './card-title.component'
 
 interface PlanOverviewCardProps {
@@ -25,21 +25,22 @@ export function PlanOverviewCard({ plan, title }: PlanOverviewCardProps) {
         <InfoCard label="Datos del plan">
             {title && <CardTitle icon={ClipboardDocumentListIcon} title={title} />}
 
-            {/* sin gap: el espacio entre columnas lo da el padding de cada una, con el separador al medio */}
-            <dl className="grid grid-cols-3">
-                <Stat label="Objetivo" value={overview.goal ?? NO_DATA} icon={FlagIcon} className="pr-4" />
+            {/* móvil: cada dato en su propia fila. Desde sm: 3 columnas sin gap (el espacio lo da el padding de
+                cada una, con el separador al medio) */}
+            <dl className="grid grid-cols-1 gap-y-4 sm:grid-cols-3 sm:gap-y-0">
+                <Stat label="Objetivo" value={overview.goal ?? NO_DATA} icon={FlagIcon} className="sm:pr-4" />
                 <Stat
                     label="Régimen"
                     value={overview.dietRegimen ?? NO_DATA}
                     icon={FireIcon}
-                    className={`px-4 ${DIVIDER}`}
+                    className={`sm:px-4 ${DIVIDER_SM}`}
                 />
                 <Stat
                     label="Duración"
                     value={overview.duration ?? NO_DATA}
                     detail={overview.range ?? undefined}
                     icon={CalendarDaysIcon}
-                    className={`pl-4 ${DIVIDER}`}
+                    className={`sm:pl-4 ${DIVIDER_SM}`}
                 />
             </dl>
 

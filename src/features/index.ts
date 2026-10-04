@@ -17,6 +17,7 @@ export * from './consultation/components/form-measurements';
 export * from './consultation/components/somatotype-selector';
 export * from './consultation/components/form-user-info'
 export * from './consultation/components/goal-not-feasible'
+export * from './consultation/components/plan-generation-progress'
 export * from './nutrition-plan/components/generate-order-button'
 export * from "./consultation/services/consultation.service";
 export * from "./consultation/interfaces/measurements.interface";

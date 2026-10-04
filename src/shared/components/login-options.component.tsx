@@ -19,10 +19,12 @@ function loginHref(params: Record<string, string>, returnTo?: string): string {
 // /login y por el modal de registro que aparece al pagar sin sesión: es un mismo bloque, no dos copias.
 export function LoginOptions({ returnTo }: LoginOptionsProps) {
     return (
+        // ancho de los botones: en móvil 89% del contenedor interno del Card (que es el 90% del card),
+        // es decir ~80% del card; desde md, 60%
         <div className="flex flex-col gap-3 mt-6">
             <a
                 href={loginHref({ identity_provider: 'Google' }, returnTo)}
-                className="flex items-center justify-center gap-2 w-[60%] mx-auto px-8 py-2 rounded-lg text-center font-semibold border border-zinc-300"
+                className="flex items-center justify-center gap-2 w-[89%] md:w-[60%] mx-auto px-8 py-2 rounded-lg text-center font-semibold border border-zinc-300"
             >
                 <div className="w-4 h-4 flex items-center justify-center shrink-0">
                     <FontAwesomeIcon icon={faGoogle} className="w-full h-full" />
@@ -34,14 +36,14 @@ export function LoginOptions({ returnTo }: LoginOptionsProps) {
 
             <a
                 href={loginHref({ screen_hint: 'signup' }, returnTo)}
-                className="block w-[60%] mx-auto px-8 py-2 rounded-lg text-white font-semibold text-center"
+                className="block w-[89%] md:w-[60%] mx-auto px-8 py-2 rounded-lg text-white font-semibold text-center"
                 style={{ backgroundColor: 'var(--color-primary)' }}
             >
                 Registro
             </a>
             <a
                 href={loginHref({}, returnTo)}
-                className="block w-[60%] mx-auto px-8 py-2 rounded-lg text-center font-semibold border"
+                className="block w-[89%] md:w-[60%] mx-auto px-8 py-2 rounded-lg text-center font-semibold border"
                 style={{ borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}
             >
                 Inicio de sesión

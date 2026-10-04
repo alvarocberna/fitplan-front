@@ -41,7 +41,7 @@ const steps = [
 
 export function ConsultationDescription() {
   return (
-    <div id="consulta-nutricional-virtual" className="w-full min-h-screen flex flex-col items-center justify-center text-center px-6">
+    <div id="consulta-nutricional-virtual" className="w-full min-h-screen pt-[50px] md:pt-0 flex flex-col items-center justify-center text-center px-6">
       {/* inner container */}
       <div className="w-[90%] md:w-[80%] mx-auto flex flex-col">
         {/* title */}
@@ -58,7 +58,7 @@ export function ConsultationDescription() {
               {steps.map((paso, index) => (
                 <div
                   key={index}
-                  className="relative overflow-hidden flex flex-col w-[30%] items-start gap-4 rounded-xl px-6 py-6 bg-white/30 backdrop-blur-md border border-white/60 shadow-lg shadow-black/5 transition-colors hover:bg-white/40"
+                  className="relative overflow-hidden flex flex-col w-full md:w-[30%] items-start gap-4 rounded-xl px-6 py-6 bg-white/30 backdrop-blur-md border border-white/60 shadow-lg shadow-black/5 transition-colors hover:bg-white/40"
                 >
                   {/* top border accent */}
                   <span
