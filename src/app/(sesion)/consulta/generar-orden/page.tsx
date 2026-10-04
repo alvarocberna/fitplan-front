@@ -29,7 +29,7 @@ export default function GenerateOrderPage() {
                             {/* image */}
                             <div className="w-20 md:w-24 flex-shrink-0 border border-zinc-300 rounded-xl overflow-hidden">
                                 <Image
-                                    src="/images/img_informe1.jpg"
+                                    src="/images/plan-ejemplo/plan-nuvi-page-001.jpg"
                                     alt="Consulta nutricional personalizada"
                                     width={200}
                                     height={283}
