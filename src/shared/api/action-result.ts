@@ -1,4 +1,5 @@
-'use server'
+// OJO: este archivo NO lleva 'use server'. Con esa directiva cada export async queda publicado como
+// Server Action invocable desde el navegador, y runAction es un helper interno, no un endpoint.
 
 // Resultado de una Server Action: el error viaja como valor (no como throw) para que Next no reemplace
 // su mensaje por uno genérico en producción.

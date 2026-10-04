@@ -3,7 +3,6 @@
 import { apiFetch } from '@/shared/api/client'
 import { runAction, type ActionResult } from '@/shared/api/action-result'
 import { getValidAccessToken } from './tokens'
-import { getSession } from './session'
 
 export interface PerfilStatus {
   profileComplete: boolean
@@ -20,14 +19,12 @@ export interface PerfilStatus {
 }
 
 // Idempotente: asegura que exista AuthIdentity + User (esqueleto la primera vez) para la sesión
-// actual, y devuelve el estado del perfil. El email sale de la sesión de Cognito, nunca de un
-// formulario — así el perfil queda siempre consistente con la cuenta con la que se inició sesión.
+// actual, y devuelve el estado del perfil. No se envía ningún email: el backend se lo pregunta a
+// Cognito con el access token, para que nadie pueda ligar su identidad al correo de otra persona.
 export async function syncProfileAction(): Promise<ActionResult<PerfilStatus>> {
   return runAction(async () => {
-    const { userInfo } = await getSession()
-    const email = String(userInfo?.email ?? '')
     const accessToken = await getValidAccessToken()
-    return apiFetch<PerfilStatus>('me/sync', 'POST', { email }, accessToken)
+    return apiFetch<PerfilStatus>('me/sync', 'POST', undefined, accessToken)
   })
 }
 

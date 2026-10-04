@@ -62,12 +62,25 @@ const nextConfig: NextConfig = {
         value: "DENY",
       },
       {
+        // El filtro XSS heredado de los navegadores está obsoleto y puede introducir fallos: se
+        // desactiva explícitamente. La defensa real contra XSS es el CSP con nonce (src/proxy.ts).
         key: "X-XSS-Protection",
-        value: "1; mode=block",
+        value: "0",
       },
       {
         key: "Referrer-Policy",
         value: "strict-origin-when-cross-origin",
+      },
+      {
+        // La aplicación no usa ninguna de estas APIs del navegador: se le niegan a todo el documento
+        // (y a cualquier iframe o script de terceros).
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
+      },
+      {
+        // Aísla la ventana de las que abra o la abran desde otro origen (sin referencia cruzada).
+        key: "Cross-Origin-Opener-Policy",
+        value: "same-origin",
       },
     ];
 

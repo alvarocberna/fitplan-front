@@ -12,7 +12,8 @@ vi.mock('openid-client', () => ({
 vi.mock('@/shared/auth/cognito-config', () => ({ getCognitoConfig: vi.fn() }));
 vi.mock('@/shared/auth/session', () => ({ deleteSession: vi.fn() }));
 
-const request = (path: string) => new Request(`http://localhost:3000${path}`);
+const request = (path: string, headers: Record<string, string> = {}) =>
+  new Request(`http://localhost:3000${path}`, { headers });
 
 let consoleError: ReturnType<typeof vi.spyOn>;
 
@@ -74,5 +75,25 @@ describe('GET /api/cognito/logout', () => {
     expect(deleteSession).toHaveBeenCalled();
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe('http://localhost:3000/');
+  });
+
+  it.each([
+    ['a link or image on another site', { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'navigate' }],
+    ['a sibling subdomain', { 'sec-fetch-site': 'same-site', 'sec-fetch-mode': 'navigate' }],
+    ['a background fetch/prefetch', { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors' }],
+  ])('does NOT log out when the request comes from %s (forced logout / CSRF)', async (_name, headers) => {
+    const response = await logout(request('/api/cognito/logout', headers));
+
+    expect(deleteSession).not.toHaveBeenCalled();
+    expect(response.headers.get('location')).toBe('http://localhost:3000/');
+  });
+
+  it.each([
+    ['a same-origin navigation', { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'navigate' }],
+    ['a typed URL', { 'sec-fetch-site': 'none', 'sec-fetch-mode': 'navigate' }],
+  ])('logs out on %s', async (_name, headers) => {
+    await logout(request('/api/cognito/logout', headers));
+
+    expect(deleteSession).toHaveBeenCalled();
   });
 });

@@ -70,11 +70,11 @@ test.describe('Planes predefinidos - selección y carro', () => {
 test.describe('Planes predefinidos - pago con sesión', () => {
   test('paga el plan del carro y termina en /inicio', async ({ page }) => {
     await mockPredefinedProduct({ price: 14990 });
-    await mockCreatePredefinedOrder({ orderId: 'order-predef-1' });
+    await mockCreatePredefinedOrder({ orderId: 'aaaaaaaa-0000-4000-8000-0000000000f1' });
     await mockSimulatePayment();
     await mockPlansList([
       {
-        orderId: 'order-predef-1',
+        orderId: 'aaaaaaaa-0000-4000-8000-0000000000f1',
         type: 'PREDEFINED',
         name: `Plan ${CODE}`,
         purchasedAt: '2026-09-21T12:00:00.000Z',
@@ -90,7 +90,7 @@ test.describe('Planes predefinidos - pago con sesión', () => {
     await expect(page).toHaveURL(/\/carrito$/);
 
     await page.getByRole('button', { name: 'Pagar' }).click();
-    await expect(page).toHaveURL(/\/pago\/order-predef-1\?tipo=predefinido$/);
+    await expect(page).toHaveURL(/\/pago\/aaaaaaaa-0000-4000-8000-0000000000f1\?tipo=predefinido$/);
     await page.getByRole('button', { name: 'Pagar' }).click();
 
     await expect(page).toHaveURL(/\/inicio$/);
@@ -103,7 +103,7 @@ test.describe('Planes predefinidos - pago con sesión', () => {
     const createCall = calls.find((c) => c.path === `/plans/standard/${CODE}/purchase`);
     expect(createCall).toMatchObject({ method: 'POST', authorized: true });
     expect(createCall?.body).toBeUndefined();
-    expect(calls.find((c) => c.path === '/dev/orders/order-predef-1/simulate-payment')?.method).toBe('POST');
+    expect(calls.find((c) => c.path === '/dev/orders/aaaaaaaa-0000-4000-8000-0000000000f1/simulate-payment')?.method).toBe('POST');
   });
 
   test('si el backend rechaza la orden muestra un error y se queda en el carro', async ({ page }) => {

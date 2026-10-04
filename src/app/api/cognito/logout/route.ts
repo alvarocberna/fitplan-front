@@ -1,7 +1,23 @@
 import { NextResponse } from 'next/server'
 import { deleteSession } from '@/shared/auth/session'
 
+// Solo cierra la sesión ante una navegación que el propio usuario inició en este sitio. Con los
+// headers Fetch Metadata del navegador se descartan: (a) un enlace o una imagen en otro sitio que
+// apunte acá (cierre de sesión forzado, CSRF) y (b) cualquier fetch/prefetch en segundo plano.
+function isUserNavigationFromThisSite(request: Request): boolean {
+  const site = request.headers.get('sec-fetch-site')
+  const mode = request.headers.get('sec-fetch-mode')
+  // navegadores sin Fetch Metadata no mandan los headers: se deja pasar
+  if (site && site !== 'same-origin' && site !== 'none') return false
+  if (mode && mode !== 'navigate') return false
+  return true
+}
+
 export async function GET(request: Request) {
+  if (!isUserNavigationFromThisSite(request)) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
   await deleteSession()
 
   const domain = process.env.COGNITO_DOMAIN

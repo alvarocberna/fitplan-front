@@ -11,12 +11,12 @@ import {
 } from './helpers/mock-backend';
 
 const PENDING = {
-  consultationId: 'c-2',
+  consultationId: 'cccccccc-0000-4000-8000-000000000002',
   consultationNumber: 2,
   consultationDate: '2026-05-10T12:00:00.000Z',
   mainGoal: 'Ganar masa muscular',
   planStatus: 'awaiting_payment',
-  orderId: 'order-2',
+  orderId: 'aaaaaaaa-0000-4000-8000-000000000002',
   plan: null,
 };
 
@@ -31,12 +31,12 @@ const PLAN = {
 };
 
 const READY = {
-  consultationId: 'c-1',
+  consultationId: 'cccccccc-0000-4000-8000-000000000001',
   consultationNumber: 1,
   consultationDate: '2026-03-15T12:00:00.000Z',
   mainGoal: 'Bajar de peso',
   planStatus: 'ready',
-  orderId: 'order-1',
+  orderId: 'aaaaaaaa-0000-4000-8000-000000000001',
   plan: PLAN,
 };
 
@@ -80,21 +80,21 @@ test.describe('Inicio', () => {
     await expect(ready.getByText('Plan personalizado')).toHaveCount(0);
 
     await pending.getByRole('link', { name: 'Pagar consulta' }).click();
-    await expect(page).toHaveURL(/\/pago\/order-2$/);
+    await expect(page).toHaveURL(/\/pago\/aaaaaaaa-0000-4000-8000-000000000002$/);
   });
 
   test('al hacer click en una consulta abre su detalle', async ({ page }) => {
     await mockConsultationsList([READY]);
     await mockConsultationDetail({
-      consultationId: 'c-1',
+      consultationId: 'cccccccc-0000-4000-8000-000000000001',
       consultationNumber: 1,
       consultationDate: '2026-03-15T12:00:00.000Z',
       goals: { mainGoal: 'Bajar de peso', secondaryGoals: ['Dormir mejor'] },
       planStatus: 'ready',
-      orderId: 'order-1',
+      orderId: 'aaaaaaaa-0000-4000-8000-000000000001',
       measurements: [
         {
-          measurementId: 'm-1',
+          measurementId: 'dddddddd-0000-4000-8000-000000000001',
           measurementNumber: 1,
           measuredAt: '2026-03-15T12:00:00.000Z',
           level: 'BASIC',
@@ -102,11 +102,11 @@ test.describe('Inicio', () => {
           results: null,
         },
       ],
-      plan: { ...PLAN, orderId: 'order-1', pdfUrl: 'https://bucket.example/plan.pdf?sig=abc' },
+      plan: { ...PLAN, orderId: 'aaaaaaaa-0000-4000-8000-000000000001', pdfUrl: 'https://bucket.example/plan.pdf?sig=abc' },
     });
     // el detalle arma sus cards con el plan (GET me/plans/:orderId) y cada medición (GET me/measurements/:id)
     await mockPlanDetail({
-      orderId: 'order-1',
+      orderId: 'aaaaaaaa-0000-4000-8000-000000000001',
       type: 'GENERATED',
       name: 'Plan personalizado',
       purchasedAt: '2026-03-15T12:00:00.000Z',
@@ -114,7 +114,7 @@ test.describe('Inicio', () => {
       thumbnailUrl: null,
       predefined: null,
       generated: {
-        consultationId: 'c-1',
+        consultationId: 'cccccccc-0000-4000-8000-000000000001',
         planName: 'Plan personalizado',
         period: null,
         startDate: null,
@@ -137,12 +137,12 @@ test.describe('Inicio', () => {
       },
     });
     await mockMeasurementDetail({
-      measurementId: 'm-1',
+      measurementId: 'dddddddd-0000-4000-8000-000000000001',
       measurementNumber: 1,
       measuredAt: '2026-03-15T12:00:00.000Z',
       level: 'BASIC',
       origin: 'CONSULTATION',
-      consultationId: 'c-1',
+      consultationId: 'cccccccc-0000-4000-8000-000000000001',
       consultationNumber: 1,
       editable: false,
       raw: { basic: { weight: 70.5, height: 172 }, skinfolds: null, circumferences: null, diameters: null },
@@ -152,7 +152,7 @@ test.describe('Inicio', () => {
 
     await page.getByRole('link', { name: 'Ver consulta N°1' }).click();
 
-    await expect(page).toHaveURL(/\/inicio\/consultas\/c-1$/);
+    await expect(page).toHaveURL(/\/inicio\/consultas\/cccccccc-0000-4000-8000-000000000001$/);
     await expect(page.getByRole('heading', { name: 'Consulta N°1' })).toBeVisible();
     await expect(page.getByRole('region', { name: 'Datos del plan' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Descargar plan nutricional' })).toHaveAttribute('href', /plan\.pdf/);
@@ -162,9 +162,9 @@ test.describe('Inicio', () => {
     await expect(page.getByText('70.5 kg')).toBeVisible();
 
     const calls = await getBackendCalls();
-    expect(calls.find((c) => c.path === '/me/consultations/c-1')).toMatchObject({ method: 'GET', authorized: true });
-    expect(calls.find((c) => c.path === '/me/plans/order-1')).toMatchObject({ method: 'GET', authorized: true });
-    expect(calls.find((c) => c.path === '/me/measurements/m-1')).toMatchObject({ method: 'GET', authorized: true });
+    expect(calls.find((c) => c.path === '/me/consultations/cccccccc-0000-4000-8000-000000000001')).toMatchObject({ method: 'GET', authorized: true });
+    expect(calls.find((c) => c.path === '/me/plans/aaaaaaaa-0000-4000-8000-000000000001')).toMatchObject({ method: 'GET', authorized: true });
+    expect(calls.find((c) => c.path === '/me/measurements/dddddddd-0000-4000-8000-000000000001')).toMatchObject({ method: 'GET', authorized: true });
   });
 
   test('una consulta inexistente o ajena muestra "Consulta no encontrada"', async ({ page }) => {
@@ -177,7 +177,7 @@ test.describe('Inicio', () => {
 
 test.describe('Mis planes (/planes)', () => {
   const PLAN_ROW = {
-    orderId: 'order-1',
+    orderId: 'aaaaaaaa-0000-4000-8000-000000000001',
     type: 'GENERATED',
     name: 'Plan personalizado',
     purchasedAt: '2026-02-01T12:00:00.000Z',
@@ -203,14 +203,14 @@ test.describe('Mis planes (/planes)', () => {
     await expect(row.getByRole('link', { name: 'Descargar plan Plan personalizado' })).toHaveAttribute('href', /plan\.pdf/);
     await expect(row.getByRole('link', { name: 'Ver plan Plan personalizado' })).toHaveAttribute(
       'href',
-      '/planes/order-1',
+      '/planes/aaaaaaaa-0000-4000-8000-000000000001',
     );
   });
 
   test('"Ver plan" abre el detalle completo del plan', async ({ page }) => {
     await mockPlansList([PLAN_ROW]);
     await mockPlanDetail({
-      orderId: 'order-1',
+      orderId: 'aaaaaaaa-0000-4000-8000-000000000001',
       type: 'GENERATED',
       name: 'Plan personalizado',
       purchasedAt: '2026-02-01T12:00:00.000Z',
@@ -218,7 +218,7 @@ test.describe('Mis planes (/planes)', () => {
       thumbnailUrl: null,
       predefined: null,
       generated: {
-        consultationId: 'c-1',
+        consultationId: 'cccccccc-0000-4000-8000-000000000001',
         planName: 'Plan personalizado',
         period: null,
         startDate: '2026-02-01T00:00:00.000Z',
@@ -246,13 +246,13 @@ test.describe('Mis planes (/planes)', () => {
 
     await page.getByRole('link', { name: 'Ver plan Plan personalizado' }).click();
 
-    await expect(page).toHaveURL(/\/planes\/order-1$/);
+    await expect(page).toHaveURL(/\/planes\/aaaaaaaa-0000-4000-8000-000000000001$/);
     await expect(page.getByRole('heading', { name: 'Plan personalizado' })).toBeVisible();
     await expect(page.getByRole('listitem', { name: 'Resumen de Desayuno' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Descargar plan nutricional' })).toHaveAttribute('href', /plan\.pdf/);
 
     const calls = await getBackendCalls();
-    expect(calls.find((c) => c.path === '/me/plans/order-1')).toMatchObject({ method: 'GET', authorized: true });
+    expect(calls.find((c) => c.path === '/me/plans/aaaaaaaa-0000-4000-8000-000000000001')).toMatchObject({ method: 'GET', authorized: true });
   });
 
   test('un plan inexistente, ajeno o no listo muestra "Plan no encontrado"', async ({ page }) => {
@@ -264,7 +264,7 @@ test.describe('Mis planes (/planes)', () => {
 
 test.describe('Mediciones', () => {
   const DETAIL = {
-    measurementId: 'm-1',
+    measurementId: 'dddddddd-0000-4000-8000-000000000001',
     measurementNumber: 1,
     measuredAt: '2026-05-10T12:00:00.000Z',
     level: 'BASIC',
@@ -279,7 +279,7 @@ test.describe('Mediciones', () => {
   test('lista las mediciones y al hacer click abre su detalle', async ({ page }) => {
     await mockMeasurementsList([
       {
-        measurementId: 'm-1',
+        measurementId: 'dddddddd-0000-4000-8000-000000000001',
         measurementNumber: 1,
         measuredAt: '2026-05-10T12:00:00.000Z',
         level: 'BASIC',
@@ -303,7 +303,7 @@ test.describe('Mediciones', () => {
     await expect(row.getByText('Básica', { exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Ver medición N°1' }).click();
 
-    await expect(page).toHaveURL(/\/mediciones\/m-1$/);
+    await expect(page).toHaveURL(/\/mediciones\/dddddddd-0000-4000-8000-000000000001$/);
     await expect(page.getByRole('heading', { name: 'Medición N°1' })).toBeVisible();
     await expect(page.getByText('Los resultados interpretados estarán disponibles próximamente.')).toBeVisible();
   });
@@ -323,11 +323,11 @@ test.describe('Mediciones', () => {
       mmPercentage: null,
     };
     await mockMeasurementsList([
-      { ...summary, measurementId: 'm-2', measurementNumber: 2, measuredAt: '2026-09-28T12:00:00.000Z', weight: 78, bmi: 26.37 },
-      { ...summary, measurementId: 'm-1', measuredAt: '2026-09-01T12:00:00.000Z', weight: 80, bmi: 27.04 },
+      { ...summary, measurementId: 'dddddddd-0000-4000-8000-000000000002', measurementNumber: 2, measuredAt: '2026-09-28T12:00:00.000Z', weight: 78, bmi: 26.37 },
+      { ...summary, measurementId: 'dddddddd-0000-4000-8000-000000000001', measuredAt: '2026-09-01T12:00:00.000Z', weight: 80, bmi: 27.04 },
     ]);
     await mockLatestPlanProjection({
-      orderId: 'order-1',
+      orderId: 'aaaaaaaa-0000-4000-8000-000000000001',
       planName: 'Plan de prueba',
       startDate: '2026-09-27',
       endDate: '2026-12-27',
@@ -365,7 +365,7 @@ test.describe('Mediciones', () => {
     await page.getByLabel('Talla (cm)').fill('172');
     await page.getByRole('button', { name: 'Registrar medición' }).click();
 
-    await expect(page).toHaveURL(/\/mediciones\/m-1$/);
+    await expect(page).toHaveURL(/\/mediciones\/dddddddd-0000-4000-8000-000000000001$/);
     const calls = await getBackendCalls();
     const post = calls.find((c) => c.path === '/me/measurements' && c.method === 'POST');
     expect(post).toMatchObject({ authorized: true, body: { level: 'BASIC', weight: 70, height: 172 } });
@@ -382,7 +382,7 @@ test.describe('Inicio - sin sesión', () => {
   test.use({ authenticated: false });
 
   test('el detalle de una consulta exige sesión', async ({ page }) => {
-    await page.goto('/inicio/consultas/c-1');
+    await page.goto('/inicio/consultas/cccccccc-0000-4000-8000-000000000001');
 
     await expect(page).toHaveURL(/\/login/);
   });

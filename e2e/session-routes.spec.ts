@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { mockOrderStatusSequence } from './helpers/mock-backend';
 
-const FLOW_PATHS = ['/consulta/inicio', '/consulta/anamnesis', '/pago/order-e2e-123', '/ordenes/order-e2e-123'];
+const FLOW_PATHS = ['/consulta/inicio', '/consulta/anamnesis', '/pago/aaaaaaaa-0000-4000-8000-000000000123', '/ordenes/aaaaaaaa-0000-4000-8000-000000000123'];
 
 // src/proxy.ts exige sesión válida en /consulta/*, /pago/*, /ordenes/*, /inicio, /planes, /mediciones y /perfil.
 test.describe('Session gating (sin sesión)', () => {
@@ -60,7 +60,7 @@ test.describe('Session layout (con sesión)', () => {
   }
 
   test('undocks the sidebar to reveal its links and docks it again', async ({ page }) => {
-    await page.goto('/pago/order-e2e-123');
+    await page.goto('/pago/aaaaaaaa-0000-4000-8000-000000000123');
     const sidebar = sidebarOf(page);
     const newConsultation = topbarOf(page).getByRole('link', { name: 'Nueva consulta' });
 
@@ -86,7 +86,7 @@ test.describe('Session layout (con sesión)', () => {
 
   test('on small screens the sidebar is gone and its options move to the topbar menu', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
-    await page.goto('/pago/order-e2e-123');
+    await page.goto('/pago/aaaaaaaa-0000-4000-8000-000000000123');
 
     await expect(page.getByRole('button', { name: /menú lateral/ })).toBeHidden();
 

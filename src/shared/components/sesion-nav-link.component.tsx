@@ -30,18 +30,26 @@ interface SesionNavLinkProps extends SesionNavItem {
     // Variante para la barra superior en móvil: ícono sobre la etiqueta, sin rectángulo lateral.
     compact?: boolean;
     className?: string;
+    // true para un href que no es una página sino un endpoint (el logout): se renderiza un <a> común
+    // en vez de <Link>, para que sea una navegación real del navegador. Con <Link> el router de Next
+    // lo pediría (y lo precargaría) por fetch, y el endpoint solo cierra la sesión ante una navegación.
+    hardNavigation?: boolean;
+    onClick?: () => void;
 }
 
 // Link de navegación con ícono. Activo: texto en color primary y, en el sidebar, un rectángulo de
 // 5px pegado al borde izquierdo con el alto del link.
-export function SesionNavLink({ href, label, icon: Icon, isActive = false, compact = false, className = "" }: SesionNavLinkProps) {
+export function SesionNavLink({ href, label, icon: Icon, isActive = false, compact = false, className = "", hardNavigation = false, onClick }: SesionNavLinkProps) {
     const layout = compact
         ? "flex-col gap-0.5 px-2 py-1 text-[11px]"
         : "flex-row gap-3 px-3 py-2 text-sm";
 
+    const Anchor = hardNavigation ? "a" : Link;
+
     return (
-        <Link
+        <Anchor
             href={href}
+            onClick={onClick}
             className={`relative flex items-center rounded-lg font-medium transition-colors ${layout}
             ${isActive ? "" : "text-zinc-700 hover:bg-zinc-100"} ${className}`}
             style={isActive ? { color: "var(--color-primary)" } : undefined}
@@ -56,6 +64,6 @@ export function SesionNavLink({ href, label, icon: Icon, isActive = false, compa
             )}
             <Icon className="w-5 h-5" />
             <span>{label}</span>
-        </Link>
+        </Anchor>
     );
 }

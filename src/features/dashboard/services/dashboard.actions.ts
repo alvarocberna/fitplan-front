@@ -3,6 +3,7 @@
 import { apiFetch } from '@/shared/api/client'
 import { runAction, type ActionResult } from '@/shared/api/action-result'
 import { getValidAccessToken } from '@/shared/auth/tokens'
+import { uuidParam } from '@/shared/api/path-params'
 import { DashboardSummaryDto } from '../dtos/dashboard-summary.dto'
 import { ConsultationSummaryDto } from '../dtos/consultation-summary.dto'
 import { ConsultationDetailDto } from '../dtos/consultation-detail.dto'
@@ -28,7 +29,7 @@ export async function getMyConsultationAction(consultationId: string): Promise<A
     return runAction(async () => {
         const accessToken = await getValidAccessToken()
         return apiFetch<ConsultationDetailDto>(
-            `me/consultations/${encodeURIComponent(consultationId)}`,
+            `me/consultations/${uuidParam(consultationId)}`,
             'GET',
             undefined,
             accessToken,
@@ -46,7 +47,7 @@ export async function getMyPlansAction(): Promise<ActionResult<MyPlanSummaryDto[
 export async function getMyPlanAction(orderId: string): Promise<ActionResult<MyPlanDetailDto>> {
     return runAction(async () => {
         const accessToken = await getValidAccessToken()
-        return apiFetch<MyPlanDetailDto>(`me/plans/${encodeURIComponent(orderId)}`, 'GET', undefined, accessToken)
+        return apiFetch<MyPlanDetailDto>(`me/plans/${uuidParam(orderId)}`, 'GET', undefined, accessToken)
     })
 }
 

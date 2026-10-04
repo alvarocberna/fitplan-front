@@ -221,7 +221,7 @@ raíz, y el CSS global se carga de forma transitiva (`layout.tsx` tiene el impor
 | `api/cognito/login` | Falta `COGNITO_REDIRECT_URI` o falla el discovery → `console.error` + redirect a `/login?error=login_unavailable` |
 | `api/cognito/callback` | Falla el intercambio → `/login?error=callback_failed`. Falla `me/sync` posterior → se continúa (el login ya fue exitoso) |
 | `api/cognito/logout` | Falta la configuración de Cognito → se borra igual la sesión local y se vuelve a `/` |
-| `/login` | Traduce `?error=` (`callback_failed`, `session_expired`, `login_unavailable`) a un aviso `role="alert"` |
+| `/login` | Traduce `?error=` (`callback_failed`, `session_expired`, `login_unavailable`, `email_not_verified`) a un aviso `role="alert"` |
 
 Resumen del 401: un Server Action recibe 401 → `code: 'unauthenticated'` → `SessionRequiredError` → en un Client
 Component `notifyError` lleva a `/login`; en un Server Component lo hace `withSession`. `CartView` es la

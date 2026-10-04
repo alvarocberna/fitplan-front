@@ -57,7 +57,7 @@ export async function mockGoalFeasibility(options: { feasible: boolean; goal?: s
 
 export async function mockCreateOrder(options: { orderId?: string; fail?: boolean } = {}) {
   await setMock('createOrder', {
-    orderId: options.orderId ?? 'order-e2e-123',
+    orderId: options.orderId ?? 'aaaaaaaa-0000-4000-8000-000000000123',
     fail: options.fail,
     message: 'Error al crear la orden',
   });
@@ -92,7 +92,7 @@ export async function mockPredefinedProduct(options: { price?: number; unavailab
 // plans/standard/:code/purchase (con sesión).
 export async function mockCreatePredefinedOrder(options: { orderId?: string; fail?: boolean } = {}) {
   await setMock('createPredefinedOrder', {
-    orderId: options.orderId ?? 'order-predef-1',
+    orderId: options.orderId ?? 'aaaaaaaa-0000-4000-8000-0000000000f1',
     fail: options.fail,
     message: 'Error al crear la orden',
   });

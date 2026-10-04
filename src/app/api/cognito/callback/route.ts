@@ -3,13 +3,14 @@ import { cookies } from 'next/headers'
 import { authorizationCodeGrant, fetchUserInfo, type UserInfoResponse } from 'openid-client'
 import { getCognitoConfig } from '@/shared/auth/cognito-config'
 import { RETURN_TO_COOKIE, sanitizeReturnTo } from '@/shared/auth/return-to'
-import { createSession } from '@/shared/auth/session'
-import { apiFetch } from '@/shared/api/client'
+import { createSession, deleteSession } from '@/shared/auth/session'
+import { apiFetch, ApiError } from '@/shared/api/client'
 import type { PerfilStatus } from '@/shared/auth/profile.actions'
 
 const POST_LOGIN_REDIRECT = '/consulta/inicio'
 const PROFILE_COMPLETE_REDIRECT = '/inicio'
 const LOGIN_ERROR_REDIRECT = '/login?error=callback_failed'
+const EMAIL_NOT_VERIFIED_REDIRECT = '/login?error=email_not_verified'
 
 export async function GET(request: Request) {
   const cookieStore = await cookies()
@@ -59,12 +60,18 @@ export async function GET(request: Request) {
   // sincronización con su propia lógica de fallback.
   let postLoginRedirect: string = POST_LOGIN_REDIRECT
   try {
-    const email = String(userInfo.email ?? '')
-    const perfil = await apiFetch<PerfilStatus>('me/sync', 'POST', { email }, accessToken)
+    // sin body: el backend obtiene el email de Cognito con el access token
+    const perfil = await apiFetch<PerfilStatus>('me/sync', 'POST', undefined, accessToken)
     if (perfil.profileComplete) {
       postLoginRedirect = PROFILE_COMPLETE_REDIRECT
     }
   } catch (err) {
+    // Cuenta con el correo sin verificar: no puede usar la aplicación. Se descarta la sesión recién
+    // creada y se le explica en /login, en vez de dejarla entrar a un flujo que fallará en cada paso.
+    if (err instanceof ApiError && err.code === 'EMAIL_NOT_VERIFIED') {
+      await deleteSession()
+      return NextResponse.redirect(new URL(EMAIL_NOT_VERIFIED_REDIRECT, request.url))
+    }
     console.error('No se pudo confirmar el estado del perfil tras el login (se continúa a /consulta/inicio):', err)
   }
 

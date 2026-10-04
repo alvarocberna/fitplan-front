@@ -3,8 +3,8 @@ import { GET } from './route';
 import { cookies } from 'next/headers';
 import { authorizationCodeGrant, fetchUserInfo } from 'openid-client';
 import { getCognitoConfig } from '@/shared/auth/cognito-config';
-import { createSession } from '@/shared/auth/session';
-import { apiFetch } from '@/shared/api/client';
+import { createSession, deleteSession } from '@/shared/auth/session';
+import { apiFetch, ApiError } from '@/shared/api/client';
 
 vi.mock('next/headers', () => ({
   cookies: vi.fn(async () => ({
@@ -24,10 +24,16 @@ vi.mock('@/shared/auth/cognito-config', () => ({
 
 vi.mock('@/shared/auth/session', () => ({
   createSession: vi.fn(),
+  deleteSession: vi.fn(),
 }));
 
 vi.mock('@/shared/api/client', () => ({
   apiFetch: vi.fn(),
+  ApiError: class ApiError extends Error {
+    constructor(message: string, public status: number, public code?: string) {
+      super(message);
+    }
+  },
 }));
 
 const mockedAuthorizationCodeGrant = vi.mocked(authorizationCodeGrant);
@@ -130,7 +136,7 @@ describe('GET /api/cognito/callback', () => {
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe('http://localhost:3000/carrito');
     // el chequeo crea la identidad que el backend necesita para crear la orden
-    expect(mockedApiFetch).toHaveBeenCalledWith('me/sync', 'POST', { email: 'user@test.com' }, 'token-abc');
+    expect(mockedApiFetch).toHaveBeenCalledWith('me/sync', 'POST', undefined, 'token-abc');
     expect(cookieStore.delete).toHaveBeenCalledWith('post_login_return_to');
   });
 
@@ -149,18 +155,24 @@ describe('GET /api/cognito/callback', () => {
     expect(response.headers.get('location')).toBe('http://localhost:3000/inicio');
   });
 
-  it('calls apiFetch with the email from fetchUserInfo and the access token from the token exchange (no la cookie de sesión recién escrita)', async () => {
+  it('calls me/sync WITHOUT an email (the backend asks Cognito for it) and with the access token from the token exchange', async () => {
     mockedAuthorizationCodeGrant.mockResolvedValue(makeTokens({ access_token: 'token-xyz' }) as never);
     mockedFetchUserInfo.mockResolvedValue({ sub: 'sub-123', email: 'user@test.com' } as never);
     mockedApiFetch.mockResolvedValue({ profileComplete: false } as never);
 
     await GET(makeRequest());
 
-    expect(mockedApiFetch).toHaveBeenCalledWith(
-      'me/sync',
-      'POST',
-      { email: 'user@test.com' },
-      'token-xyz',
-    );
+    expect(mockedApiFetch).toHaveBeenCalledWith('me/sync', 'POST', undefined, 'token-xyz');
+  });
+
+  it('discards the session and sends to /login?error=email_not_verified when the account email is not verified', async () => {
+    mockedAuthorizationCodeGrant.mockResolvedValue(makeTokens() as never);
+    mockedFetchUserInfo.mockResolvedValue({ sub: 'sub-123', email: 'user@test.com' } as never);
+    mockedApiFetch.mockRejectedValue(new ApiError('Verifica tu correo', 403, 'EMAIL_NOT_VERIFIED'));
+
+    const response = await GET(makeRequest());
+
+    expect(vi.mocked(deleteSession)).toHaveBeenCalled();
+    expect(response.headers.get('location')).toBe('http://localhost:3000/login?error=email_not_verified');
   });
 });

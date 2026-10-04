@@ -3,6 +3,7 @@ import {Card, SubsectionHead, SubsectionTitle, LoginOptions} from '@/shared'
 
 const ERROR_MESSAGES: Record<string, string> = {
   callback_failed: 'No pudimos completar tu inicio de sesión. Intenta de nuevo.',
+  email_not_verified: 'Debes verificar tu correo electrónico antes de continuar. Revisa tu bandeja de entrada e inicia sesión de nuevo.',
   session_expired: 'Tu sesión expiró. Inicia sesión nuevamente para continuar.',
   login_unavailable: 'El inicio de sesión no está disponible en este momento. Intenta de nuevo en unos minutos.',
 }

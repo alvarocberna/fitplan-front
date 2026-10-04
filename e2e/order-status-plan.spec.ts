@@ -27,7 +27,7 @@ test.describe('Order status & plan', () => {
   test('polls until completion and shows the plan preview and download button', async ({ page }) => {
     await mockOrderStatusSequence([GENERATING, COMPLETED]);
 
-    await page.goto('/ordenes/order-e2e-123');
+    await page.goto('/ordenes/aaaaaaaa-0000-4000-8000-000000000123');
     await expect(page.getByText(/Estamos generando tu plan nutricional/)).toBeVisible();
 
     await expect(page.getByText('¡Tu plan nutricional está listo!')).toBeVisible({ timeout: 10_000 });
@@ -42,7 +42,7 @@ test.describe('Order status & plan', () => {
   test('shows a placeholder instead of the thumbnail when the plan has none', async ({ page }) => {
     await mockOrderStatusSequence([{ ...COMPLETED, thumbnailUrl: null }]);
 
-    await page.goto('/ordenes/order-e2e-123');
+    await page.goto('/ordenes/aaaaaaaa-0000-4000-8000-000000000123');
 
     await expect(page.getByText('Vista previa no disponible')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole('link', { name: /Descargar/ })).toHaveAttribute('href', PDF_URL);
@@ -52,7 +52,7 @@ test.describe('Order status & plan', () => {
     test.setTimeout(70_000);
     await mockOrderStatusSequence([GENERATING]);
 
-    await page.goto('/ordenes/order-e2e-123');
+    await page.goto('/ordenes/aaaaaaaa-0000-4000-8000-000000000123');
 
     await expect(page.getByText(/tardando más de lo normal/)).toBeVisible({ timeout: 60_000 });
   });
@@ -60,7 +60,7 @@ test.describe('Order status & plan', () => {
   test('shows a reassuring error state and no download button when generation fails', async ({ page }) => {
     await mockOrderStatusSequence([{ ...GENERATING, generationStatus: 'ERROR' }]);
 
-    await page.goto('/ordenes/order-e2e-123');
+    await page.goto('/ordenes/aaaaaaaa-0000-4000-8000-000000000123');
 
     await expect(page.getByText('Tu pago está a salvo')).toBeVisible();
     await expect(page.getByRole('link', { name: /Descargar/ })).toHaveCount(0);

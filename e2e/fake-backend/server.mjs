@@ -171,7 +171,7 @@ const server = http.createServer(async (req, res) => {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       const mock = mocks.createOrder
       if (!mock) return send(res, 501, { message: 'consultations sin mock' })
-      return respond(res, mock, { orderId: mock.orderId ?? 'order-e2e-123' })
+      return respond(res, mock, { orderId: mock.orderId ?? 'aaaaaaaa-0000-4000-8000-000000000123' })
     }
 
     // ---- planes predefinidos ----
@@ -208,7 +208,7 @@ const server = http.createServer(async (req, res) => {
       if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       const mock = mocks.createPredefinedOrder
       if (!mock) return send(res, 501, { message: 'plans/standard/:code/purchase sin mock' })
-      return respond(res, mock, { orderId: mock.orderId ?? 'order-predef-1' })
+      return respond(res, mock, { orderId: mock.orderId ?? 'aaaaaaaa-0000-4000-8000-0000000000f1' })
     }
 
     // ---- inicio (/inicio): resumen del usuario y listado de planes (el destino tras pagar un plan predefinido) ----
@@ -282,8 +282,9 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, detail)
     }
 
-    // ---- pago simulado (sin auth en el backend real: es el stand-in del webhook) ----
+    // ---- pago simulado: como en el backend real, exige la sesión del dueño de la orden ----
     if (/^\/dev\/orders\/[^/]+\/simulate-payment$/.test(path) && method === 'POST') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       const mock = mocks.payment
       if (!mock) return send(res, 501, { message: 'simulate-payment sin mock' })
       return respond(res, mock, { status: 'processed' })
@@ -291,6 +292,7 @@ const server = http.createServer(async (req, res) => {
 
     // ---- rechazo de pago simulado ----
     if (/^\/dev\/orders\/[^/]+\/simulate-payment-rejection$/.test(path) && method === 'POST') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
       const mock = mocks.paymentRejection
       if (!mock) return send(res, 501, { message: 'simulate-payment-rejection sin mock' })
       return respond(res, mock, { status: 'rejected' })

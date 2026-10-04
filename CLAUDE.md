@@ -25,7 +25,8 @@ Requires a `.env` (see `.env.template`) with:
 - `NEXT_PUBLIC_PROYECTO_ID` — project id sent to the CMS backend
 - `COGNITO_ISSUER_URL`, `COGNITO_CLIENT_ID`, `COGNITO_CLIENT_SECRET`, `COGNITO_REDIRECT_URI`,
   `COGNITO_DOMAIN` — Amazon Cognito (Hosted UI, native login + Google as a federated Identity
-  Provider). `SESSION_SECRET` — signs the app's own `session` cookie. See `doc/auth.md`.
+  Provider). `SESSION_SECRET` — key material for the app's own **encrypted** `session` cookie (JWE; at least 32
+  characters, enforced in production). See `doc/auth.md`.
 
 Path alias: `@/*` → `./src/*` (see `tsconfig.json`).
 
@@ -101,6 +102,18 @@ which throw `ActionError` or `SessionRequiredError` (`unwrapOrNull` maps a 404 t
 call `toast.error(error.message)` directly. Server Components of `(sesion)` load data inside `withSession(...)`
 (`src/shared/auth/with-session.ts`, server-only) so an expired session redirects to login instead of hitting
 `error.tsx`. The three boundaries report to the server through `useReportError`.
+
+### Security rules (read `../doc/security/frontend-security.md`)
+
+- A Server Action is a public endpoint and its arguments are untrusted: pass every id through `uuidParam`
+  (`src/shared/api/path-params.ts`) before building a backend path. Only files that export actions carry
+  `'use server'` — helpers such as `action-result.ts` must not, or they get published as actions.
+- Tokens never reach the browser: keep `apiFetch`/`session.ts`/`tokens.ts` server-only, nothing sensitive in
+  `NEXT_PUBLIC_*`, and never send the user's email to the backend (it asks Cognito).
+- New image/API origin: extend the CSP directive in `src/proxy.ts`, don't loosen it. Redirect targets and
+  `?error=` messages go through allowlists (`return-to.ts`, `ERROR_MESSAGES`).
+- Links to endpoints that are not pages (logout) use a plain `<a>` (`hardNavigation`), not `<Link>`. `/dev/*`
+  must stay 404 in production.
 
 ### Paid consultation flow (the core product)
 

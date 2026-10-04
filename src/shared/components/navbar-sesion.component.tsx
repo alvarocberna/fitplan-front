@@ -8,6 +8,7 @@ import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 //shared
 import { SESION_NAV_ITEMS, SesionNavLink } from "./sesion-nav-link.component";
+import { clearClientState } from "../auth/clear-client-state";
 
 interface NavbarSesionProps {
     // Sidebar acoplado (angosto, sin links) o desacoplado (con los links).
@@ -76,6 +77,8 @@ export function NavbarSesion({ collapsed = false, onToggle }: NavbarSesionProps)
 
             <SesionNavLink
                 href="/api/cognito/logout"
+                hardNavigation
+                onClick={clearClientState}
                 label="Cerrar sesión"
                 icon={ArrowRightOnRectangleIcon}
                 className={`mt-auto ${hideWhenCollapsed}`}

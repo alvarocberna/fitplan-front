@@ -3,6 +3,7 @@
 import { apiFetch } from '@/shared/api/client'
 import { runAction, type ActionResult } from '@/shared/api/action-result'
 import { getValidAccessToken } from '@/shared/auth/tokens'
+import { uuidParam } from '@/shared/api/path-params'
 import {
     MeasurementDetailDto,
     MeasurementSummaryDto,
@@ -23,7 +24,7 @@ export async function getMyMeasurementAction(measurementId: string): Promise<Act
     return runAction(async () => {
         const accessToken = await getValidAccessToken()
         return apiFetch<MeasurementDetailDto>(
-            `me/measurements/${encodeURIComponent(measurementId)}`,
+            `me/measurements/${uuidParam(measurementId)}`,
             'GET',
             undefined,
             accessToken,
@@ -45,7 +46,7 @@ export async function updateMeasurementAction(
     return runAction(async () => {
         const accessToken = await getValidAccessToken()
         return apiFetch<MeasurementDetailDto>(
-            `me/measurements/${encodeURIComponent(measurementId)}`,
+            `me/measurements/${uuidParam(measurementId)}`,
             'PATCH',
             data,
             accessToken,

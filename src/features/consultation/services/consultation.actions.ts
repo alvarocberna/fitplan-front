@@ -3,6 +3,7 @@
 import { apiFetch } from '@/shared/api/client'
 import { runAction, type ActionResult } from '@/shared/api/action-result'
 import { getValidAccessToken } from '@/shared/auth/tokens'
+import { uuidParam } from '@/shared/api/path-params'
 import { CompleteConsultationDto } from '../dtos/consultation.dto'
 import { InputChatDto, OutputChatDto } from '../dtos/anamnesis-chat.dto'
 import { OrderStatusDto } from '../dtos/order.dto'
@@ -30,13 +31,20 @@ export async function evaluateGoalFeasibilityAction(
   })
 }
 
+// El backend exige la sesión del dueño de la orden (no se puede pagar la orden de otro).
 export async function simulatePaymentAction(orderId: string): Promise<ActionResult<{ status: string }>> {
-  return runAction(() => apiFetch<{ status: string }>(`dev/orders/${orderId}/simulate-payment`, 'POST'))
+  return runAction(async () => {
+    const accessToken = await getValidAccessToken()
+    return apiFetch<{ status: string }>(`dev/orders/${uuidParam(orderId)}/simulate-payment`, 'POST', undefined, accessToken)
+  })
 }
 
 // CU-BIL-04: simula que la pasarela rechazó el pago (la orden queda REJECTED y se puede reintentar).
 export async function simulatePaymentRejectionAction(orderId: string): Promise<ActionResult<{ status: string }>> {
-  return runAction(() => apiFetch<{ status: string }>(`dev/orders/${orderId}/simulate-payment-rejection`, 'POST'))
+  return runAction(async () => {
+    const accessToken = await getValidAccessToken()
+    return apiFetch<{ status: string }>(`dev/orders/${uuidParam(orderId)}/simulate-payment-rejection`, 'POST', undefined, accessToken)
+  })
 }
 
 export async function sendAnamnesisTurnAction(data: InputChatDto): Promise<ActionResult<OutputChatDto>> {
@@ -49,6 +57,6 @@ export async function sendAnamnesisTurnAction(data: InputChatDto): Promise<Actio
 export async function getOrderStatusAction(orderId: string): Promise<ActionResult<OrderStatusDto>> {
   return runAction(async () => {
     const accessToken = await getValidAccessToken()
-    return apiFetch<OrderStatusDto>(`orders/${orderId}/status`, 'GET', undefined, accessToken)
+    return apiFetch<OrderStatusDto>(`orders/${uuidParam(orderId)}/status`, 'GET', undefined, accessToken)
   })
 }

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 //shared
 import { SESION_NAV_ITEMS, SesionNavLink } from "./sesion-nav-link.component";
+import { clearClientState } from "../auth/clear-client-state";
 
 // Barra superior fija del área con sesión (h-15 = 60px, ancho completo): logo "Nuvi" (→ /inicio) a la izquierda y
 // el botón "Nueva consulta" a la derecha. En pantallas chicas también aloja las opciones del sidebar
@@ -28,6 +29,8 @@ export function TopbarSesion() {
                 ))}
                 <SesionNavLink
                     href="/api/cognito/logout"
+                    hardNavigation
+                    onClick={clearClientState}
                     label="Cerrar sesión"
                     icon={ArrowRightOnRectangleIcon}
                     compact

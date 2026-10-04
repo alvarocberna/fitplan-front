@@ -1,6 +1,6 @@
 import 'server-only'
 import { cookies } from 'next/headers'
-import { SignJWT, jwtVerify, errors as joseErrors, type JWTPayload } from 'jose'
+import { EncryptJWT, jwtDecrypt, errors as joseErrors, type JWTPayload } from 'jose'
 
 export const SESSION_COOKIE = 'session'
 const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7 // 7 días
@@ -21,31 +21,52 @@ export interface SessionData {
 
 export type SessionStatus = 'authenticated' | 'expired' | 'anonymous'
 
-function getSecretKey() {
+// Largo mínimo del secreto del que se deriva la clave de cifrado de la cookie.
+const MIN_SECRET_LENGTH = 32
+
+// La cookie va CIFRADA (JWE, A256GCM), no solo firmada: lleva el access y el refresh token de
+// Cognito, que con un JWT firmado quedarían legibles en base64 para cualquiera que vea la cookie
+// (logs de un proxy, el propio equipo del usuario). La clave de 256 bits se deriva de SESSION_SECRET
+// con SHA-256. Un secreto corto se rechaza en producción; en desarrollo solo se avisa.
+async function getSecretKey(): Promise<Uint8Array> {
   const secret = process.env.SESSION_SECRET
   if (!secret) throw new Error('Falta la variable de entorno SESSION_SECRET')
-  return new TextEncoder().encode(secret)
+  if (secret.length < MIN_SECRET_LENGTH) {
+    const message = `SESSION_SECRET debe tener al menos ${MIN_SECRET_LENGTH} caracteres`
+    if (process.env.NODE_ENV === 'production') throw new Error(message)
+    warnShortSecretOnce(message)
+  }
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret))
+  return new Uint8Array(digest)
+}
+
+let shortSecretWarned = false
+function warnShortSecretOnce(message: string) {
+  if (shortSecretWarned) return
+  shortSecretWarned = true
+  console.warn(`${message} (en producción la aplicación no arranca con un secreto corto)`)
 }
 
 async function encrypt(payload: SessionPayload) {
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
+  return new EncryptJWT(payload)
+    .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_DURATION_SECONDS}s`)
-    .sign(getSecretKey())
+    .encrypt(await getSecretKey())
 }
 
-// Devuelve el payload si el JWT es válido, 'expired' si la única razón del fallo fue que
-// venció (para distinguirlo en getSession), o null para cualquier otro fallo de
-// verificación (firma inválida, formato corrupto, algoritmo no permitido). jose valida la
-// firma antes que las claims, así que un token manipulado/corrupto nunca cae en JWTExpired.
+// Devuelve el payload si la cookie se descifra y está vigente, 'expired' si la única razón del
+// fallo fue que venció (para distinguirlo en getSession), o null para cualquier otro fallo
+// (cookie manipulada o corrupta, cifrada con otra clave, algoritmo no permitido). A256GCM es cifrado
+// autenticado: un token alterado no se descifra, así que nunca llega a evaluarse su expiración.
 async function decrypt(token: string): Promise<SessionPayload | 'expired' | null> {
   // Fuera del try a propósito: si falta SESSION_SECRET es un error de configuración y debe verse
   // (lanza), no convertirse en "no hay sesión" y redirigir a todo el mundo a /login en silencio.
-  const secretKey = getSecretKey()
+  const secretKey = await getSecretKey()
   try {
-    const { payload } = await jwtVerify<SessionPayload>(token, secretKey, {
-      algorithms: ['HS256'],
+    const { payload } = await jwtDecrypt<SessionPayload>(token, secretKey, {
+      keyManagementAlgorithms: ['dir'],
+      contentEncryptionAlgorithms: ['A256GCM'],
     })
     return payload
   } catch (err) {

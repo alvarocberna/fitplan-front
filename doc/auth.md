@@ -21,9 +21,10 @@ Singleton perezoso y cacheado de la `Configuration` de `openid-client`, construi
 `import 'server-only'` porque maneja `COGNITO_CLIENT_SECRET`.
 
 ### `src/shared/auth/session.ts`
-Sesión propia de la app como cookie `session` firmada con HMAC (`jose`'s `SignJWT`/`jwtVerify`,
-`HS256`, clave derivada de `SESSION_SECRET`), `httpOnly`, `secure` en producción,
-`sameSite: 'lax'`, 7 días de expiración.
+Sesión propia de la app como cookie `session` **cifrada** (JWE: `jose`'s `EncryptJWT`/`jwtDecrypt`,
+`dir` + `A256GCM`, clave de 256 bits = SHA-256 de `SESSION_SECRET`), `httpOnly`, `secure` en producción,
+`sameSite: 'lax'`, 7 días de expiración. Va cifrada y no solo firmada porque contiene el access y el
+refresh token de Cognito. `SESSION_SECRET` debe tener al menos 32 caracteres (obligatorio en producción).
 
 El payload guarda **más que el perfil del usuario**: también los tokens de Cognito, necesarios
 para autenticar las llamadas al backend (ver sección "Server Actions" más abajo).
@@ -103,7 +104,8 @@ de fingir éxito.
 
 Al terminar (éxito), hace un chequeo **best-effort** del estado del perfil antes de decidir el
 redirect: llama `POST /me/sync` (mismo endpoint que ya usaba `syncProfileAction()`) directo vía
-`apiFetch`, con el `email`/`accessToken` que ya tiene en memoria de este mismo request — sin releer
+`apiFetch`, con el `accessToken` que ya tiene en memoria de este mismo request (sin body: el email lo obtiene
+el backend desde Cognito) — sin releer
 la cookie de sesión recién escrita. Si `profileComplete === true`, redirige directo a **`/inicio`**,
 saltándose `/consulta/inicio`. Si da `false`, o si la llamada falla (red, backend caído), redirige a
 **`/consulta/inicio`** como antes — un fallo en este chequeo nunca bloquea el login ni manda a la
@@ -118,7 +120,10 @@ para el diagrama completo.
 ### `src/app/api/cognito/logout/route.ts`
 `deleteSession()` + redirección al `/logout` propietario del Hosted UI de Cognito (arma la URL a
 mano con `COGNITO_DOMAIN`; Cognito no publica `end_session_endpoint` para usar
-`buildEndSessionUrl()` estándar).
+`buildEndSessionUrl()` estándar). Solo cierra la sesión ante una navegación iniciada en el propio sitio
+(cabeceras `Sec-Fetch-Site` / `Sec-Fetch-Mode`): un enlace en otro sitio o un `fetch` en segundo plano se
+redirigen a `/` sin tocar la sesión. Por eso "Cerrar sesión" es un `<a>` común (`hardNavigation` en
+`SesionNavLink`), que además borra del `localStorage` la consulta en curso (`clearClientState`).
 
 ### `src/app/login/page.tsx`
 Tres opciones: **"Continuar con Google"** (`/api/cognito/login?identity_provider=Google`, con
@@ -218,7 +223,7 @@ cambia cómo se ve la página, no agrega ninguna verificación de sesión — el
 no por en qué carpeta esté el archivo, y por eso el gating de `/pago/*` y `/ordenes/*` es un
 mecanismo propio (`isSessionGatedPrefix`) y no un efecto de haberlas movido a `(sesion)`.
 
-**E2E**: las specs de Playwright (`e2e/`) fabrican la cookie `session` (JWT HS256 firmado con
+**E2E**: las specs de Playwright (`e2e/`) fabrican la cookie `session` (JWT cifrado con la clave derivada de
 `SESSION_SECRET`, `e2e/helpers/session.ts`) para pasar por el proxy, y `e2e/session-routes.spec.ts`
 verifica el gating (sin sesión → `/login`) y el layout de estas rutas. El login real contra Cognito no
 se prueba en e2e. Ver `doc/testing.md`.
@@ -373,7 +378,7 @@ Todas server-only, sin prefijo `NEXT_PUBLIC_`:
 
 | Cookie | Contenido | Vida | Quién la setea/lee |
 |---|---|---|---|
-| `session` | JWT firmado con `{ userInfo, accessToken, refreshToken, accessTokenExpiresAt }` | 7 días | `createSession`/`getSession`/`getRawSession`/`deleteSession` en `session.ts` |
+| `session` | JWT cifrado (JWE A256GCM) con `{ userInfo, accessToken, refreshToken, accessTokenExpiresAt }` | 7 días | `createSession`/`getSession`/`getRawSession`/`deleteSession` en `session.ts` |
 | `cognito_state` | `state` de la request de autorización | 10 min | seteada en `/api/cognito/login`, leída y borrada en `/api/cognito/callback` |
 | `cognito_nonce` | `nonce` de la request de autorización | 10 min | ídem |
 

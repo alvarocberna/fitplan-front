@@ -10,6 +10,20 @@ export interface ClientErrorReport {
 }
 
 const MAX_FIELD_LENGTH = 4000
+// Tope de reportes por minuto y por proceso. Pasado el tope se descartan en silencio.
+const MAX_REPORTS_PER_MINUTE = 30
+
+let windowStart = 0
+let reportsInWindow = 0
+
+function allowReport(now = Date.now()): boolean {
+  if (now - windowStart >= 60_000) {
+    windowStart = now
+    reportsInWindow = 0
+  }
+  reportsInWindow += 1
+  return reportsInWindow <= MAX_REPORTS_PER_MINUTE
+}
 
 function clip(value: unknown, max = MAX_FIELD_LENGTH): string | undefined {
   if (typeof value !== 'string' || !value) return undefined
@@ -21,6 +35,9 @@ function clip(value: unknown, max = MAX_FIELD_LENGTH): string | undefined {
 // se le muestra como "Referencia" y el que Next imprime junto al error original en el servidor.
 // Los campos vienen del navegador: se acotan en tamaño y solo se registran, nunca se interpretan.
 export async function reportClientErrorAction(report: ClientErrorReport): Promise<void> {
+  // Es una acción pública (la puede invocar cualquiera sin sesión): se limita para que no sirva para
+  // inundar los logs.
+  if (!allowReport()) return
   console.error(
     '[client error]',
     JSON.stringify({
