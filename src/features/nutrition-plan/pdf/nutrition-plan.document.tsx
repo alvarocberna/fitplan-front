@@ -256,8 +256,8 @@ function CoverDecoration() {
         <Svg style={styles.coverDecoration} viewBox={`0 0 ${width} ${height}`} fixed>
             <Defs>
                 <LinearGradient id="coverTriangleGradient" x1={960} y1={333} x2={108} y2={47.9999} gradientUnits="userSpaceOnUse">
-                    <Stop offset={0} stopColor="#086A8C" stopOpacity={0.8} />
-                    <Stop offset={1} stopColor="#0BAED2" stopOpacity={0.3} />
+                    <Stop offset={0} stopColor="#01796A" stopOpacity={0.8} />
+                    <Stop offset={1} stopColor="#01B49C" stopOpacity={0.3} />
                 </LinearGradient>
                 <LinearGradient id="coverCornerGradient" x1={130} y1={500} x2={778} y2={480} gradientUnits="userSpaceOnUse">
                     <Stop offset={0} stopColor="#EFEFEF" stopOpacity={0.6} />
@@ -268,9 +268,9 @@ function CoverDecoration() {
                     <Stop offset={1} stopColor="#D6DEE2" stopOpacity={0.2} />
                 </LinearGradient>
                 <LinearGradient id="coverBottomGradient" x1={344} y1={-60.5745} x2={280} y2={443.426} gradientUnits="userSpaceOnUse">
-                    <Stop offset={0} stopColor="#6CD9F0" stopOpacity={0.7} />
-                    <Stop offset={0.407637} stopColor="#3CA9D6" stopOpacity={0.814059} />
-                    <Stop offset={1} stopColor="#086A8C" stopOpacity={0.9} />
+                    <Stop offset={0} stopColor="#6FE3D2" stopOpacity={0.7} />
+                    <Stop offset={0.407637} stopColor="#2BC4AE" stopOpacity={0.814059} />
+                    <Stop offset={1} stopColor="#01796A" stopOpacity={0.9} />
                 </LinearGradient>
                 <LinearGradient id="coverBottom2Gradient" x1={40} y1={23.9998} x2={608} y2={692} gradientUnits="userSpaceOnUse">
                     <Stop offset={0} stopColor="#A8B4BA" stopOpacity={0.6} />

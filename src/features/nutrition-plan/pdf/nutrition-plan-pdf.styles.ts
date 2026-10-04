@@ -7,16 +7,16 @@ import { StyleSheet } from '@react-pdf/renderer'
 // sin tocar el resto de los estilos.
 // ============================================================
 export const palette = {
-    primary: '#0baed2',       // color de marca (igual a --color-primary en globals.css)
-    primarySoft: '#beffe0',   // fondo suave para bloques destacados (aporte nutricional, etc)
+    primary: '#01b49c',       // color de marca (igual a --color-primary en globals.css)
+    primarySoft: '#d0f4ee',   // primary aclarado: fondo suave para bloques destacados (aporte nutricional, etc)
     text: '#1f2937',          // gris oscuro para texto principal
     textDark: '#0f172a',      // casi negro, para el título grande de la portada
     textSoft: '#6b7280',      // gris medio para textos secundarios / labels
     border: '#e5e7eb',        // gris claro para líneas divisorias
     alternateBackground: '#f9fafb', // fondo gris muy claro (filas alternadas, tarjetas)
-    background: '#f8f9fc',    // fondo general de cada página del documento
-    darkBackground: '#edf0fb', // variante un poco más oscura de fondo (badges sobre tarjetas claras)
-    cardBackground: '#fbfcfd', // punto medio entre blanco y fondo (aporte nutricional)
+    background: '#f8fafb',    // fondo general de cada página del documento (igual a --color-sesion-background)
+    darkBackground: '#e8f4f2', // primary muy aclarado: fondo un poco más oscuro (badges sobre tarjetas claras)
+    cardBackground: '#fbfdfd', // punto medio entre blanco y fondo (aporte nutricional)
     white: '#ffffff',
     // -------- Acentos usados en la portada (macros + formas decorativas) --------
     accent: '#f4a261',        // naranja (carbohidratos)
@@ -28,7 +28,7 @@ export const palette = {
     blue: '#38bdf8',          // (energía)
     blueSoft: '#dbeafe',
     blueDark: '#2784ae',      // variante oscurecida, para íconos sin badge
-    primaryDark: '#0b8249',   // variante oscurecida, para íconos sin badge
+    primaryDark: '#017867',   // primary oscurecido, para íconos sin badge
 }
 
 const spacing = {
