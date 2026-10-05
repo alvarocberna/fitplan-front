@@ -10,8 +10,7 @@ A diferencia de la primera versión de esta funcionalidad, **el backend (`nutric
 ya no es ciego a esto**: valida el Access Token de Cognito y resuelve la identidad real
 (`User`/`AuthIdentity` en Postgres). El navegador nunca llama al backend directo — todo pasa por
 **Server Actions** de Next.js, que adjuntan el token. Detalle del lado del backend:
-`nutricionista-virtual-back/doc/auth.md`. Flujo end-to-end completo (ambos repos + DB):
-`doc/flow.md` de este mismo directorio.
+`nutricionista-virtual-back/doc/auth.md`.
 
 ## Piezas implementadas — Cognito Hosted UI (login/logout)
 
@@ -114,8 +113,7 @@ chequeo es separado del que envuelve el intercambio de tokens). `/consulta/inici
 cambió: sigue llamando a `syncProfileAction()` por su cuenta como defensa en profundidad para quien
 llegue ahí con perfil incompleto (o si el chequeo del callback falló) — en el caso "perfil
 incompleto" eso implica una llamada duplicada a `POST /me/sync` (una en el callback, otra en
-`/consulta/inicio`), aceptada como trade-off porque el endpoint es idempotente. Ver `doc/flow.md`
-para el diagrama completo.
+`/consulta/inicio`), aceptada como trade-off porque el endpoint es idempotente.
 
 ### `src/app/api/cognito/logout/route.ts`
 `deleteSession()` + redirección al `/logout` propietario del Hosted UI de Cognito (arma la URL a
@@ -135,7 +133,7 @@ Tres opciones: **"Continuar con Google"** (`/api/cognito/login?identity_provider
 Los dos botones "Iniciar Consulta" del sitio (navbar global y hero de la home) usan
 `getStartConsultationHref()` (`session.ts`) para no mandar a todo el mundo a `/consulta/inicio` por
 igual: sin sesión (o expirada) van directo a `/login`; con sesión, a `/consulta/inicio`
-(que a su vez decide entre `informacion-personal`/`inicio` según el perfil — ver `doc/flow.md`).
+(que a su vez decide entre `informacion-personal`/`inicio` según el perfil).
 
 **Gotcha de bundling a tener presente**: `Hero` (`hero.component.tsx`) y `NavbarLanding`
 (`navbar-landing.component.tsx`) se re-exportan desde el barrel `@/features/index.ts`, que también
@@ -158,8 +156,7 @@ ese barrel y necesite código `server-only` va a pisar el mismo problema.
   endpoints protegidos (`/consultations`, `/consultations/chat`, `/orders/:id/status`) obtienen el
   token con `getValidAccessToken()` y lo adjuntan como `Authorization: Bearer`.
 - `src/shared/auth/profile.actions.ts` — `syncProfileAction` (`POST /me/sync`) y
-  `updateProfileAction` (`PATCH /me`), usadas por el flujo de registro/perfil (ver
-  `doc/flow.md`).
+  `updateProfileAction` (`PATCH /me`), usadas por el flujo de registro/perfil.
 - `src/features/profile/services/profile.actions.ts` — `getUserProfileAction` (`GET /me`) y
   `updateUserProfileAction` (`PATCH /me`), usadas por `/perfil` (ver sección "Área de usuario
   logueado" más abajo). Pegan al **mismo** recurso que `src/shared/auth/profile.actions.ts`
@@ -281,7 +278,7 @@ el ancho actual del sidebar y cuyo padding superior (`pt-19 md:pt-23`) deja libr
   lo que consulta el proxy; `isFocusRoute()` y `usesSesionLayout()` (que agrupa `isSesionRoute` +
   `isFocusRoute`) solo deciden presentación (navbar/sidebar), no seguridad.
 
-Páginas propias del área (además del flujo `/consulta/*`, documentado en `doc/flow.md`):
+Páginas propias del área (además del flujo `/consulta/*`):
 
 - **`/inicio`** (`src/app/(sesion)/inicio/page.tsx`, Server Component): llama en paralelo, vía
   `DashboardService` (`src/features/dashboard/services/dashboard.service.ts` → Server Actions de `dashboard.actions.ts`,
@@ -393,8 +390,7 @@ Ver `nutricionista-virtual-back/doc/auth.md` para el detalle completo. Resumen:
   Pool) en las rutas que lo requieren: `/consultations`, `/consultations/chat`,
   `/orders/:id/status`, `me/plans` (listado usado en `/inicio`).
 - La identidad (`AuthIdentity`+`User` "esqueleto") se crea apenas hay sesión válida
-  (`POST /me/sync`), separada de completar el perfil (`PATCH /me`) — ver `doc/flow.md`
-  para el flujo completo, incluido por qué están separados.
+  (`POST /me/sync`), separada de completar el perfil (`PATCH /me`).
 - Google como Identity Provider no requirió **ningún** cambio en el backend: Cognito abstrae la
   federación, así que un login nativo y uno vía Google producen el mismo tipo de token.
 
@@ -404,5 +400,4 @@ Ver `nutricionista-virtual-back/doc/auth.md` para el detalle completo. Resumen:
 manualmente end-to-end contra el User Pool real: login nativo, registro, gating de rutas, creación
 de orden autenticada, refresh silencioso del access_token, y el flujo completo de
 `consulta/inicio` → `informacion-personal` (o directo a `/inicio` si el perfil ya está completo).
-Login vía Google integrado en el código pero no ejercitado todavía contra el User Pool real — ver
-`doc/auth-pending.md`.
+Login vía Google integrado en el código pero no ejercitado todavía contra el User Pool real.

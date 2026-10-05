@@ -33,8 +33,7 @@ Path alias: `@/*` → `./src/*` (see `tsconfig.json`).
 ## Authentication (Amazon Cognito)
 
 Implemented — see `doc/auth.md` (frontend pieces: Hosted UI, session cookie, token refresh, Server
-Actions) and `doc/flow.md` (full end-to-end flow across both repos + DB, including why identity
-and profile-completion are two separate steps). Backend side documented in
+Actions; it also covers why identity and profile-completion are two separate steps). Backend side documented in
 `nutricionista-virtual-back/doc/auth.md`. Key point for this repo: the browser **never** calls
 `BACKEND_URL` directly — every call goes through a Server Action
 (`src/features/consultation/services/consultation.actions.ts`,
@@ -45,7 +44,7 @@ silently via `src/shared/auth/tokens.ts` when it's expired.
 
 Next.js 15 App Router + React 19 + TypeScript, Tailwind CSS 4. Code is organized `src/app` (routes only) / `src/features/<feature>` (components, dtos, entities, services per feature) / `src/shared` (cross-feature components, context, api clients). Each of `src/features` and `src/shared` has a barrel `index.ts` that re-exports everything; other code imports from `@/features` / `@/shared` rather than deep paths.
 
-**Barrel gotcha (found while making `Hero`/`NavbarLanding` session-aware, see `doc/auth-pending.md`)**:
+**Barrel gotcha (found while making `Hero`/`NavbarLanding` session-aware)**:
 `src/features/index.ts` re-exports both plain components and Client Components (`'use client'`,
 e.g. `testimonial-form.component.tsx`). That pulls the **whole barrel** into the browser bundle —
 any component re-exported there that imports `server-only` code (e.g. anything from
@@ -61,7 +60,7 @@ This app talks to **two unrelated backends**, each with its own fetch wrapper �
 - **Order/consultation backend** (`src/shared/api/client.ts`, `apiFetch`) — `server-only`, hits the private `BACKEND_URL` and prepends the backend's `api/v1` prefix (`API_PREFIX`) to every endpoint (routes: `me`, `consultations`, `orders/:id/status`, `plans/standard/...`, `dev/orders/:id/simulate-payment`; see the backend README). Only ever called from Server Actions (`consultation.actions.ts`, `profile.actions.ts`), which attach `Authorization: Bearer <access_token>` for the endpoints that require a session (order creation, chat, order status polling — see `doc/auth.md`). `ConsultationService` (`src/features/consultation/services/consultation.service.ts`) is the public-facing wrapper Client Components actually call — same shape as before this became auth-aware, so call sites didn't change.
 - **CMS backend** (`src/shared/api/client-cms.ts`, `apiFetchCMS` / `apiFetchFormData`) — used by `ArticlesServicePublic` and the testimonials service. In the browser it always goes through the `/api/*` → CMS rewrite in `next.config.ts` (never calls the CMS origin directly), carries cookies (`credentials: 'include'`), fetches a CSRF token for mutating requests, and auto-retries once on 401 via `/auth/refresh`. On the server it calls `NEXT_PUBLIC_BACKEND_CMS_URL` directly.
 
-The Content-Security-Policy is nonce-based and generated per-request in `src/proxy.ts` (Next.js 16's replacement for the `middleware.ts` file convention), since the nonce must change on every response. `next.config.ts` keeps only the static security headers (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Strict-Transport-Security` in prod) and the `images.remotePatterns` allowlist (local uploads + the S3 bucket the CMS serves images from) — extend that allowlist, and the `img-src`/`connect-src` directives in `src/proxy.ts`, rather than loosening CSP if a new image host or backend origin is needed. See `doc/security.md` for details.
+The Content-Security-Policy is nonce-based and generated per-request in `src/proxy.ts` (Next.js 16's replacement for the `middleware.ts` file convention), since the nonce must change on every response. `next.config.ts` keeps only the static security headers (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Strict-Transport-Security` in prod) and the `images.remotePatterns` allowlist (local uploads + the S3 bucket the CMS serves images from) — extend that allowlist, and the `img-src`/`connect-src` directives in `src/proxy.ts`, rather than loosening CSP if a new image host or backend origin is needed. See `../doc/security/frontend-security.md` for details.
 
 ### Session area: `(sesion)` route group and route gating
 
@@ -201,7 +200,7 @@ E2E gotchas (details in `doc/testing.md`): the backend is called from Server Act
 
 - ~~The order/consultation backend URL is exposed as a public env var...~~ — **resolved**: `BACKEND_URL` is private, every call goes through a Server Action carrying the Cognito Access Token. See `doc/auth.md`.
 - Anamnesis state is only persisted to context/localStorage once the chat completes; a mid-chat reload re-runs (and re-bills, token-wise) the whole conversation. Intended fix: persist incrementally per turn, plus add an explicit reset action for users who want to restart.
-- `athlete` ("Deportista" in `informacion-personal`) is persisted on the backend `User` via `PATCH /me` (`updateProfileAction`) and prefilled from `PerfilStatus.athlete`. The select has three levels (`none` / `recreational` / `professional`, form-only field `sportLevel`); only `professional` maps to `athlete = true`. Since only the boolean is stored, a previous "recreational" answer is prefilled as `none`. (The BOLA on `GET /orders/:id/status` is recorded as **resolved** in the backend repo — see `doc/flow.md`; not re-verified from this repo.)
+- `athlete` ("Deportista" in `informacion-personal`) is persisted on the backend `User` via `PATCH /me` (`updateProfileAction`) and prefilled from `PerfilStatus.athlete`. The select has three levels (`none` / `recreational` / `professional`, form-only field `sportLevel`); only `professional` maps to `athlete = true`. Since only the boolean is stored, a previous "recreational" answer is prefilled as `none`. (The BOLA on `GET /orders/:id/status` is recorded as **resolved** in the backend repo; not re-verified from this repo.)
 - E2E doesn't cover the real Cognito login (the session cookie is fabricated). The fake backend (`e2e/fake-backend/server.mjs`) mirrors the backend's `/api/v1` routes and rejects calls without the prefix; `/perfil` has no e2e spec yet.
 
 <!-- BEGIN:nextjs-agent-rules -->
