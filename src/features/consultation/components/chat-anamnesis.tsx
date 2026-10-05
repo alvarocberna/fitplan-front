@@ -28,10 +28,19 @@ export function ChatAnamnesis() {
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [isComplete, setIsComplete] = useState(false)
-    const messagesEndRef = useRef<HTMLDivElement>(null)
+    const messagesContainerRef = useRef<HTMLDivElement>(null)
 
+    // Con cada mensaje nuevo se baja al final del ÁREA DE MENSAJES, no de la página. (scrollIntoView
+    // desplazaría también la ventana: la pantalla se iba al fondo en cada turno del chat.)
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+        const container = messagesContainerRef.current
+        if (!container) return
+        // scrollTo no existe en todos los entornos (jsdom): se asigna scrollTop como alternativa
+        if (typeof container.scrollTo === 'function') {
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+        } else {
+            container.scrollTop = container.scrollHeight
+        }
     }, [messages, isLoading])
 
     //enviar mensaje del usuario al backend
@@ -83,7 +92,7 @@ export function ChatAnamnesis() {
         <div className="flex flex-col h-[70vh] max-w-2xl mx-auto">
 
             {/* Área de mensajes */}
-            <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
                 {messages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
@@ -120,8 +129,6 @@ export function ChatAnamnesis() {
                         </div>
                     </div>
                 )}
-
-                <div ref={messagesEndRef}/>
             </div>
 
             {/* Input o botón Siguiente */}
