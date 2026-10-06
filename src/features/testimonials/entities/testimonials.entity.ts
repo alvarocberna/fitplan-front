@@ -1,0 +1,14 @@
+import { TestimonialEntityPublic } from "./testimonial.entity";
+
+export class TestimonialsEntityPublic {
+    constructor(
+        public id: string,
+        public titulo: string,
+        public descripcion: string,
+        public activo: boolean,
+        public aprobar: boolean,
+        public notificacion: boolean,
+        public proyecto_id: string,
+        public testimonio: TestimonialEntityPublic[],
+    ){}
+}

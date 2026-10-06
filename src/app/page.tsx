@@ -1,13 +1,20 @@
-'use client'
 //features
-import { Portada } from "@/features/home/components/portada";
-//css
-import './globals.css'
+import { Hero, NuviDescription, ConsultationDescription, PersonalPlanDescription, StandardPlanDescription } from "@/features";
+//shared
+import { getSession, getStartConsultationHref } from "@/shared/auth/session";
 
-export default function Home() {
+
+export default async function Home() {
+  const { isAuthenticated, status, userInfo } = await getSession();
+  const startHref = await getStartConsultationHref();
+
   return (
     <div>
-      <Portada />
+      <Hero startHref={startHref} />
+      <NuviDescription/>
+      <ConsultationDescription/>
+      <PersonalPlanDescription/>
+      {/* <StandardPlanDescription/> */}
     </div>
   );
 }

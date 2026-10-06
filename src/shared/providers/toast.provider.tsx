@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 export function Providers() {
   return <ToastContainer 
     position="top-right"
-    autoClose={1500}
+    autoClose={4000}
     hideProgressBar={true}
     closeOnClick
     pauseOnHover

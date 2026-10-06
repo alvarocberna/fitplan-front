@@ -7,17 +7,19 @@ interface InputFieldProps {
   type?: string;
   register: UseFormRegister<any>; // recibe el register del form
   rules?: object; // reglas de validación
-  defaultValue?: number | string; 
+  defaultValue?: number | string;
+  disabled?: boolean;
 }
 
-export function InputOutlined({ label, name, type = "text", register, rules, defaultValue = "" }: InputFieldProps) {
+export function InputOutlined({ label, name, type = "text", register, rules, defaultValue = "", disabled = false }: InputFieldProps) {
   return (
     <div className="relative w-full mt-3">
       <input
         {...register(name, rules)}
         type={type}
         id={name}
-        className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-zinc-900 bg-transparent rounded-lg border-1 border-gray-100 appearance-none dark:focus:border-blue-primary focus:outline-none focus:ring-0 focus:border-primary peer"
+        disabled={disabled}
+        className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-zinc-900 bg-transparent rounded-lg border-1 border-gray-100 appearance-none dark:focus:border-blue-primary focus:outline-none focus:ring-0 focus:border-primary peer disabled:opacity-60 disabled:cursor-not-allowed"
         placeholder=" "
         defaultValue={defaultValue}
         {...((type === "number") ? { step: "0.1" } : {})}
