@@ -13,6 +13,14 @@ const s3Bucket = "https://web-core-storage.s3.us-east-1.amazonaws.com";
 const plansS3Bucket =
   "https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com";
 
+// Formulario de pago de Webpay (Transbank): /pago/[orderId] envía al navegador ahí con un formulario
+// POST, así que debe estar en form-action. Por defecto, los ambientes de integración y producción de
+// Transbank; WEBPAY_FORM_ORIGINS (orígenes separados por espacio) lo reemplaza, p. ej. en los e2e, que
+// usan un Webpay falso.
+const webpayFormOrigins =
+  process.env.WEBPAY_FORM_ORIGINS ||
+  "https://webpay3gint.transbank.cl https://webpay3g.transbank.cl";
+
 // Rutas bajo /consulta/* que deben quedar accesibles sin sesión: solo /consulta (vacía, sin uso).
 // /consulta/inicio ahora requiere sesión igual que el resto — sin ella, el proxy redirige a /login
 // antes de que la página se renderice. El login vive en /login (fuera de /consulta/*, así que no
@@ -56,7 +64,7 @@ export async function proxy(request: NextRequest) {
     object-src 'none';
     base-uri 'self';
     frame-ancestors 'none';
-    form-action 'self';
+    form-action 'self' ${webpayFormOrigins};
     ${isDev ? "" : "upgrade-insecure-requests;"}
   `;
 

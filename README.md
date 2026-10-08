@@ -70,29 +70,42 @@ Página de resumen/checkout. El precio no está fijo en el frontend: lo trae `us
 3. Redirige a `/pago/{orderId}`.
 
 ### 5. Pago — `/pago/[ordenId]`
-Pasarela **simulada**: los campos de tarjeta son decorativos/`disabled`, no hay integración real con ningún
-proveedor. El botón "Pagar" llama a `POST dev/orders/{orderId}/simulate-payment`
-(`simulatePaymentAction`; en el backend requiere `ENABLE_PAYMENT_SIMULATION=true`), que dispara en el backend la misma lógica que ejecutaría el webhook real de
-un proveedor de pago (Mercado Pago, Flow, Stripe, etc.) al confirmar un cobro. Tras la respuesta, redirige a
-`/ordenes/{ordenId}`.
+Pago con **Webpay Plus** (Transbank):
+
+1. "Pagar con Webpay" llama a `POST orders/{orderId}/payments` (`startPaymentAction`): el backend crea la
+   transacción con el monto de la orden y responde `{ url, token }`.
+2. La página envía un formulario POST con `token_ws` a esa `url` (el formulario de pago de Webpay). El CSP lo
+   permite solo hacia Webpay (`form-action` en `src/proxy.ts`; los orígenes se pueden reemplazar con
+   `WEBPAY_FORM_ORIGINS`).
+3. Al terminar, Webpay devuelve al navegador a **`/api/webpay/return`** (route handler, por GET o por POST, **sin
+   exigir sesión**: en un POST entre sitios la cookie `session` no viaja). Ese handler reenvía los parámetros a
+   `POST payments/webpay/commit` —el backend confirma el cobro con Transbank— y redirige (303) a
+   `/pago/{orderId}`, con `?tipo=predefinido` si el producto es un plan estándar y `?resultado=` cuando el estado
+   de la orden no basta para explicar qué pasó (`anulado`, `no_cobrado`, `revision`).
+4. De vuelta en `/pago/{orderId}`, la página lee el estado de la orden: pagada → sigue a `/ordenes/{orderId}` (o
+   a `/inicio`, vaciando el carro, con `?tipo=predefinido`); rechazada o anulada → aviso y reintento.
+
+Si la confirmación falla (backend o Transbank caídos), el handler redirige a **`/pago/error`**, que ofrece
+"Reintentar confirmación" (vuelve a `/api/webpay/return` con el mismo token; es idempotente, no cobra dos veces).
+
+**Pago simulado (solo desarrollo y pruebas).** Con `NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true` la página
+muestra además "Simular pago" (`simulatePaymentAction` → `POST dev/orders/{orderId}/simulate-payment`) y
+"Simular rechazo" (`simulatePaymentRejectionAction`), que marcan la orden sin pasar por Webpay. En el backend
+requieren `ENABLE_PAYMENT_SIMULATION=true`. En producción no se define ninguna de las dos variables.
 
 Al entrar, la página consulta el estado de la orden (`getOrderStatusAction`):
 
 - **`REJECTED`** (el último pago fue rechazado): muestra el aviso "Tu pago fue rechazado" y deja reintentar.
-  El botón "Simular rechazo" (`simulatePaymentRejectionAction` → `POST dev/orders/{orderId}/simulate-payment-rejection`)
-  reproduce ese caso.
 - **`EXPIRED`** (pasaron 24 h sin pagarse): muestra "Esta orden expiró" sin botón de pago, con un enlace para
   empezar de nuevo (`/consulta/anamnesis`, o `/planes-estandar` con `?tipo=predefinido`). El backend borra la
-  consulta de una orden expirada. Si la orden vence con la página abierta, el pago falla (409) y se muestra
-  este mismo estado.
+  consulta de una orden expirada. Si la orden vence con la página abierta, iniciar el pago falla (409) y se
+  muestra este mismo estado.
 - **`PAID`**: no vuelve a cobrar; redirige como si se acabara de pagar.
 
 `/ordenes/{ordenId}` también corta el polling ante `REJECTED` (enlace "Reintentar pago" a `/pago/{ordenId}`) y
 `EXPIRED`. En `/inicio`, una consulta con el pago rechazado lleva el tag "Pago rechazado" (`planStatus:
 'payment_rejected'`) y conserva el botón "Pagar consulta".
 
-> Cuando se integre una pasarela real, esta página se reemplaza por la redirección al checkout de ese
-> proveedor, y la confirmación llegará por su webhook real en vez del botón "Pagar".
 
 ### 6. Orden — `/ordenes/[id]`
 Hace polling a `GET orders/{id}/status` (`getOrderStatusAction`) cada 4s
@@ -116,7 +129,7 @@ Hace polling a `GET orders/{id}/status` (`getOrderStatusAction`) cada 4s
 - `error` → detiene el polling, mensaje tranquilizador ("Tu pago está a salvo") indicando que el equipo fue
   notificado.
 
-Al llegar el webhook de pago confirmado, el backend pasa a generar el plan de forma asíncrona; esta página es
+Al confirmarse el pago, el backend pasa a generar el plan de forma asíncrona; esta página es
 la que espera y muestra ese resultado. El enlace es reutilizable: el usuario puede cerrar la pestaña y volver
 más tarde con la misma URL.
 
@@ -161,7 +174,9 @@ Vive en otro repo (`../nutricionista-virtual-back`). Su contrato está documenta
 | POST | `consultations/chat` | `sendAnamnesisTurnAction` | turno de chat de anamnesis |
 | POST | `consultations` | `createOrderAction` | crea la consulta y su orden (`paymentStatus: 'PENDING'`) |
 | GET | `orders/:id/status` | `getOrderStatusAction` | polling de estado de pago (`PENDING`/`PAID`/`REJECTED`/`EXPIRED`)/generación, `expirationDate`, `planJson`, `pdfUrl`, `thumbnailUrl` |
-| POST | `dev/orders/:id/simulate-payment` | `simulatePaymentAction` | simula la confirmación de pago (stand-in del webhook real) |
+| POST | `orders/:id/payments` | `startPaymentAction` | inicia el pago en Webpay: `{ url, token }` para el formulario de pago |
+| POST | `payments/webpay/commit` | route handler `/api/webpay/return` (sin sesión) | confirma el pago al volver de Webpay: `{ orderId, productType, outcome }` |
+| POST | `dev/orders/:id/simulate-payment` | `simulatePaymentAction` | pago simulado, solo desarrollo y pruebas (`NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION`) |
 | POST | `dev/orders/:id/simulate-payment-rejection` | `simulatePaymentRejectionAction` | simula un pago rechazado (la orden queda `REJECTED`, reintentable) |
 | GET | `plans/standard/previews`, `plans/standard/:code` | `getPlanPreviewsAction`, `getPredefinedProductAction` | catálogo público de planes estándar |
 | GET | `plans/personalized` | `getPersonalizedProductAction` | precio del plan personalizado (lo muestran `/consulta/inicio` y `/consulta/generar-orden`; es el monto con que el backend crea la orden) |

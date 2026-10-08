@@ -56,7 +56,7 @@ test.describe('Consultation - simulated payment', () => {
     await mockSimulatePayment();
     await page.goto('/pago/aaaaaaaa-0000-4000-8000-000000000123');
 
-    await page.getByRole('button', { name: 'Pagar' }).click();
+    await page.getByRole('button', { name: 'Simular pago' }).click();
 
     await expect(page).toHaveURL(/\/ordenes\/aaaaaaaa-0000-4000-8000-000000000123$/);
     const payCall = (await getBackendCalls()).find((c) => c.path === '/dev/orders/aaaaaaaa-0000-4000-8000-000000000123/simulate-payment');
@@ -77,7 +77,7 @@ test.describe('Consultation - simulated payment', () => {
     );
     expect(rejectCall?.method).toBe('POST');
 
-    await page.getByRole('button', { name: 'Pagar' }).click();
+    await page.getByRole('button', { name: 'Simular pago' }).click();
     await expect(page).toHaveURL(/\/ordenes\/aaaaaaaa-0000-4000-8000-000000000123$/);
   });
 
@@ -88,7 +88,7 @@ test.describe('Consultation - simulated payment', () => {
     await page.goto('/pago/aaaaaaaa-0000-4000-8000-000000000123');
 
     await expect(page.getByText('Esta orden expiró')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Pagar' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Simular pago' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Iniciar una nueva consulta' })).toBeVisible();
   });
 
@@ -96,7 +96,7 @@ test.describe('Consultation - simulated payment', () => {
     await mockSimulatePayment({ fail: true });
     await page.goto('/pago/aaaaaaaa-0000-4000-8000-000000000123');
 
-    await page.getByRole('button', { name: 'Pagar' }).click();
+    await page.getByRole('button', { name: 'Simular pago' }).click();
 
     await expect(page.getByText('Error al procesar el pago')).toBeVisible();
     await expect(page).toHaveURL(/\/pago\/aaaaaaaa-0000-4000-8000-000000000123$/);

@@ -23,6 +23,11 @@ import http from 'node:http'
 const PORT = Number(process.env.FAKE_BACKEND_PORT ?? 3101)
 const API_PREFIX = '/api/v1'
 const E2E_ACCESS_TOKEN = process.env.E2E_ACCESS_TOKEN ?? 'e2e-access-token'
+// Webpay falso (ver el handler /__webpay/form): token y orden de compra de la única transacción que
+// maneja, y la URL del frontend a la que devuelve al navegador.
+const WEBPAY_TOKEN = 'e2ewebpaytoken0001'
+const WEBPAY_BUY_ORDER = 'e2ebuyorder0001'
+const WEBPAY_RETURN_URL = process.env.WEBPAY_RETURN_URL ?? 'http://localhost:3100/api/webpay/return'
 
 // mocks: { [nombre]: config } — ver cada handler abajo para la forma de cada uno
 let mocks = {}
@@ -52,10 +57,14 @@ function send(res, status, body) {
   res.end(body === undefined ? undefined : JSON.stringify(body))
 }
 
-async function readJson(req) {
+async function readText(req) {
   const chunks = []
   for await (const chunk of req) chunks.push(chunk)
-  const raw = Buffer.concat(chunks).toString('utf8')
+  return Buffer.concat(chunks).toString('utf8')
+}
+
+async function readJson(req) {
+  const raw = await readText(req)
   return raw ? JSON.parse(raw) : undefined
 }
 
@@ -123,6 +132,24 @@ const server = http.createServer(async (req, res) => {
       const { name, config } = await readJson(req)
       mocks[name] = { ...config, calls: 0 }
       return send(res, 200, { ok: true })
+    }
+
+    // ---- Webpay falso: el formulario de pago al que /pago/[orderId] envía al navegador ----
+    // No es parte de la API del backend: reemplaza al sitio de Transbank. Recibe token_ws por POST y
+    // devuelve al navegador a la URL de retorno del frontend, como hace Webpay: con token_ws si el
+    // usuario "pagó" (aprobado o rechazado) o con TBK_TOKEN si "anuló" (mock webpay.abort).
+    if (fullPath === '/__webpay/form' && method === 'POST') {
+      const token = new URLSearchParams(await readText(req)).get('token_ws') ?? ''
+      const mock = mocks.webpay
+      const returnUrl = new URL(mock?.returnUrl ?? WEBPAY_RETURN_URL)
+      if (mock?.abort) {
+        returnUrl.searchParams.set('TBK_TOKEN', token)
+        returnUrl.searchParams.set('TBK_ORDEN_COMPRA', WEBPAY_BUY_ORDER)
+      } else {
+        returnUrl.searchParams.set('token_ws', token)
+      }
+      res.writeHead(303, { Location: returnUrl.toString() })
+      return res.end()
     }
 
     if (!fullPath.startsWith(`${API_PREFIX}/`)) {
@@ -280,6 +307,36 @@ const server = http.createServer(async (req, res) => {
         return send(res, 404, { message: 'Consulta no encontrada' })
       }
       return send(res, 200, detail)
+    }
+
+    // ---- pago con Webpay: inicio (exige la sesión del dueño de la orden) ----
+    // mock webpay: { orderId, outcome, productType?, abort?, statusAfterCommit?, startFail?, commitFail? }
+    if (/^\/orders\/[^/]+\/payments$/.test(path) && method === 'POST') {
+      if (!isAuthorized(req)) return send(res, 401, { message: 'No autorizado' })
+      const mock = mocks.webpay
+      if (!mock) return send(res, 501, { message: 'orders/:id/payments sin mock' })
+      if (mock.startFail) {
+        return send(res, 503, { message: 'No pudimos conectar con el medio de pago', code: 'PAYMENT_UNAVAILABLE' })
+      }
+      return send(res, 201, { url: `http://localhost:${PORT}/__webpay/form`, token: WEBPAY_TOKEN })
+    }
+
+    // ---- pago con Webpay: confirmación al volver (sin sesión, la llama /api/webpay/return) ----
+    if (path === '/payments/webpay/commit' && method === 'POST') {
+      const mock = mocks.webpay
+      if (!mock) return send(res, 501, { message: 'payments/webpay/commit sin mock' })
+      if (mock.commitFail) {
+        return send(res, 503, { message: 'No pudimos conectar con el medio de pago', code: 'PAYMENT_UNAVAILABLE' })
+      }
+      const known = [body?.tokenWs, body?.tbkToken].includes(WEBPAY_TOKEN) || body?.tbkBuyOrder === WEBPAY_BUY_ORDER
+      if (!known) return send(res, 404, { message: 'Pago no encontrado' })
+      // el estado de la orden que verá /pago/[orderId] después de confirmar
+      if (mock.statusAfterCommit) mocks.orderStatus = { sequence: [mock.statusAfterCommit], calls: 0 }
+      return send(res, 200, {
+        orderId: mock.orderId,
+        productType: mock.productType ?? 'GENERATED',
+        outcome: body?.tbkToken || !body?.tokenWs ? 'cancelled' : mock.outcome,
+      })
     }
 
     // ---- pago simulado: como en el backend real, exige la sesión del dueño de la orden ----

@@ -123,12 +123,16 @@ Helpers para quien atrapa: `isSessionRequiredError(error)`, `isNotFoundError(err
 | `GenerateOrderButton` | faltan datos del contexto | fijo: `Faltan datos de pasos anteriores` |
 | `GenerateOrderButton` | falla `POST consultations` | el del error, o `Error al iniciar la consulta` |
 | `CartView` | falla la creación de la orden | el del error, o `No se pudo iniciar el pago` (sesión vencida → `LoginModal`) |
-| `/pago/[orderId]` | falla el pago o el rechazo simulado | el del error, o `Error al procesar el pago` |
+| `/pago/[orderId]` | falla iniciar el pago en Webpay (p. ej. 503 `PAYMENT_UNAVAILABLE`), o el pago/rechazo simulado | el del error, o `Error al procesar el pago` |
 | `ProfileForm`, `MeasurementForm` | falla guardar | el del error, o un mensaje fijo |
 | `TestimonialFormPublic` | falla el envío al CMS | el del CMS, o `Error al enviar el testimonio` |
 
 ### 4.2 Errores esperados como estado de la vista
 
+- **`/api/webpay/return`** (retorno de Webpay): no muestra errores, redirige. Si `payments/webpay/commit` falla o el
+  retorno llega sin parámetros válidos → `/pago/error` (con `?token=` cuando el usuario sí pagó, para reintentar la
+  confirmación). Un pago rechazado o anulado no es un error: vuelve a `/pago/[orderId]`, con `?resultado=` si hace
+  falta un aviso (`anulado`, `no_cobrado`, `revision`; cualquier otro valor se ignora).
 - **`/pago/[orderId]`**: al montar lee el estado de la orden. `EXPIRED` → "Esta orden expiró"; `REJECTED` →
   aviso `role="alert"` y reintento; `PAID` → redirige sin cobrar; **404 → "Orden no encontrada"**. Si la lectura
   falla por otro motivo se asume pagable (el backend valida igual). Si el pago falla, se vuelve a leer el

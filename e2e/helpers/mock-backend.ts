@@ -63,6 +63,26 @@ export async function mockCreateOrder(options: { orderId?: string; fail?: boolea
   });
 }
 
+// Pago con Webpay: POST orders/:id/payments devuelve la URL de un Webpay falso servido por el backend
+// falso, que devuelve al navegador a /api/webpay/return (con TBK_TOKEN si `abort`), y
+// POST payments/webpay/commit responde `outcome`. `statusAfterCommit` es lo que responderá
+// orders/:id/status después de confirmar (el estado que lee /pago/[orderId] al volver).
+export async function mockWebpay(options: {
+  orderId?: string;
+  outcome?: 'paid' | 'rejected' | 'not_committed' | 'needs_review';
+  productType?: 'GENERATED' | 'PREDEFINED';
+  abort?: boolean;
+  statusAfterCommit?: Record<string, unknown>;
+  startFail?: boolean;
+  commitFail?: boolean;
+} = {}) {
+  await setMock('webpay', {
+    orderId: 'aaaaaaaa-0000-4000-8000-000000000123',
+    outcome: 'paid',
+    ...options,
+  });
+}
+
 export async function mockSimulatePayment(options: { fail?: boolean } = {}) {
   await setMock('payment', { fail: options.fail, message: 'Error al procesar el pago' });
 }

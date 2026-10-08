@@ -185,6 +185,15 @@ describe('proxy — Content-Security-Policy', () => {
     expect(directive(csp, 'frame-src')).toContain("'self'");
   });
 
+  it('form-action permite enviar el formulario de pago solo a Webpay (integración y producción)', async () => {
+    const response = await proxy(makeRequest('/'));
+    const csp = response.headers.get('Content-Security-Policy') ?? '';
+
+    expect(directive(csp, 'form-action')).toBe(
+      "form-action 'self' https://webpay3gint.transbank.cl https://webpay3g.transbank.cl",
+    );
+  });
+
   it('no abre connect-src al bucket de planes (la miniatura y la descarga no usan fetch)', async () => {
     const response = await proxy(makeRequest('/'));
     const csp = response.headers.get('Content-Security-Policy') ?? '';

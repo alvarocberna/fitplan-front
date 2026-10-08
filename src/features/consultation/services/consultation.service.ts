@@ -1,6 +1,7 @@
 //features - consulta
 import {
     createOrderAction,
+    startPaymentAction,
     simulatePaymentAction,
     simulatePaymentRejectionAction,
     sendAnamnesisTurnAction,
@@ -11,7 +12,7 @@ import {
 import { unwrap } from '@/shared/api/unwrap'
 import { CompleteConsultationDto } from "../dtos/consultation.dto";
 import { InputChatDto, OutputChatDto } from "../dtos/anamnesis-chat.dto";
-import { OrderStatusDto } from "../dtos/order.dto";
+import { OrderStatusDto, StartPaymentDto } from "../dtos/order.dto";
 import { GoalFeasibilityDto, GoalFeasibilityRequestDto } from "../dtos/goal-feasibility.dto";
 
 export class ConsultationService{
@@ -21,8 +22,12 @@ export class ConsultationService{
         return unwrap(await createOrderAction(completeConsultation))
     }
 
-    //llamado desde la pasarela de pago simulada (/pago/[orderId]). Golpea el mismo endpoint
-    //que usaría el webhook real de una pasarela de pago una vez que se integre una.
+    //inicia el pago en Webpay (/pago/[orderId]): devuelve la URL del formulario y el token a enviarle
+    public static async startPayment(orderId: string): Promise<StartPaymentDto> {
+        return unwrap(await startPaymentAction(orderId))
+    }
+
+    //pago simulado (solo desarrollo y pruebas): marca la orden como pagada sin pasar por Webpay
     public static async simulatePayment(orderId: string): Promise<{ status: string }> {
         return unwrap(await simulatePaymentAction(orderId))
     }
