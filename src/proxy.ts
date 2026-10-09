@@ -7,14 +7,14 @@ const apiCMSUrl =
   process.env.NEXT_PUBLIC_BACKEND_CMS_URL || "http://localhost:3001";
 const s3Bucket = "https://web-core-storage.s3.us-east-1.amazonaws.com";
 // Bucket privado donde el backend almacena los PDFs de los planes nutricionales y sus miniaturas
-// (ver StorageService en nutricionista-virtual-back). Se accede solo con URLs firmadas: las
+// (ver StorageService en fitplan-back). Se accede solo con URLs firmadas: las
 // miniaturas <img> de /inicio y /ordenes/[id] (img-src). Las descargas del PDF son navegaciones de
 // un <a>, no las restringe el CSP, y el PDF ya no se incrusta en un <iframe> (no va en frame-src).
 // PLANS_S3_BUCKET_ORIGIN lo reemplaza cuando un ambiente usa otro bucket o región: debe ser el origen
 // de AWS_S3_BUCKET_NAME / AWS_REGION del backend.
 const plansS3Bucket =
   process.env.PLANS_S3_BUCKET_ORIGIN ||
-  "https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com";
+  "https://fitplan-planes-pdfs.s3.us-east-1.amazonaws.com";
 
 // Formulario de pago de Webpay (Transbank): /pago/[orderId] envía al navegador ahí con un formulario
 // POST, así que debe estar en form-action. Por defecto, los ambientes de integración y producción de

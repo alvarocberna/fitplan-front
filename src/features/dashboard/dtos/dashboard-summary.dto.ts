@@ -1,5 +1,5 @@
 // Espejo de SummaryDto en el backend (GET /me/summary)
-// (nutricionista-virtual-back/src/modules/identity/dto/summary.dto.ts).
+// (fitplan-back/src/modules/identity/dto/summary.dto.ts).
 
 export interface DashboardNutritionalPlanDto {
     dietRegimen: string | null;

@@ -6,11 +6,11 @@ La app usa Amazon Cognito (Hosted UI, flujo Authorization Code con cliente confi
 proveedor de identidad — login nativo (usuario/contraseña) y **Google como Identity Provider
 federado**. Implementado con `openid-client@6` sobre Route Handlers de Next.js.
 
-A diferencia de la primera versión de esta funcionalidad, **el backend (`nutricionista-virtual-back`)
+A diferencia de la primera versión de esta funcionalidad, **el backend (`fitplan-back`)
 ya no es ciego a esto**: valida el Access Token de Cognito y resuelve la identidad real
 (`User`/`AuthIdentity` en Postgres). El navegador nunca llama al backend directo — todo pasa por
 **Server Actions** de Next.js, que adjuntan el token. Detalle del lado del backend:
-`nutricionista-virtual-back/doc/auth.md`.
+`fitplan-back/doc/auth.md`.
 
 ## Piezas implementadas — Cognito Hosted UI (login/logout)
 
@@ -357,7 +357,7 @@ Páginas propias del área (además del flujo `/consulta/*`):
   llama `updateUserProfileAction` → `PATCH /me` (solo con los campos editados).
 
 Ambos endpoints (`GET`/`PATCH /me`, `GET /me/summary`) viven en el módulo `identity` del backend
-(`nutricionista-virtual-back/src/modules/identity`), protegidos por el mismo `CognitoAuthGuard` que el
+(`fitplan-back/src/modules/identity`), protegidos por el mismo `CognitoAuthGuard` que el
 resto de rutas autenticadas. Todas las rutas llevan el prefijo `/api/v1`, que agrega `apiFetch`.
 
 ## Variables de entorno (`.env.template`)
@@ -384,7 +384,7 @@ Todas server-only, sin prefijo `NEXT_PUBLIC_`:
 
 ## Backend — implementado, ya no es una caja negra
 
-Ver `nutricionista-virtual-back/doc/auth.md` para el detalle completo. Resumen:
+Ver `fitplan-back/doc/auth.md` para el detalle completo. Resumen:
 
 - El backend valida el Access Token (`CognitoAuthGuard`, `aws-jwt-verify` contra el JWKS del User
   Pool) en las rutas que lo requieren: `/consultations`, `/consultations/chat`,

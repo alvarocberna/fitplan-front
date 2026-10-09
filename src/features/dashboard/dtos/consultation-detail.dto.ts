@@ -1,5 +1,5 @@
 // Espejo de ConsultationDetailDto en el backend (GET /me/consultations/:consultationId)
-// (nutricionista-virtual-back/src/modules/clinical/dto/consultation-detail.dto.ts).
+// (fitplan-back/src/modules/clinical/dto/consultation-detail.dto.ts).
 import type { ConsultationPlanStatus, ConsultationPlanSummaryDto } from './consultation-summary.dto';
 
 // Medición tomada en la consulta: datos básicos y resultados guardados (null si no se calcularon).

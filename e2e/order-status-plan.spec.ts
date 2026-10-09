@@ -5,7 +5,7 @@ import { nutritionPlanMock } from '../src/features/nutrition-plan/dtos/nutrition
 // URLs firmadas que el backend real devolvería una vez generado el plan. La miniatura es un data:
 // URI (1x1 PNG) para no depender de la red: el CSP (img-src) permite `data:` y el bucket privado
 // de planes solo se accede con URLs firmadas reales.
-const PDF_URL = 'https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com/plan-e2e.pdf?X-Amz-Signature=e2e';
+const PDF_URL = 'https://fitplan-planes-pdfs.s3.us-east-1.amazonaws.com/plan-e2e.pdf?X-Amz-Signature=e2e';
 const THUMBNAIL_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 

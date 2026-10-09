@@ -164,7 +164,7 @@ describe('proxy — session gating', () => {
 });
 
 describe('proxy — Content-Security-Policy', () => {
-  const PLANS_BUCKET = 'https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com';
+  const PLANS_BUCKET = 'https://fitplan-planes-pdfs.s3.us-east-1.amazonaws.com';
 
   function directive(csp: string, name: string): string {
     return csp.split(';').map((d) => d.trim()).find((d) => d.startsWith(`${name} `)) ?? '';

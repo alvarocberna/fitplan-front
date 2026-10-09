@@ -5,8 +5,8 @@ import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserDoctor, faClipboardList, faCapsules, faDumbbell } from '@fortawesome/free-solid-svg-icons'
 //FEATURES
-import { NuviViewGreen } from "./nuvi-view-green.component";
-import { NuviViewTeal } from "./nuvi-view-teal.component";
+import { FitplanViewGreen } from "./fitplan-view-green.component";
+import { FitplanViewTeal } from "./fitplan-view-teal.component";
 
 const features = [
   { text: 'Agente de IA especializado en nutrición', description: 'Entrenado por expertos en nutrición deportiva', icon: faUserDoctor },
@@ -95,7 +95,7 @@ export function Hero({ startHref }: { startHref: string }) {
 
       {/* círculo con el rostro: solo desde md */}
       <div className="relative hidden md:flex w-1/2 h-full items-center justify-center">
-        <NuviViewTeal />
+        <FitplanViewTeal />
       </div>
     </div>
   )

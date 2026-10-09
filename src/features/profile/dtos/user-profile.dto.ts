@@ -1,5 +1,5 @@
 // Subconjunto de ProfileDto / UpdateProfileDtoImpl del backend (GET y PATCH /me, ver
-// nutricionista-virtual-back/src/modules/identity/dto/profile.dto.ts): la pantalla de perfil solo
+// fitplan-back/src/modules/identity/dto/profile.dto.ts): la pantalla de perfil solo
 // usa y edita estos campos. PATCH /me acepta cualquier subconjunto de campos.
 
 export interface UserProfileDto {

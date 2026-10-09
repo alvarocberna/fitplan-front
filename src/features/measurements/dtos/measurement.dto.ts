@@ -1,5 +1,5 @@
 // Espejo de los DTOs de /me/measurements del backend
-// (nutricionista-virtual-back/src/modules/clinical/dto/measurement.dto.ts).
+// (fitplan-back/src/modules/clinical/dto/measurement.dto.ts).
 
 export type MeasurementLevel = 'BASIC' | 'ISAK_1' | 'BIOIMPEDANCE';
 export type RecordableLevel = 'BASIC' | 'BIOIMPEDANCE';

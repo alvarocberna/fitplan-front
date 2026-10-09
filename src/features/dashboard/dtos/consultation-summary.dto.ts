@@ -1,5 +1,5 @@
 // Espejo de ConsultationSummaryDto en el backend (GET /me/consultations)
-// (nutricionista-virtual-back/src/modules/clinical/dto/consultation-summary.dto.ts).
+// (fitplan-back/src/modules/clinical/dto/consultation-summary.dto.ts).
 
 // 'payment_rejected': el último intento de pago fue rechazado; se puede reintentar igual que 'awaiting_payment'.
 export type ConsultationPlanStatus = 'awaiting_payment' | 'payment_rejected' | 'generating' | 'ready' | 'error';

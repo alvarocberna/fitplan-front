@@ -1,5 +1,5 @@
 //features
-import { Hero, NuviDescription, ConsultationDescription, PersonalPlanDescription, StandardPlanDescription } from "@/features";
+import { Hero, FitplanDescription, ConsultationDescription, PersonalPlanDescription, StandardPlanDescription } from "@/features";
 //shared
 import { getSession, getStartConsultationHref } from "@/shared/auth/session";
 
@@ -11,7 +11,7 @@ export default async function Home() {
   return (
     <div>
       <Hero startHref={startHref} />
-      <NuviDescription/>
+      <FitplanDescription/>
       <ConsultationDescription/>
       <PersonalPlanDescription/>
       {/* <StandardPlanDescription/> */}

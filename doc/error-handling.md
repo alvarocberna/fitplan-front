@@ -1,7 +1,7 @@
 # Manejo de errores (frontend)
 
-Cómo maneja los errores `nutricionista-virtual-front` (estado al 2026-10-03). El lado del backend está en
-`nutricionista-virtual-back/doc/error-handling.md`, y el manejo de errores a nivel de flujo de compra (estados
+Cómo maneja los errores `fitplan-front` (estado al 2026-10-03). El lado del backend está en
+`fitplan-back/doc/error-handling.md`, y el manejo de errores a nivel de flujo de compra (estados
 de la orden, qué ve el usuario en cada etapa) en `../doc/flows/purchase-flow-personalized-plan.md` §7.
 
 ## 1. Mapa general

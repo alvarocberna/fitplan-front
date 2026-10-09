@@ -1,5 +1,5 @@
 // Espejo de los DTOs de "mis planes" del backend (GET /me/plans y GET /me/plans/:orderId)
-// (nutricionista-virtual-back/src/modules/plans/dto/my-plan.dto.ts).
+// (fitplan-back/src/modules/plans/dto/my-plan.dto.ts).
 
 export type MyPlanType = 'GENERATED' | 'PREDEFINED';
 

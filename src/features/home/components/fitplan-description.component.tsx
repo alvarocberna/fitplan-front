@@ -40,7 +40,7 @@ function StartLink({ className }: { className: string }) {
   )
 }
 
-export function NuviDescription() {
+export function FitplanDescription() {
   return (
     <div id="fitplan-saber-mas" className="w-full min-h-screen pt-[50px] md:pt-0 flex items-center justify-center text-center px-6 mb-20">
       {/* inner container */}
