@@ -10,6 +10,11 @@ vi.mock('@/shared/auth/session', async (importOriginal) => {
   return { ...actual, getSession: vi.fn() };
 });
 vi.mock('@/shared/auth/profile.actions', () => ({ syncProfileAction: vi.fn() }));
+// La página pide el precio del plan personalizado al backend: sin este mock el test hace una llamada
+// de red real y su duración depende de cuánto tarde en fallar el DNS.
+vi.mock('@/features/plans/services/plans.actions', () => ({
+  getPersonalizedProductAction: vi.fn().mockResolvedValue({ ok: false, message: 'sin backend' }),
+}));
 
 const mockedGetSession = vi.mocked(getSession);
 const mockedSyncProfileAction = vi.mocked(syncProfileAction);
