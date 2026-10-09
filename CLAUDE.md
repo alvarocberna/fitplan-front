@@ -72,7 +72,7 @@ segment): `/inicio`, `/planes`, `/mediciones`, `/perfil`, `/consulta/*`, `/pago/
 `src/app/(sesion)/layout.tsx`, which renders `SesionShell` (`src/shared/components/sesion-shell.component.tsx`,
 a Client Component): `TopbarSesion` + the `NavbarSesion` sidebar + a `<main>` (`pt-19 md:pt-23`) whose
 left padding follows the sidebar width. `TopbarSesion` is a fixed 60px (`h-15`) full-width bar: the
-"Nuvi" text logo (→ `/inicio`) on the left and the "Nueva consulta" button (→ `/consulta/anamnesis`) on the
+"Fitplan" text logo (→ `/inicio`) on the left and the "Nueva consulta" button (→ `/consulta/anamnesis`) on the
 right. The sidebar (md+ only, below the top bar; options Inicio = `/inicio`, Planes = `/planes`, Mediciones = `/mediciones`, Perfil, Cerrar sesión) starts
 **docked** (narrow, `w-14`, no links) in the flow routes `/consulta/*`, `/pago/*`,
 `/ordenes/*`, and **undocked** (`w-56`, with links) in `/inicio`, `/planes`, `/mediciones` and `/perfil`; the manual choice is kept

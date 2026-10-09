@@ -13,11 +13,11 @@ describe('TopbarSesion', () => {
     expect(screen.getByRole('banner')).toHaveClass('fixed', 'top-0', 'w-full', 'h-15');
   });
 
-  it('links the "Nuvi" logo to /inicio', () => {
+  it('links the "Fitplan" logo to /inicio', () => {
     usePathnameMock.mockReturnValue('/inicio');
     render(<TopbarSesion />);
 
-    expect(screen.getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/inicio');
+    expect(screen.getByRole('link', { name: 'Fitplan' })).toHaveAttribute('href', '/inicio');
   });
 
   it('renders the "Nueva consulta" button pointing to /consulta/anamnesis', () => {
@@ -31,7 +31,7 @@ describe('TopbarSesion', () => {
     usePathnameMock.mockReturnValue('/inicio');
     render(<TopbarSesion onMenuToggle={vi.fn()} />);
 
-    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['Nuvi', 'Nueva consulta']);
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['Fitplan', 'Nueva consulta']);
   });
 
   it('keeps "Nueva consulta" visible on every route (never hidden by the collapse or active state)', () => {
@@ -91,7 +91,7 @@ describe('TopbarSesion', () => {
       render(<TopbarSesion onMenuToggle={vi.fn()} />);
 
       const button = screen.getByRole('button', { name: 'Abrir menú' });
-      const logo = screen.getByRole('link', { name: 'Nuvi' });
+      const logo = screen.getByRole('link', { name: 'Fitplan' });
       expect(button.compareDocumentPosition(logo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
   });

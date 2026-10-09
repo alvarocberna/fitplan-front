@@ -14,7 +14,7 @@ export function HeroOld() {
         </div> */}
         {/* title */}
         <h2 className="text-5xl text-zinc-900 mb-5">
-          NUVI
+          FITPLAN
         </h2>
         {/* text 1*/}
         <p className="relative w-full text-zinc-700 text-md md:text-md mb-6 text-justify">
@@ -32,7 +32,7 @@ export function HeroOld() {
         </Link>
         {/* button 2 */}
         <Link
-          href="/#nuvi-saber-mas"
+          href="/#fitplan-saber-mas"
           className="relative block w-[60%] px-6 py-2 text-zinc-600">
           Saber Más
         </Link>

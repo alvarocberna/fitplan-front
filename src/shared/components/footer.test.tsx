@@ -16,7 +16,7 @@ describe('Footer', () => {
   it('links the brand name to the home page', () => {
     render(<Footer />);
 
-    const brand = within(screen.getByRole('contentinfo')).getByRole('link', { name: 'Nuvi - Nutricionista Virtual' });
+    const brand = within(screen.getByRole('contentinfo')).getByRole('link', { name: 'Fitplan - Nutricionista Virtual' });
     expect(brand).toHaveAttribute('href', '/');
   });
 
@@ -37,13 +37,13 @@ describe('Footer', () => {
     render(<Footer />);
 
     const nav = screen.getByRole('navigation', { name: 'Enlaces del pie de página' });
-    expect(nav).not.toContainElement(screen.getByRole('link', { name: 'Nuvi - Nutricionista Virtual' }));
+    expect(nav).not.toContainElement(screen.getByRole('link', { name: 'Fitplan - Nutricionista Virtual' }));
   });
 
   it('shows the copyright with the current year', () => {
     render(<Footer />);
 
-    expect(screen.getByText(`© ${new Date().getFullYear()} Nuvi. Todos los derechos reservados.`)).toBeInTheDocument();
+    expect(screen.getByText(`© ${new Date().getFullYear()} Fitplan. Todos los derechos reservados.`)).toBeInTheDocument();
   });
 
   it('computes the copyright year at render time (not hardcoded)', () => {
@@ -51,6 +51,6 @@ describe('Footer', () => {
     vi.setSystemTime(new Date('2031-06-15T12:00:00Z'));
     render(<Footer />);
 
-    expect(screen.getByText('© 2031 Nuvi. Todos los derechos reservados.')).toBeInTheDocument();
+    expect(screen.getByText('© 2031 Fitplan. Todos los derechos reservados.')).toBeInTheDocument();
   });
 });

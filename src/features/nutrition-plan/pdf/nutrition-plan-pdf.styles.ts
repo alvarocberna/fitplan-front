@@ -391,7 +391,7 @@ export const styles = StyleSheet.create({
     },
 
     // ============================================================
-    // PORTADA (página 1) — inspirada en el diseño de marca NUVI
+    // PORTADA (página 1) — inspirada en el diseño de marca FITPLAN
     // ============================================================
     coverPage: {
         paddingHorizontal: spacing.pageX,

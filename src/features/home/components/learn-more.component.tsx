@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faNotesMedical, faRulerVertical, faCreditCard } from '@fortawesome/free-solid-svg-icons'
 
 const steps = [
-  { href: '#que-es-nuvi', text: 'Nuvi ¿igual a un nutricionista?', icon: faUser },
+  { href: '#que-es-fitplan', text: 'Fitplan ¿igual a un nutricionista?', icon: faUser },
   { href: '#consulta-nutricional-virtual', text: 'Consulta nutricional virtual ¿en qué consiste?', icon: faNotesMedical },
   { href: '#plan-nutricional-personalizado', text: 'Plan nutricional personalizado ¿qué incluye?', icon: faRulerVertical },
   { href: '#plan-estandarizado-por-disciplina', text: 'Planes estandarizados por deportes y objetivos', icon: faCreditCard },

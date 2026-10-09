@@ -15,8 +15,8 @@ const steps = [
   },
   {
     step: '02',
-    title: 'Conversa con Nuvi',
-    text: 'Nuvi es un modelo de IA inteligente con el que puedes conversar sobre el deporte que practicas, tus objetivos, hábitos alimentarios y estrategias deportivas. Toda esta información Nuvi la utilizará para conocerte mejor e idear tu plan.',
+    title: 'Conversa con Fitplan',
+    text: 'Fitplan es un modelo de IA inteligente con el que puedes conversar sobre el deporte que practicas, tus objetivos, hábitos alimentarios y estrategias deportivas. Toda esta información Fitplan la utilizará para conocerte mejor e idear tu plan.',
     icon: faNotesMedical
   },
   {

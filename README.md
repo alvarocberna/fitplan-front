@@ -24,7 +24,7 @@ El estado de la consulta se administra mediante `ConsultaProvider` (React Contex
 `src/app/(sesion)/` (el paréntesis no agrega segmento a la URL; las URLs no cambian), junto con `/inicio`,
 `/planes`, `/mediciones` y `/perfil`. Comparten `src/app/(sesion)/layout.tsx`, que renderiza `SesionShell`
 (`src/shared/components/sesion-shell.component.tsx`): una barra superior fija `TopbarSesion` (100% de ancho,
-60px de alto, con el logo "Nuvi" a la izquierda, que lleva a `/inicio`, y el botón "Nueva consulta" a la derecha, que
+60px de alto, con el logo "Fitplan" a la izquierda, que lleva a `/inicio`, y el botón "Nueva consulta" a la derecha, que
 lleva a `/consulta/anamnesis`), un sidebar `NavbarSesion` a la izquierda (solo md+, debajo de la barra superior) y
 el contenido con el padding correspondiente. El sidebar tiene las opciones Inicio (`/inicio`), Planes (`/planes`),
 Mediciones (`/mediciones`), Perfil y Cerrar sesión; en móvil no se renderiza y esas opciones pasan a la barra superior. Estas rutas ya no muestran el
@@ -42,7 +42,7 @@ rut, nombre, apellidos, género, correo, fecha de nacimiento). Al enviar, guarda
 (`setInformacionPersonal`) y redirige a `/consulta/anamnesis`. No hay llamada al backend en este paso.
 
 ### 2. Anamnesis — `/consulta/anamnesis`
-Componente `ChatAnamnesis`. Chat guiado por IA que arranca con una pregunta fija ("¿Cómo estás? Soy Nuvi...").
+Componente `ChatAnamnesis`. Chat guiado por IA que arranca con una pregunta fija ("¿Cómo estás? Soy Fitplan...").
 Cada respuesta del usuario se envía a `POST /consultations/chat` (`ConsultaService.enviarTurnoAnamnesis`) con el
 DTO `InputChatDto`: historial completo de mensajes (`{ role, content }`) + el estado actual de `AnamnesisDto`.
 El backend responde `OutputChatDto` con:

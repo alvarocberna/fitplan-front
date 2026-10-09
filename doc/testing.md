@@ -212,7 +212,7 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   `collapsed`, que un click en el `<nav>` (o en el botón, una sola vez) llama `onToggle` pero no uno sobre un link, el
   hover/focus del botón que ilumina su borde y el borde derecho del `<nav>` con `var(--color-primary)`, que los links llevan
   `hidden` al colapsar y el `<nav>` `w-14` en vez de `w-56`.
-- **`TopbarSesion`** (barra superior `<header>` fija, `h-15`): logo "Nuvi" hacia `/inicio`, botón "Nueva consulta" hacia
+- **`TopbarSesion`** (barra superior `<header>` fija, `h-15`): logo "Fitplan" hacia `/inicio`, botón "Nueva consulta" hacia
   `/consulta/anamnesis` (siempre visible), y el botón "menú" de móvil (`md:hidden`, `aria-controls="sesion-nav"`): solo existe
   con `onMenuToggle`, lo invoca al hacer click y cambia etiqueta, `aria-expanded` e ícono según `menuOpen`. La barra ya no
   aloja los links de sesión. `NavbarSesion` cubre el panel móvil: fuera de pantalla e `invisible` cerrado, con fondo al
@@ -286,7 +286,7 @@ individuales no verían (traspaso de `localStorage`, remonte de `ConsultationPro
    estado de error reasegurante.
 7. **Protección de rutas y layout de sesión** (`session-routes.spec.ts`): sin sesión, `/consulta/*`, `/pago/*`, `/ordenes/*`,
    `/inicio` y `/perfil` redirigen a `/login` y `/consulta` (raíz) sigue pública; con sesión, `/consulta/*`, `/pago/*` y
-   `/ordenes/*` muestran la barra superior (logo "Nuvi" y "Nueva consulta", siempre visible), el sidebar de sesión acoplado, sin
+   `/ordenes/*` muestran la barra superior (logo "Fitplan" y "Nueva consulta", siempre visible), el sidebar de sesión acoplado, sin
    el navbar de la landing, y el botón lo desacopla y lo vuelve a acoplar (sin afectar a la barra superior). En un viewport
    móvil (390px) las opciones están ocultas hasta abrir el panel con el botón "Abrir menú" de la barra superior, y se
    vuelven a ocultar con "Cerrar menú". Los selectores se acotan

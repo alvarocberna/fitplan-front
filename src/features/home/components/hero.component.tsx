@@ -86,7 +86,7 @@ export function Hero({ startHref }: { startHref: string }) {
           </Link>
           {/* button 2 */}
           <Link
-            href="/#nuvi-saber-mas"
+            href="/#fitplan-saber-mas"
             className="relative block w-full md:w-[70%] px-6 py-2 text-sm text-zinc-600">
             Saber Más
           </Link>

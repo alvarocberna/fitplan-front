@@ -42,7 +42,7 @@ function StartLink({ className }: { className: string }) {
 
 export function NuviDescription() {
   return (
-    <div id="nuvi-saber-mas" className="w-full min-h-screen pt-[50px] md:pt-0 flex items-center justify-center text-center px-6 mb-20">
+    <div id="fitplan-saber-mas" className="w-full min-h-screen pt-[50px] md:pt-0 flex items-center justify-center text-center px-6 mb-20">
       {/* inner container */}
       <div className="w-[90%] md:w-[80%] mx-auto flex flex-col md:flex-row justify-between">
         {/* left */}
@@ -51,8 +51,8 @@ export function NuviDescription() {
             Guía tu alimentación con un experto
           </h2>
           <p className="font-medium text-md mb-8 text-zinc-800" style={{textAlign: 'justify'}}>
-            Nuvi es un modelo de IA experto en nutrición, el cual ha sido entrenado por nutricionistas con solida experiencia
-            trabajando con deportistas de alto rendimiento. Nuvi cuenta con un modelo inteligente con la capacidad de analizar 
+            Fitplan es un modelo de IA experto en nutrición, el cual ha sido entrenado por nutricionistas con solida experiencia
+            trabajando con deportistas de alto rendimiento. Fitplan cuenta con un modelo inteligente con la capacidad de analizar 
             datos, razonar y planificar pautas nutricionales específicas para cada disciplina deportiva y objetivo. 
           </p>
           {/* escritorio: el botón va bajo el texto. En móvil se muestra el de más abajo, tras las características */}

@@ -12,7 +12,7 @@ interface TopbarSesionProps {
     onMenuToggle?: () => void;
 }
 
-// Barra superior fija del área con sesión (h-15 = 60px, ancho completo): logo "Nuvi" (→ /inicio) a la izquierda y
+// Barra superior fija del área con sesión (h-15 = 60px, ancho completo): logo "Fitplan" (→ /inicio) a la izquierda y
 // el botón "Nueva consulta" a la derecha. En pantallas chicas muestra además, antes del logo, el botón "menú"
 // que abre/cierra el panel de navegación (NavbarSesion), donde viven Inicio, Planes, Mediciones, Perfil y
 // Cerrar sesión.
@@ -39,7 +39,7 @@ export function TopbarSesion({ menuOpen = false, onMenuToggle }: TopbarSesionPro
                     </button>
                 )}
                 <Link href="/inicio" className="text-2xl font-bold" style={{ color: "var(--color-secondary)" }}>
-                    Nuvi
+                    Fitplan
                 </Link>
             </div>
 

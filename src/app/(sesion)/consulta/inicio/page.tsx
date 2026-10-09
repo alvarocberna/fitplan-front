@@ -14,7 +14,7 @@ import { formatPrice } from '@/features/plans/format-price'
 //pasos de la consulta; el del pago lleva el precio del backend (sin monto si no se pudo obtener)
 const buildSteps = (price: string | null) => [
   { title: 'Información personal:', text: 'Completa tus datos básicos.', icon: faUser },
-  { title: 'Chat con Nuvi:', text: 'Conversa con Nuvi para que pueda conocer tus objetivos deportivos y requerimientos.', icon: faNotesMedical },
+  { title: 'Chat con Fitplan:', text: 'Conversa con Fitplan para que pueda conocer tus objetivos deportivos y requerimientos.', icon: faNotesMedical },
   { title: 'Datos físicos:', text: 'Ingresa tu información física, como peso y talla.', icon: faRulerVertical },
   { title: 'Pago seguro:', text: price ? `Realiza el pago de ${price} para generar tu plan.` : 'Realiza el pago para generar tu plan.', icon: faCreditCard },
   { title: '¡Tu plan está listo!', text: 'Descárgalo tu plan y recíbelo también por correo electrónico.', icon: faClipboardCheck },
