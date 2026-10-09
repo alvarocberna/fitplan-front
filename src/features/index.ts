@@ -11,6 +11,7 @@ export * from './home/components/fitplan-view-green.component';
 export * from './home/components/fitplan-view-blue.component';
 export * from './home/components/fitplan-view-indigo.component';
 export * from './home/components/fitplan-view-teal.component';
+export * from './home/components/plan-preview.component';
 //consultation
 export * from './consultation/components/chat-anamnesis';
 export * from './consultation/components/form-measurements';
