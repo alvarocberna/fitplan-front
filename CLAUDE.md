@@ -40,7 +40,7 @@ Path alias: `@/*` → `./src/*` (see `tsconfig.json`).
 
 Implemented — see `doc/auth.md` (frontend pieces: Hosted UI, session cookie, token refresh, Server
 Actions; it also covers why identity and profile-completion are two separate steps). Backend side documented in
-`nutricionista-virtual-back/doc/auth.md`. Key point for this repo: the browser **never** calls
+`fitplan-back/doc/auth.md`. Key point for this repo: the browser **never** calls
 `BACKEND_URL` directly — every call goes through a Server Action
 (`src/features/consultation/services/consultation.actions.ts`,
 `src/shared/auth/profile.actions.ts`) that attaches the Cognito Access Token, refreshing it

@@ -1,4 +1,4 @@
-# Nutricionista Virtual (Front)
+# Fitplan (Front)
 
 Aplicación web construida con [Next.js](https://nextjs.org) que sirve como interfaz de un agente de IA experto en nutrición deportiva. El frontend recopila la información del usuario en varios pasos (datos personales, anamnesis conversacional y evaluación física), la envía a un backend en NestJS que la procesa con IA, y genera un plan nutricional en formato PDF. El plan solo se genera una vez que el usuario paga la consulta.
 
@@ -154,7 +154,7 @@ a través del context.
 
 ## Backend (NestJS + PostgreSQL)
 
-Vive en otro repo (`../nutricionista-virtual-back`). Su contrato está documentado en su README y en
+Vive en otro repo (`../fitplan-back`). Su contrato está documentado en su README y en
 `../doc/product/use-cases.md`. Todas sus rutas cuelgan de `/api/v1`: `apiFetch`
 (`src/shared/api/client.ts`, `server-only`) antepone ese prefijo a cada endpoint y usa `BACKEND_URL`
 (privado) como base. Solo se llama desde Server Actions, que adjuntan el Access Token de Cognito.

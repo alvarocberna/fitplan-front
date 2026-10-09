@@ -1,6 +1,6 @@
 import { GoalsDto } from './consultation.dto'
 
-// Espejo de nutricionista-virtual-back/src/modules/consultation/dto/goal-feasibility.dto.ts
+// Espejo de fitplan-back/src/modules/consultation/dto/goal-feasibility.dto.ts
 // (POST /api/v1/consultations/goal-feasibility, CU-CON-03).
 
 export interface GoalFeasibilityRequestDto {

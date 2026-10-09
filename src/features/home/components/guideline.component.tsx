@@ -7,13 +7,13 @@ import Image from "next/image";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleChevronRight, faCircleChevronLeft, faXmark } from '@fortawesome/free-solid-svg-icons'
 //PUBLIC
-import PlanEjemplo1 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-001.jpg'
-import PlanEjemplo2 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-002.jpg'
-import PlanEjemplo3 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-003.jpg'
-import PlanEjemplo4 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-004.jpg'
-import PlanEjemplo5 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-005.jpg'
-import PlanEjemplo6 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-006.jpg'
-import PlanEjemplo7 from '../../../../public/images/plan-ejemplo/plan-nuvi-page-007.jpg'
+import PlanEjemplo1 from '../../../../public/images/plan-ejemplo/plan-fitplan-page-001.jpg'
+import PlanEjemplo2 from '../../../../public/images/plan-ejemplo/plan-fitplan-page-002.jpg'
+import PlanEjemplo3 from '../../../../public/images/plan-ejemplo/plan-fitplan-page-003.jpg'
+import PlanEjemplo4 from '../../../../public/images/plan-ejemplo/plan-fitplan-page-004.jpg'
+import PlanEjemplo5 from '../../../../public/images/plan-ejemplo/plan-fitplan-page-005.jpg'
+import PlanEjemplo6 from '../../../../public/images/plan-ejemplo/plan-fitplan-page-006.jpg'
+import PlanEjemplo7 from '../../../../public/images/plan-ejemplo/plan-fitplan-page-007.jpg'
 
 
 const IMAGES = [PlanEjemplo1, PlanEjemplo2, PlanEjemplo3, PlanEjemplo4, PlanEjemplo5, PlanEjemplo6, PlanEjemplo7]

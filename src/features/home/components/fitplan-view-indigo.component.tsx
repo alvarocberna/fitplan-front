@@ -100,7 +100,7 @@ function getBlinkCloseAmount(cycleElapsed: number) {
   return closeAmt;
 }
 
-export function NuviViewGreen() {
+export function FitplanViewIndigo() {
   const containerRef = useRef<HTMLDivElement>(null);
   const sphereRef = useRef<HTMLDivElement>(null);
   const eyeRefs = useRef<Record<number, SVGGElement | null>>({});
@@ -240,7 +240,7 @@ export function NuviViewGreen() {
         className="absolute inset-0 rounded-full blur-xl opacity-70 animate-[spin_6s_linear_infinite]"
         style={{
           background:
-            'conic-gradient(from 0deg, #bbf7d0, #4ade80, #16a34a, #4ade80, #bbf7d0)',
+            'conic-gradient(from 0deg, #c7c6fd, #6866fa, #3f3dc4, #6866fa, #c7c6fd)',
         }}
       />
 
@@ -258,12 +258,12 @@ export function NuviViewGreen() {
       {/* capa 1 - esfera: no se mueve, solo la iluminación se desplaza levemente para dar volumen */}
       <div
         ref={sphereRef}
-        className="relative w-[90%] h-[90%] rounded-full border border-green-300/50 flex items-center justify-center"
+        className="relative w-[90%] h-[90%] rounded-full border border-[#6866fa]/50 flex items-center justify-center"
         style={{
           '--hl-x': '38%',
           '--hl-y': '30%',
           background:
-            'radial-gradient(circle at var(--hl-x) var(--hl-y), rgba(255,255,255,0.65), rgba(255,255,255,0.3) 40%, rgba(134,239,172,0.22) 70%, rgba(6,78,45,0.28) 100%)',
+            'radial-gradient(circle at var(--hl-x) var(--hl-y), rgba(255,255,255,0.65), rgba(255,255,255,0.3) 40%, rgba(104,102,250,0.22) 70%, rgba(28,27,92,0.28) 100%)',
         } as CSSProperties}
       >
         {/* face (emoji style, smiling) */}
