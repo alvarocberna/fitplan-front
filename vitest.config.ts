@@ -22,6 +22,8 @@ export default defineConfig({
       BACKEND_URL: 'https://api.consultation.test',
       NEXT_PUBLIC_BACKEND_CMS_URL: 'https://cms.test',
       NEXT_PUBLIC_PROYECTO_ID: 'test-project-id',
+      // muestra los botones de pago simulado de /pago/[orderId] (en producción no se define)
+      NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION: 'true',
     },
     coverage: {
       provider: 'v8',

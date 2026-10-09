@@ -62,7 +62,7 @@ test('completes the full consultation flow end-to-end: personal info -> anamnesi
   await expect(page).toHaveURL(new RegExp(`/pago/${ORDER_ID}$`));
 
   // 5. Pago simulado
-  await page.getByRole('button', { name: 'Pagar' }).click();
+  await page.getByRole('button', { name: 'Simular pago' }).click();
   await expect(page).toHaveURL(new RegExp(`/ordenes/${ORDER_ID}$`));
 
   // 6. Estado de la orden -> plan listo (el polling real es cada 4s, se espera tiempo real)

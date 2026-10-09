@@ -46,7 +46,7 @@ resolubles para el CMS (`http://cms-backend.e2e.local`), de modo que cualquier r
   cookie `session` (un JWT HS256 firmado con `SESSION_SECRET`, fabricado en `e2e/helpers/session.ts` igual que lo emite
   `src/shared/auth/session.ts`). Para probar sin sesión: `test.use({ authenticated: false })`.
 - **Backend falso**: cada endpoint responde lo que el test configuró con los helpers de `e2e/helpers/mock-backend.ts`
-  (`mockChatTurn`, `mockCreateOrder`, `mockSimulatePayment`, `mockOrderStatusSequence`, `mockProfile`, ...); un endpoint sin
+  (`mockChatTurn`, `mockCreateOrder`, `mockSimulatePayment`, `mockWebpay`, `mockOrderStatusSequence`, `mockProfile`, ...); un endpoint sin
   configurar responde `501`, así una llamada inesperada falla en vez de devolver datos inventados. Los endpoints que en el
   backend real exigen sesión validan `Authorization: Bearer <token>` (el Access Token de la cookie) y responden `401` sin él,
   por lo que los e2e también verifican que los Server Actions lo adjuntan. `getBackendCalls()` devuelve el registro de
@@ -212,7 +212,7 @@ Config: `vitest.config.ts` / `vitest.setup.tsx` (raíz) para unitarios; `playwri
   `collapsed`, que un click en el `<nav>` (o en el botón, una sola vez) llama `onToggle` pero no uno sobre un link, el
   hover/focus del botón que ilumina su borde y el borde derecho del `<nav>` con `var(--color-primary)`, que los links llevan
   `hidden` al colapsar y el `<nav>` `w-14` en vez de `w-56`.
-- **`TopbarSesion`** (barra superior `<header>` fija, `h-15`): logo "Nuvi" hacia `/inicio`, botón "Nueva consulta" hacia
+- **`TopbarSesion`** (barra superior `<header>` fija, `h-15`): logo "Fitplan" hacia `/inicio`, botón "Nueva consulta" hacia
   `/consulta/anamnesis` (siempre visible), y el botón "menú" de móvil (`md:hidden`, `aria-controls="sesion-nav"`): solo existe
   con `onMenuToggle`, lo invoca al hacer click y cambia etiqueta, `aria-expanded` e ícono según `menuOpen`. La barra ya no
   aloja los links de sesión. `NavbarSesion` cubre el panel móvil: fuera de pantalla e `invisible` cerrado, con fondo al
@@ -253,7 +253,8 @@ deshabilitado hasta completar, navegación a `/planes-estandar/<slug>`), `/plane
 `/planes-estandar/[slug]` (busca la versión al completar los datos, precio, miniatura o imagen estática, versión no disponible, añadir
 al carro), `CartView` (sin sesión abre el modal de registro con `return_to`, con sesión crea la orden y va a
 `/pago/<id>?tipo=predefinido`, sesión expirada, errores), `/pago/[orderId]` (`?tipo=predefinido` → `/inicio`, si no →
-`/ordenes/<id>`), `return-to` y el `callback` con `return_to`.
+`/ordenes/<id>`; "Pagar con Webpay" envía el formulario con `token_ws`, avisos de `?resultado=`, botones simulados solo
+con el flag), el route handler `/api/webpay/return` (`src/app/api/webpay/return/route.test.ts`), `return-to` y el `callback` con `return_to`.
 
 E2E: `e2e/predefined-plan-purchase.spec.ts` (con handlers nuevos en el backend falso: `/plans/standard/:code`,
 `/plans/standard/:code/purchase`, `/me/summary`, `/me/plans`). **Nota**: el e2e levanta su propio `next dev` en el puerto 3100 y Next
@@ -274,14 +275,18 @@ individuales no verían (traspaso de `localStorage`, remonte de `ConsultationPro
 3. **Evaluación física**: envío válido, y la guarda cuando falta la anamnesis del paso anterior.
 4. **Generar orden**: creación de la orden (con el Access Token adjunto) y redirección a pago, error del backend, y que no se
    llame al backend si faltan datos de pasos anteriores.
-5. **Pago simulado**: pago exitoso y redirección al estado de la orden, y error de la simulación de pago.
+5. **Pago simulado** (`NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true` en `.env.test`): pago exitoso y redirección al estado de la orden, y error de la simulación de pago.
+   **Pago con Webpay** (`webpay-payment.spec.ts`): el backend falso sirve un Webpay falso (`/__webpay/form`, permitido en el
+   CSP por `WEBPAY_FORM_ORIGINS`) que devuelve al navegador a `/api/webpay/return`: pago aprobado (→ `/ordenes/<id>`),
+   rechazado, anulado (`?resultado=anulado`), plan predefinido (→ `/inicio`), fallo al confirmar (`/pago/error` con
+   reintento) y fallo al iniciar el pago.
 6. **Estado de la orden**: polling hasta completarse (miniatura + enlace "Descargar" hacia la URL firmada del PDF, sin
    `<iframe>`, con `nutritionPlanMock` como `planJson`), placeholder cuando el plan no tiene miniatura, barra de avance mientras
    genera, aviso de demora pasados 4 min (sembrando el inicio en `sessionStorage` para no esperar el tiempo real), y el
    estado de error reasegurante.
 7. **Protección de rutas y layout de sesión** (`session-routes.spec.ts`): sin sesión, `/consulta/*`, `/pago/*`, `/ordenes/*`,
    `/inicio` y `/perfil` redirigen a `/login` y `/consulta` (raíz) sigue pública; con sesión, `/consulta/*`, `/pago/*` y
-   `/ordenes/*` muestran la barra superior (logo "Nuvi" y "Nueva consulta", siempre visible), el sidebar de sesión acoplado, sin
+   `/ordenes/*` muestran la barra superior (logo "Fitplan" y "Nueva consulta", siempre visible), el sidebar de sesión acoplado, sin
    el navbar de la landing, y el botón lo desacopla y lo vuelve a acoplar (sin afectar a la barra superior). En un viewport
    móvil (390px) las opciones están ocultas hasta abrir el panel con el botón "Abrir menú" de la barra superior, y se
    vuelven a ocultar con "Cerrar menú". Los selectores se acotan

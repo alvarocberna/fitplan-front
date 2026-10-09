@@ -44,7 +44,7 @@ test.describe('Session layout (con sesión)', () => {
       await page.goto(path);
 
       // barra superior: siempre visible, no depende de acoplar el sidebar
-      await expect(topbarOf(page).getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/inicio');
+      await expect(topbarOf(page).getByRole('link', { name: 'Fitplan' })).toHaveAttribute('href', '/inicio');
       await expect(topbarOf(page).getByRole('link', { name: 'Nueva consulta' })).toBeVisible();
 
       await expect(page.getByRole('button', { name: 'Desacoplar menú lateral' })).toBeVisible();

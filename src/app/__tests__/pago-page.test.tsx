@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { toast } from 'react-toastify';
-import SimulatedPaymentPage from '@/app/(sesion)/pago/[orderId]/page';
+import PaymentPage from '@/app/(sesion)/pago/[orderId]/page';
 import { ConsultationService } from '@/features';
 import type { OrderStatusDto } from '@/features';
 import { PlanSelectionProvider, ActionError, SessionRequiredError } from '@/shared';
@@ -19,10 +19,11 @@ vi.mock('@/features', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features')>();
   return {
     ...actual,
-    ConsultationService: { simulatePayment: vi.fn(), simulatePaymentRejection: vi.fn(), getOrderStatus: vi.fn() },
+    ConsultationService: { startPayment: vi.fn(), simulatePayment: vi.fn(), simulatePaymentRejection: vi.fn(), getOrderStatus: vi.fn() },
   };
 });
 
+const startPayment = vi.mocked(ConsultationService.startPayment);
 const simulatePayment = vi.mocked(ConsultationService.simulatePayment);
 const simulatePaymentRejection = vi.mocked(ConsultationService.simulatePaymentRejection);
 const getOrderStatus = vi.mocked(ConsultationService.getOrderStatus);
@@ -41,7 +42,7 @@ function orderStatus(paymentStatus: OrderStatusDto['paymentStatus']): OrderStatu
 function renderPage() {
   return render(
     <PlanSelectionProvider>
-      <SimulatedPaymentPage />
+      <PaymentPage />
     </PlanSelectionProvider>
   );
 }
@@ -50,19 +51,20 @@ beforeEach(() => {
   searchParams = new URLSearchParams();
   pushMock.mockClear();
   vi.mocked(toast.error).mockClear();
+  startPayment.mockReset();
   simulatePayment.mockReset();
   simulatePaymentRejection.mockReset();
   getOrderStatus.mockReset();
   getOrderStatus.mockResolvedValue(orderStatus('PENDING'));
 });
 
-describe('SimulatedPaymentPage (/pago/[orderId])', () => {
+describe('PaymentPage (/pago/[orderId])', () => {
   it('plan personalizado (sin ?tipo): tras pagar va a /ordenes/<id>, donde se espera la generación del plan', async () => {
     simulatePayment.mockResolvedValue({ status: 'processed' });
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+    await user.click(screen.getByRole('button', { name: 'Simular pago' }));
 
     expect(simulatePayment).toHaveBeenCalledWith('order-1');
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/ordenes/order-1'));
@@ -78,9 +80,9 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     const user = userEvent.setup();
     renderPage();
     //espera a que el proveedor se hidrate desde localStorage antes de pagar
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Pagar' })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Simular pago' })).toBeEnabled());
 
-    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+    await user.click(screen.getByRole('button', { name: 'Simular pago' }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/inicio'));
     expect(pushMock).not.toHaveBeenCalledWith('/ordenes/order-1');
@@ -93,7 +95,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+    await user.click(screen.getByRole('button', { name: 'Simular pago' }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/ordenes/order-1'));
   });
@@ -104,11 +106,11 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+    await user.click(screen.getByRole('button', { name: 'Simular pago' }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al procesar el pago', expect.anything()));
     expect(pushMock).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Pagar' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Simular pago' })).toBeEnabled();
   });
 
   it('si no se puede leer el estado de la orden, igual deja pagar', async () => {
@@ -117,7 +119,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+    await user.click(screen.getByRole('button', { name: 'Simular pago' }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/ordenes/order-1'));
   });
@@ -127,7 +129,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     renderPage();
 
     expect(await screen.findByText('Esta orden expiró')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Pagar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Simular pago' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Iniciar una nueva consulta' })).toHaveAttribute(
       'href',
       '/consulta/anamnesis'
@@ -150,7 +152,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Tu pago fue rechazado');
 
-    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+    await user.click(screen.getByRole('button', { name: 'Simular pago' }));
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/ordenes/order-1'));
   });
 
@@ -172,7 +174,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     expect(simulatePaymentRejection).toHaveBeenCalledWith('order-1');
     expect(await screen.findByRole('alert')).toHaveTextContent('Tu pago fue rechazado');
     expect(pushMock).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Pagar' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Simular pago' })).toBeEnabled();
   });
 
   it('si la orden expiró mientras la página estaba abierta, al pagar muestra el estado expirado', async () => {
@@ -181,7 +183,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+    await user.click(screen.getByRole('button', { name: 'Simular pago' }));
 
     expect(await screen.findByText('Esta orden expiró')).toBeInTheDocument();
     expect(toast.error).not.toHaveBeenCalled();
@@ -193,8 +195,98 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     renderPage();
 
     expect(await screen.findByText('Orden no encontrada')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Pagar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Simular pago' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/inicio');
+  });
+
+  describe('pago con Webpay', () => {
+    let submitMock: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      //jsdom no implementa la navegación de un formulario
+      submitMock = vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(() => {});
+    });
+
+    it('"Pagar con Webpay" inicia el pago y envía el token al formulario de Webpay por POST', async () => {
+      startPayment.mockResolvedValue({ url: 'https://webpay3gint.transbank.cl/webpayserver/initTransaction', token: 'tok-1' });
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Pagar con Webpay' }));
+
+      expect(startPayment).toHaveBeenCalledWith('order-1');
+      await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
+      const form = submitMock.mock.contexts[0] as HTMLFormElement;
+      expect(form.method).toBe('post');
+      expect(form.action).toBe('https://webpay3gint.transbank.cl/webpayserver/initTransaction');
+      expect(new FormData(form).get('token_ws')).toBe('tok-1');
+      //no navega dentro de la app: el navegador sale hacia Webpay
+      expect(pushMock).not.toHaveBeenCalled();
+      expect(simulatePayment).not.toHaveBeenCalled();
+    });
+
+    it('si no se puede iniciar el pago muestra el error del backend y permite reintentar', async () => {
+      startPayment.mockRejectedValue(new ActionError('No pudimos conectar con el medio de pago', 503, 'PAYMENT_UNAVAILABLE'));
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Pagar con Webpay' }));
+
+      await waitFor(() =>
+        expect(toast.error).toHaveBeenCalledWith('No pudimos conectar con el medio de pago', expect.anything()),
+      );
+      expect(submitMock).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'Pagar con Webpay' })).toBeEnabled();
+    });
+
+    it('si la orden ya estaba pagada al intentar pagar, sigue a la orden sin mostrar un error', async () => {
+      getOrderStatus.mockResolvedValueOnce(orderStatus('PENDING')).mockResolvedValue(orderStatus('PAID'));
+      startPayment.mockRejectedValue(new ActionError('Esta orden ya está pagada', 409, 'ORDER_ALREADY_PAID'));
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Pagar con Webpay' }));
+
+      await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/ordenes/order-1'));
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['anulado', 'Anulaste el pago en Webpay'],
+      ['no_cobrado', 'no confirmamos el cobro'],
+      ['revision', 'Lo estamos revisando'],
+    ])('al volver de Webpay con ?resultado=%s muestra su aviso', async (resultado, text) => {
+      searchParams = new URLSearchParams(`resultado=${resultado}`);
+      renderPage();
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(text);
+    });
+
+    it('un ?resultado desconocido no muestra ningún aviso', async () => {
+      searchParams = new URLSearchParams('resultado=<b>hola</b>');
+      renderPage();
+
+      await waitFor(() => expect(getOrderStatus).toHaveBeenCalled());
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('sin NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION no muestra los botones de pago simulado', async () => {
+      vi.stubEnv('NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION', '');
+      vi.resetModules();
+      const { default: PageWithoutSimulation } = await import('@/app/(sesion)/pago/[orderId]/page');
+      const { PlanSelectionProvider: Provider } = await import('@/shared');
+      render(
+        <Provider>
+          <PageWithoutSimulation />
+        </Provider>
+      );
+
+      expect(await screen.findByRole('button', { name: 'Pagar con Webpay' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Simular pago' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Simular rechazo' })).not.toBeInTheDocument();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    });
   });
 
   it('sesión vencida al pagar: lleva a iniciar sesión en vez de mostrar un toast', async () => {
@@ -204,7 +296,7 @@ describe('SimulatedPaymentPage (/pago/[orderId])', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: 'Pagar' }));
+    await user.click(screen.getByRole('button', { name: 'Simular pago' }));
 
     await waitFor(() => expect(assign).toHaveBeenCalledWith('/login?error=session_expired'));
     expect(toast.error).not.toHaveBeenCalled();

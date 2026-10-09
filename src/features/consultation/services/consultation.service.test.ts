@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ConsultationService } from './consultation.service';
 import {
   createOrderAction,
+  startPaymentAction,
   simulatePaymentAction,
   simulatePaymentRejectionAction,
   sendAnamnesisTurnAction,
@@ -13,6 +14,7 @@ import type { InputChatDto } from '../dtos/anamnesis-chat.dto';
 
 vi.mock('./consultation.actions', () => ({
   createOrderAction: vi.fn(),
+  startPaymentAction: vi.fn(),
   simulatePaymentAction: vi.fn(),
   simulatePaymentRejectionAction: vi.fn(),
   sendAnamnesisTurnAction: vi.fn(),
@@ -21,6 +23,7 @@ vi.mock('./consultation.actions', () => ({
 }));
 
 const mockedCreateOrderAction = vi.mocked(createOrderAction);
+const mockedStartPaymentAction = vi.mocked(startPaymentAction);
 const mockedSimulatePaymentAction = vi.mocked(simulatePaymentAction);
 const mockedSimulatePaymentRejectionAction = vi.mocked(simulatePaymentRejectionAction);
 const mockedSendAnamnesisTurnAction = vi.mocked(sendAnamnesisTurnAction);
@@ -67,7 +70,18 @@ describe('ConsultationService', () => {
     expect(result).toEqual({ orderId: 'order-1' });
   });
 
-  it('simulatePayment posts to the webhook endpoint interpolated with the order id', async () => {
+  it('startPayment starts the Webpay payment for the order id and unwraps the form url and token', async () => {
+    mockedStartPaymentAction.mockResolvedValue({ ok: true, data: { url: 'https://webpay.test/init', token: 'tok-1' } });
+
+    await expect(ConsultationService.startPayment('order-123')).resolves.toEqual({
+      url: 'https://webpay.test/init',
+      token: 'tok-1',
+    });
+
+    expect(mockedStartPaymentAction).toHaveBeenCalledWith('order-123');
+  });
+
+  it('simulatePayment posts the simulated payment for the order id', async () => {
     mockedSimulatePaymentAction.mockResolvedValue({ ok: true, data: { status: 'pagado' } });
 
     await ConsultationService.simulatePayment('order-123');

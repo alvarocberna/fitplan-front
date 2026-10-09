@@ -177,12 +177,38 @@ describe('proxy — Content-Security-Policy', () => {
     expect(directive(csp, 'img-src')).toContain(PLANS_BUCKET);
   });
 
+  it('PLANS_S3_BUCKET_ORIGIN reemplaza el origen del bucket de planes en img-src', async () => {
+    const otherBucket = 'https://otro-bucket.s3.sa-east-1.amazonaws.com';
+    vi.stubEnv('PLANS_S3_BUCKET_ORIGIN', otherBucket);
+    vi.resetModules();
+    try {
+      const { proxy: proxyWithEnv } = await import('./proxy');
+      const response = await proxyWithEnv(makeRequest('/'));
+      const imgSrc = directive(response.headers.get('Content-Security-Policy') ?? '', 'img-src');
+
+      expect(imgSrc).toContain(otherBucket);
+      expect(imgSrc).not.toContain(PLANS_BUCKET);
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
   it('ya no permite incrustar el bucket de planes en un iframe (el PDF no se embebe, solo se descarga)', async () => {
     const response = await proxy(makeRequest('/'));
     const csp = response.headers.get('Content-Security-Policy') ?? '';
 
     expect(directive(csp, 'frame-src')).not.toContain(PLANS_BUCKET);
     expect(directive(csp, 'frame-src')).toContain("'self'");
+  });
+
+  it('form-action permite enviar el formulario de pago solo a Webpay (integración y producción)', async () => {
+    const response = await proxy(makeRequest('/'));
+    const csp = response.headers.get('Content-Security-Policy') ?? '';
+
+    expect(directive(csp, 'form-action')).toBe(
+      "form-action 'self' https://webpay3gint.transbank.cl https://webpay3g.transbank.cl",
+    );
   });
 
   it('no abre connect-src al bucket de planes (la miniatura y la descarga no usan fetch)', async () => {

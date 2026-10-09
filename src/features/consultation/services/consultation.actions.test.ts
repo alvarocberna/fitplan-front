@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getOrderStatusAction,
+  startPaymentAction,
   simulatePaymentAction,
   simulatePaymentRejectionAction,
 } from './consultation.actions';
@@ -19,6 +20,17 @@ beforeEach(() => {
 });
 
 describe('consultation actions — seguridad', () => {
+  it('startPaymentAction starts the Webpay payment with the user access token and no body (the amount comes from the backend)', async () => {
+    mockedApiFetch.mockResolvedValue({ url: 'https://webpay.test/init', token: 'tok-1' } as never);
+
+    await expect(startPaymentAction(ORDER_ID)).resolves.toEqual({
+      ok: true,
+      data: { url: 'https://webpay.test/init', token: 'tok-1' },
+    });
+
+    expect(mockedApiFetch).toHaveBeenCalledWith(`orders/${ORDER_ID}/payments`, 'POST', undefined, 'token-1');
+  });
+
   it('simulatePaymentAction sends the user access token (the backend checks the order is theirs)', async () => {
     await simulatePaymentAction(ORDER_ID);
 
@@ -38,6 +50,7 @@ describe('consultation actions — seguridad', () => {
 
   it.each([
     ['getOrderStatusAction', getOrderStatusAction],
+    ['startPaymentAction', startPaymentAction],
     ['simulatePaymentAction', simulatePaymentAction],
     ['simulatePaymentRejectionAction', simulatePaymentRejectionAction],
   ])('%s never calls the backend with an id that is not a UUID (path injection)', async (_name, action) => {

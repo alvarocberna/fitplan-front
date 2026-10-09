@@ -91,7 +91,7 @@ test.describe('Planes predefinidos - pago con sesión', () => {
 
     await page.getByRole('button', { name: 'Pagar' }).click();
     await expect(page).toHaveURL(/\/pago\/aaaaaaaa-0000-4000-8000-0000000000f1\?tipo=predefinido$/);
-    await page.getByRole('button', { name: 'Pagar' }).click();
+    await page.getByRole('button', { name: 'Simular pago' }).click();
 
     await expect(page).toHaveURL(/\/inicio$/);
     // la lista de planes (con su descarga) vive en /planes, no en /inicio

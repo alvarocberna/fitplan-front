@@ -10,8 +10,19 @@ const s3Bucket = "https://web-core-storage.s3.us-east-1.amazonaws.com";
 // (ver StorageService en nutricionista-virtual-back). Se accede solo con URLs firmadas: las
 // miniaturas <img> de /inicio y /ordenes/[id] (img-src). Las descargas del PDF son navegaciones de
 // un <a>, no las restringe el CSP, y el PDF ya no se incrusta en un <iframe> (no va en frame-src).
+// PLANS_S3_BUCKET_ORIGIN lo reemplaza cuando un ambiente usa otro bucket o región: debe ser el origen
+// de AWS_S3_BUCKET_NAME / AWS_REGION del backend.
 const plansS3Bucket =
+  process.env.PLANS_S3_BUCKET_ORIGIN ||
   "https://nutricionista-virtual-planes-pdfs.s3.us-east-1.amazonaws.com";
+
+// Formulario de pago de Webpay (Transbank): /pago/[orderId] envía al navegador ahí con un formulario
+// POST, así que debe estar en form-action. Por defecto, los ambientes de integración y producción de
+// Transbank; WEBPAY_FORM_ORIGINS (orígenes separados por espacio) lo reemplaza, p. ej. en los e2e, que
+// usan un Webpay falso.
+const webpayFormOrigins =
+  process.env.WEBPAY_FORM_ORIGINS ||
+  "https://webpay3gint.transbank.cl https://webpay3g.transbank.cl";
 
 // Rutas bajo /consulta/* que deben quedar accesibles sin sesión: solo /consulta (vacía, sin uso).
 // /consulta/inicio ahora requiere sesión igual que el resto — sin ella, el proxy redirige a /login
@@ -56,7 +67,7 @@ export async function proxy(request: NextRequest) {
     object-src 'none';
     base-uri 'self';
     frame-ancestors 'none';
-    form-action 'self';
+    form-action 'self' ${webpayFormOrigins};
     ${isDev ? "" : "upgrade-insecure-requests;"}
   `;
 

@@ -19,7 +19,7 @@ export function ChatAnamnesis() {
 
     const OPENING_MESSAGE: DisplayMessage = {
         role: 'assistant',
-        content: '¡Hola! ¿Cómo estás? Soy Nuvi y hoy tendré el gusto de acompañarte como tu nutricionista. Comencemos con lo más importante: ¡tus objetivos! Por favor, cuéntame qué es lo que estás buscando. ¿Quieres ganar músculo? ¿Bajar de peso? ¿Mejorar rendimiento en algún deporte? Sea cual sea tu objetivo, por favor, coméntamelo.',
+        content: '¡Hola! ¿Cómo estás? Soy Fitplan y hoy tendré el gusto de acompañarte como tu nutricionista. Comencemos con lo más importante: ¡tus objetivos! Por favor, cuéntame qué es lo que estás buscando. ¿Quieres ganar músculo? ¿Bajar de peso? ¿Mejorar rendimiento en algún deporte? Sea cual sea tu objetivo, por favor, coméntamelo.',
         titleReply: 'Definición de objetivos'
     }
 

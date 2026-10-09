@@ -15,7 +15,7 @@ export function Footer() {
     <footer className="w-full px-6 md:px-12 py-8 bg-white border-t border-zinc-200">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
         <Link href="/" className="text-lg font-bold" style={{ color: "var(--color-secondary)" }}>
-          Nuvi - Nutricionista Virtual
+          Fitplan - Nutricionista Virtual
         </Link>
 
         <nav aria-label="Enlaces del pie de página" className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
@@ -26,7 +26,7 @@ export function Footer() {
           ))}
         </nav>
 
-        <p className="text-sm text-zinc-500">© {new Date().getFullYear()} Nuvi. Todos los derechos reservados.</p>
+        <p className="text-sm text-zinc-500">© {new Date().getFullYear()} Fitplan. Todos los derechos reservados.</p>
       </div>
     </footer>
   );

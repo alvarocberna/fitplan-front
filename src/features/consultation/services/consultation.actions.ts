@@ -6,7 +6,7 @@ import { getValidAccessToken } from '@/shared/auth/tokens'
 import { uuidParam } from '@/shared/api/path-params'
 import { CompleteConsultationDto } from '../dtos/consultation.dto'
 import { InputChatDto, OutputChatDto } from '../dtos/anamnesis-chat.dto'
-import { OrderStatusDto } from '../dtos/order.dto'
+import { OrderStatusDto, StartPaymentDto } from '../dtos/order.dto'
 import { GoalFeasibilityDto, GoalFeasibilityRequestDto } from '../dtos/goal-feasibility.dto'
 
 export type { ActionResult }
@@ -31,7 +31,17 @@ export async function evaluateGoalFeasibilityAction(
   })
 }
 
-// El backend exige la sesión del dueño de la orden (no se puede pagar la orden de otro).
+// CU-BIL-06: inicia el pago de la orden en Webpay. El backend exige la sesión del dueño de la orden y
+// toma el monto de la orden, nunca del navegador.
+export async function startPaymentAction(orderId: string): Promise<ActionResult<StartPaymentDto>> {
+  return runAction(async () => {
+    const accessToken = await getValidAccessToken()
+    return apiFetch<StartPaymentDto>(`orders/${uuidParam(orderId)}/payments`, 'POST', undefined, accessToken)
+  })
+}
+
+// Pago simulado (solo desarrollo y pruebas, ver NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION). El backend
+// exige la sesión del dueño de la orden (no se puede pagar la orden de otro).
 export async function simulatePaymentAction(orderId: string): Promise<ActionResult<{ status: string }>> {
   return runAction(async () => {
     const accessToken = await getValidAccessToken()

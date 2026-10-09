@@ -1,0 +1,22 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - nvm use 22
+        - npm ci
+    build:
+      commands:
+        # Amplify solo expone las variables de la consola durante el build. Las de servidor se copian a
+        # .env.production para que existan en el runtime SSR (Server Actions, route handlers, proxy).
+        # Las NEXT_PUBLIC_* no hace falta copiarlas: Next las incrusta en el bundle al construir.
+        - env | grep -E '^(BACKEND_URL|COGNITO_|SESSION_SECRET|WEBPAY_FORM_ORIGINS|PLANS_S3_BUCKET_ORIGIN)=' >> .env.production || true
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*

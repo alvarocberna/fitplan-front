@@ -5,8 +5,7 @@ export function NavbarLanding() {
   return (
     <div className="absolute top-0 left-0 w-full z-20 flex items-center justify-between px-6 md:px-12 py-5 bg-transparent">
       <Link href="/" className="text-2xl font-bold ps-4 md:ps-0" style={{color: 'var(--color-secondary)'}}>
-        {/* en móvil solo "Nuvi": el nombre completo no cabe junto al botón */}
-        Nuvi<span className="hidden md:inline"> - Nutricionista Virtual</span>
+        Fitplan
       </Link>
 
       <nav className="flex items-center gap-4 md:gap-16">

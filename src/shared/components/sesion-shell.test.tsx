@@ -127,7 +127,7 @@ describe('SesionShell', () => {
       renderAt(pathname);
 
       const topbar = within(screen.getByRole('banner'));
-      expect(topbar.getByRole('link', { name: 'Nuvi' })).toHaveAttribute('href', '/');
+      expect(topbar.getByRole('link', { name: 'Fitplan' })).toHaveAttribute('href', '/');
       expect(topbar.getByRole('link', { name: 'Nueva consulta' })).toHaveAttribute('href', '/consulta/anamnesis');
     });
 

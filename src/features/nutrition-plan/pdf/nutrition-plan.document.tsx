@@ -504,7 +504,7 @@ export function NutritionPlanDocument({ plan }: { plan: NutritionPlanDto }) {
                 <View style={styles.coverLeftBar} />
 
                 <View style={styles.coverBrand}>
-                    <Text style={styles.coverLogo}>NUVI</Text>
+                    <Text style={styles.coverLogo}>FITPLAN</Text>
                     <Text style={styles.coverLogoSubtitle}>NUTRICIÓN · RENDIMIENTO · BIENESTAR</Text>
                 </View>|
 

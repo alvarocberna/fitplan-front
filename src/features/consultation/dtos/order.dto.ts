@@ -19,6 +19,25 @@ export const GenerationStatus = {
 } as const;
 export type GenerationStatus = (typeof GenerationStatus)[keyof typeof GenerationStatus];
 
+// Respuesta de POST orders/:id/payments (back: modules/billing/use-cases/start-payment.use-case.ts):
+// el navegador debe enviar `token` como `token_ws` en un formulario POST a `url` (formulario de Webpay).
+export interface StartPaymentDto {
+    url: string
+    token: string
+}
+
+// Respuesta de POST payments/webpay/commit (back: modules/billing/use-cases/commit-webpay-payment.use-case.ts).
+// paid: orden pagada. rejected: Webpay rechazó el pago. cancelled: el usuario anuló o dejó vencer el
+// formulario. not_committed: la orden ya no admitía el pago y no se confirmó el cobro. needs_review:
+// cobro confirmado que no se pudo aplicar a la orden.
+export type WebpayPaymentOutcome = 'paid' | 'rejected' | 'cancelled' | 'not_committed' | 'needs_review'
+
+export interface CommitWebpayPaymentDto {
+    orderId: string
+    productType: 'GENERATED' | 'PREDEFINED'
+    outcome: WebpayPaymentOutcome
+}
+
 export interface OrderStatusDto {
     paymentStatus: PaymentStatus
     // hasta cuándo se puede pagar la orden (ISO); null en órdenes antiguas sin plazo
