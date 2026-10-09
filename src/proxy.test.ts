@@ -177,6 +177,23 @@ describe('proxy — Content-Security-Policy', () => {
     expect(directive(csp, 'img-src')).toContain(PLANS_BUCKET);
   });
 
+  it('PLANS_S3_BUCKET_ORIGIN reemplaza el origen del bucket de planes en img-src', async () => {
+    const otherBucket = 'https://otro-bucket.s3.sa-east-1.amazonaws.com';
+    vi.stubEnv('PLANS_S3_BUCKET_ORIGIN', otherBucket);
+    vi.resetModules();
+    try {
+      const { proxy: proxyWithEnv } = await import('./proxy');
+      const response = await proxyWithEnv(makeRequest('/'));
+      const imgSrc = directive(response.headers.get('Content-Security-Policy') ?? '', 'img-src');
+
+      expect(imgSrc).toContain(otherBucket);
+      expect(imgSrc).not.toContain(PLANS_BUCKET);
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
   it('ya no permite incrustar el bucket de planes en un iframe (el PDF no se embebe, solo se descarga)', async () => {
     const response = await proxy(makeRequest('/'));
     const csp = response.headers.get('Content-Security-Policy') ?? '';

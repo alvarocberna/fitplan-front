@@ -29,7 +29,10 @@ Requires a `.env` (see `.env.template`) with:
   characters, enforced in production). See `doc/auth.md`.
 - Optional: `NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true` shows the simulated-payment buttons on `/pago/[orderId]`
   (dev/test only, never in production); `WEBPAY_FORM_ORIGINS` replaces the Webpay origins allowed by the CSP
-  `form-action` (the e2e point it at the fake Webpay).
+  `form-action` (the e2e point it at the fake Webpay); `PLANS_S3_BUCKET_ORIGIN` replaces the plans bucket origin
+  allowed by the CSP `img-src` (defaults to the current bucket). Deployment: `amplify.yml` copies the server-only
+  variables into `.env.production` at build time (Amplify doesn't expose console variables to the SSR runtime) — a
+  new server-only variable must be added to that `grep`.
 
 Path alias: `@/*` → `./src/*` (see `tsconfig.json`).
 
