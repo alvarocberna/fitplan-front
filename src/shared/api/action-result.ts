@@ -1,3 +1,5 @@
+import { unstable_rethrow } from 'next/navigation'
+
 // OJO: este archivo NO lleva 'use server'. Con esa directiva cada export async queda publicado como
 // Server Action invocable desde el navegador, y runAction es un helper interno, no un endpoint.
 
@@ -24,6 +26,10 @@ export async function runAction<T>(fn: () => Promise<T>): Promise<ActionResult<T
   try {
     return { ok: true, data: await fn() }
   } catch (err) {
+    // Los errores internos de Next (redirect, notFound y el aviso de que la ruta usa cookies y por eso
+    // no se puede prerenderizar) no son fallos: si se convierten en un resultado de error, el build
+    // intenta generar la página como estática y falla.
+    unstable_rethrow(err)
     if (isApiError(err)) {
       // Lo que no es culpa del usuario (5xx, sin respuesta) queda en el log del servidor de Next con el
       // requestId, para cruzarlo con el log del backend.

@@ -65,4 +65,16 @@ describe('runAction', () => {
     expect(result).toEqual({ ok: false, message: 'Ocurrió un error inesperado. Intenta nuevamente.' });
     expect(consoleError).toHaveBeenCalledWith('[action] error inesperado:', bug);
   });
+
+  it('rethrows the internal errors of Next (dynamic usage bailout) instead of turning them into a result', async () => {
+    // misma forma que el DynamicServerError de Next: es lo que lanza cookies() durante el prerender
+    const bailout = Object.assign(new Error('Dynamic server usage: cookies'), { digest: 'DYNAMIC_SERVER_USAGE' });
+
+    await expect(
+      runAction(async () => {
+        throw bailout;
+      }),
+    ).rejects.toBe(bailout);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
 });
