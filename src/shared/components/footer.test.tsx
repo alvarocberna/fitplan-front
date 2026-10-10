@@ -20,7 +20,7 @@ describe('Footer', () => {
     expect(brand).toHaveAttribute('href', '/');
   });
 
-  it('exposes a labelled nav with the three landing-section links, in order', () => {
+  it('exposes a labelled nav with the landing-section links and the privacy policy, in order', () => {
     render(<Footer />);
 
     const nav = within(screen.getByRole('navigation', { name: 'Enlaces del pie de página' }));
@@ -30,6 +30,7 @@ describe('Footer', () => {
       ['Consulta Virtual', '/#consulta-nutricional-virtual'],
       ['Plan Personal', '/#plan-personal'],
       ['Planes Estandar', '/#plan-estandarizado-por-disciplina'],
+      ['Política de privacidad', '/politica-de-privacidad'],
     ]);
   });
 
