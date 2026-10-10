@@ -5,6 +5,7 @@ const FOOTER_LINKS = [
   { href: "/#consulta-nutricional-virtual", label: "Consulta Virtual" },
   { href: "/#plan-personal", label: "Plan Personal" },
   { href: "/#plan-estandarizado-por-disciplina", label: "Planes Estandar" },
+  { href: "/politica-de-privacidad", label: "Política de privacidad" },
 ];
 
 // Pie de página común a todas las rutas. Fuera del área con sesión lo monta el layout raíz vía
