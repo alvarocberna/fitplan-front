@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { redirectToPath } from '@/shared/api/redirect-to-path'
 import { apiFetch } from '@/shared/api/client'
 import type { CommitWebpayPaymentDto, WebpayPaymentOutcome } from '@/features/consultation/dtos/order.dto'
 
@@ -32,16 +32,16 @@ function readParam(params: ReturnParams, name: string, pattern: RegExp): string 
 }
 
 // 303: tras un POST de Webpay, el navegador debe seguir la redirección con GET.
-function redirectTo(request: Request, path: string) {
-  return NextResponse.redirect(new URL(path, request.url), 303)
+function redirectTo(path: string) {
+  return redirectToPath(path, 303)
 }
 
-async function handleReturn(request: Request, params: ReturnParams) {
+async function handleReturn(params: ReturnParams) {
   const tokenWs = readParam(params, 'token_ws', TOKEN)
   const tbkToken = readParam(params, 'TBK_TOKEN', TOKEN)
   const tbkBuyOrder = readParam(params, 'TBK_ORDEN_COMPRA', BUY_ORDER)
 
-  if (!tokenWs && !tbkToken && !tbkBuyOrder) return redirectTo(request, PAYMENT_ERROR_PATH)
+  if (!tokenWs && !tbkToken && !tbkBuyOrder) return redirectTo(PAYMENT_ERROR_PATH)
 
   let commit: CommitWebpayPaymentDto
   try {
@@ -54,21 +54,21 @@ async function handleReturn(request: Request, params: ReturnParams) {
     console.error('No se pudo confirmar el pago al volver de Webpay:', err)
     // Con token_ws el usuario sí pagó: la página de error ofrece reintentar la confirmación.
     const retry = tokenWs && !tbkToken ? `?token=${tokenWs}` : ''
-    return redirectTo(request, `${PAYMENT_ERROR_PATH}${retry}`)
+    return redirectTo(`${PAYMENT_ERROR_PATH}${retry}`)
   }
 
-  if (!UUID.test(commit.orderId)) return redirectTo(request, PAYMENT_ERROR_PATH)
+  if (!UUID.test(commit.orderId)) return redirectTo(PAYMENT_ERROR_PATH)
 
   const query = new URLSearchParams()
   if (commit.productType === 'PREDEFINED') query.set('tipo', 'predefinido')
   const result = RESULT_BY_OUTCOME[commit.outcome]
   if (result) query.set('resultado', result)
   const suffix = query.size > 0 ? `?${query}` : ''
-  return redirectTo(request, `/pago/${commit.orderId}${suffix}`)
+  return redirectTo(`/pago/${commit.orderId}${suffix}`)
 }
 
 export async function GET(request: Request) {
-  return handleReturn(request, new URL(request.url).searchParams)
+  return handleReturn(new URL(request.url).searchParams)
 }
 
 export async function POST(request: Request) {
@@ -79,5 +79,5 @@ export async function POST(request: Request) {
     // cuerpo que no es un formulario: se trata como un retorno sin parámetros
     form = new FormData()
   }
-  return handleReturn(request, form)
+  return handleReturn(form)
 }

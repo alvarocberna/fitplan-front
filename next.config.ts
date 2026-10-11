@@ -3,8 +3,30 @@ import type { NextConfig } from "next";
 const apiCMSUrl =
   process.env.NEXT_PUBLIC_BACKEND_CMS_URL || "http://localhost:3001";
 
+// Variables de servidor que el código lee con process.env en tiempo de ejecución. El hosting (Amplify)
+// solo las expone durante el build y no las deja en el runtime SSR, así que se incrustan en el bundle
+// del servidor al construir (`env`). Una variable de servidor nueva debe agregarse a esta lista.
+// OJO: son secretos. Nunca leerlas desde un Client Component: quedarían en el JavaScript del navegador.
+const SERVER_ENV_KEYS = [
+  "BACKEND_URL",
+  "COGNITO_ISSUER_URL",
+  "COGNITO_CLIENT_ID",
+  "COGNITO_CLIENT_SECRET",
+  "COGNITO_REDIRECT_URI",
+  "COGNITO_DOMAIN",
+  "SESSION_SECRET",
+  "WEBPAY_FORM_ORIGINS",
+  "PLANS_S3_BUCKET_ORIGIN",
+];
+
+const serverEnv: Record<string, string> = {};
+for (const key of SERVER_ENV_KEYS) {
+  const value = process.env[key];
+  if (value) serverEnv[key] = value;
+}
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: serverEnv,
 
   // Evita que Next.js agregue el header "X-Powered-By: Next.js" a las respuestas
   poweredByHeader: false,

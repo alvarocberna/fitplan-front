@@ -7,8 +7,10 @@ frontend:
         - npm ci
     build:
       commands:
-        # Amplify solo expone las variables de la consola durante el build. Las de servidor se copian a
-        # .env.production para que existan en el runtime SSR (Server Actions, route handlers, proxy).
+        # Amplify solo expone las variables de la consola durante el build, no en el runtime SSR. Las de
+        # servidor llegan al runtime porque next.config.ts las incrusta en el bundle del servidor al
+        # construir (SERVER_ENV_KEYS): una variable nueva se agrega ahí y en este grep. Copiarlas a
+        # .env.production por sí solo no basta: con Next 16 ese archivo no viaja en el artefacto.
         # Las NEXT_PUBLIC_* no hace falta copiarlas: Next las incrusta en el bundle al construir.
         - env | grep -E '^(BACKEND_URL|COGNITO_|SESSION_SECRET|WEBPAY_FORM_ORIGINS|PLANS_S3_BUCKET_ORIGIN)=' >> .env.production || true
         - npm run build

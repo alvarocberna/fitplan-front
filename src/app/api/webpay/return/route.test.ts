@@ -46,7 +46,7 @@ describe('GET/POST /api/webpay/return', () => {
       tbkBuyOrder: undefined,
     });
     expect(response.status).toBe(303);
-    expect(response.headers.get('location')).toBe(`${ORIGIN}/pago/${ORDER_ID}`);
+    expect(response.headers.get('location')).toBe(`/pago/${ORDER_ID}`);
   });
 
   it('acepta el retorno por POST (formulario) igual que por GET', async () => {
@@ -60,7 +60,7 @@ describe('GET/POST /api/webpay/return', () => {
       expect.objectContaining({ tokenWs: TOKEN }),
     );
     expect(response.status).toBe(303);
-    expect(response.headers.get('location')).toBe(`${ORIGIN}/pago/${ORDER_ID}`);
+    expect(response.headers.get('location')).toBe(`/pago/${ORDER_ID}`);
   });
 
   it('un plan predefinido vuelve con ?tipo=predefinido', async () => {
@@ -68,7 +68,7 @@ describe('GET/POST /api/webpay/return', () => {
 
     const response = await getReturn(`?token_ws=${TOKEN}`);
 
-    expect(response.headers.get('location')).toBe(`${ORIGIN}/pago/${ORDER_ID}?tipo=predefinido`);
+    expect(response.headers.get('location')).toBe(`/pago/${ORDER_ID}?tipo=predefinido`);
   });
 
   it('pago anulado (TBK_TOKEN): reenvía los parámetros y vuelve con ?resultado=anulado', async () => {
@@ -81,7 +81,7 @@ describe('GET/POST /api/webpay/return', () => {
       tbkToken: TOKEN,
       tbkBuyOrder: BUY_ORDER,
     });
-    expect(response.headers.get('location')).toBe(`${ORIGIN}/pago/${ORDER_ID}?resultado=anulado`);
+    expect(response.headers.get('location')).toBe(`/pago/${ORDER_ID}?resultado=anulado`);
   });
 
   it.each([
@@ -92,7 +92,7 @@ describe('GET/POST /api/webpay/return', () => {
 
     const response = await getReturn(`?token_ws=${TOKEN}`);
 
-    expect(response.headers.get('location')).toBe(`${ORIGIN}/pago/${ORDER_ID}?resultado=${result}`);
+    expect(response.headers.get('location')).toBe(`/pago/${ORDER_ID}?resultado=${result}`);
   });
 
   it.each([
@@ -104,7 +104,7 @@ describe('GET/POST /api/webpay/return', () => {
 
     expect(mockedApiFetch).not.toHaveBeenCalled();
     expect(response.status).toBe(303);
-    expect(response.headers.get('location')).toBe(`${ORIGIN}/pago/error`);
+    expect(response.headers.get('location')).toBe(`/pago/error`);
   });
 
   it('si la confirmación falla habiendo pagado, la página de error permite reintentar con el token', async () => {
@@ -112,7 +112,7 @@ describe('GET/POST /api/webpay/return', () => {
 
     const response = await getReturn(`?token_ws=${TOKEN}`);
 
-    expect(response.headers.get('location')).toBe(`${ORIGIN}/pago/error?token=${TOKEN}`);
+    expect(response.headers.get('location')).toBe(`/pago/error?token=${TOKEN}`);
   });
 
   it('si falla el registro de una anulación no ofrece reintentar (no hubo pago)', async () => {
@@ -120,7 +120,7 @@ describe('GET/POST /api/webpay/return', () => {
 
     const response = await postReturn({ TBK_TOKEN: TOKEN, TBK_ORDEN_COMPRA: BUY_ORDER });
 
-    expect(response.headers.get('location')).toBe(`${ORIGIN}/pago/error`);
+    expect(response.headers.get('location')).toBe(`/pago/error`);
   });
 
   it('no redirige a un orderId que no sea un UUID (el destino no sale de un valor arbitrario)', async () => {
@@ -128,6 +128,6 @@ describe('GET/POST /api/webpay/return', () => {
 
     const response = await getReturn(`?token_ws=${TOKEN}`);
 
-    expect(response.headers.get('location')).toBe(`${ORIGIN}/pago/error`);
+    expect(response.headers.get('location')).toBe(`/pago/error`);
   });
 });
