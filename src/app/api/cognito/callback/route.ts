@@ -1,16 +1,28 @@
-import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { authorizationCodeGrant, fetchUserInfo, type UserInfoResponse } from 'openid-client'
 import { getCognitoConfig } from '@/shared/auth/cognito-config'
 import { RETURN_TO_COOKIE, sanitizeReturnTo } from '@/shared/auth/return-to'
 import { createSession, deleteSession } from '@/shared/auth/session'
 import { apiFetch, ApiError } from '@/shared/api/client'
+import { redirectToPath } from '@/shared/api/redirect-to-path'
 import type { PerfilStatus } from '@/shared/auth/profile.actions'
 
 const POST_LOGIN_REDIRECT = '/consulta/inicio'
 const PROFILE_COMPLETE_REDIRECT = '/inicio'
 const LOGIN_ERROR_REDIRECT = '/login?error=callback_failed'
 const EMAIL_NOT_VERIFIED_REDIRECT = '/login?error=email_not_verified'
+
+// URL de este callback tal como la conoce Cognito (COGNITO_REDIRECT_URI) con los parámetros que
+// llegaron. openid-client deriva de ella el redirect_uri del intercambio del código, que debe ser
+// idéntico al registrado; request.url no sirve porque detrás del hosting es interna (localhost).
+function getCallbackUrl(request: Request): URL {
+  const requestUrl = new URL(request.url)
+  const redirectUri = process.env.COGNITO_REDIRECT_URI
+  if (!redirectUri) return requestUrl
+  const callbackUrl = new URL(redirectUri)
+  callbackUrl.search = requestUrl.search
+  return callbackUrl
+}
 
 export async function GET(request: Request) {
   const cookieStore = await cookies()
@@ -31,7 +43,7 @@ export async function GET(request: Request) {
   try {
     const config = await getCognitoConfig()
 
-    const tokens = await authorizationCodeGrant(config, new URL(request.url), {
+    const tokens = await authorizationCodeGrant(config, getCallbackUrl(request), {
       expectedState: state,
       expectedNonce: nonce,
     })
@@ -52,7 +64,7 @@ export async function GET(request: Request) {
     })
   } catch (err) {
     console.error('Error en el callback de Cognito:', err)
-    return NextResponse.redirect(new URL(LOGIN_ERROR_REDIRECT, request.url))
+    return redirectToPath(LOGIN_ERROR_REDIRECT)
   }
 
   // El login ya fue exitoso acá (la sesión ya se creó): un fallo en este chequeo nunca debe
@@ -70,7 +82,7 @@ export async function GET(request: Request) {
     // creada y se le explica en /login, en vez de dejarla entrar a un flujo que fallará en cada paso.
     if (err instanceof ApiError && err.code === 'EMAIL_NOT_VERIFIED') {
       await deleteSession()
-      return NextResponse.redirect(new URL(EMAIL_NOT_VERIFIED_REDIRECT, request.url))
+      return redirectToPath(EMAIL_NOT_VERIFIED_REDIRECT)
     }
     console.error('No se pudo confirmar el estado del perfil tras el login (se continúa a /consulta/inicio):', err)
   }
@@ -78,5 +90,5 @@ export async function GET(request: Request) {
   // Si el login se inició para volver a un lugar concreto, ese destino manda sobre el por defecto (que
   // depende del estado del perfil). El chequeo de arriba igual se hizo: es el que crea la identidad
   // (me/sync) que necesita el backend para crear la orden.
-  return NextResponse.redirect(new URL(returnTo ?? postLoginRedirect, request.url))
+  return redirectToPath(returnTo ?? postLoginRedirect)
 }

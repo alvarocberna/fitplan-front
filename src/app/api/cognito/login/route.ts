@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { buildAuthorizationUrl, randomState, randomNonce } from 'openid-client'
 import { getCognitoConfig } from '@/shared/auth/cognito-config'
 import { RETURN_TO_COOKIE, sanitizeReturnTo } from '@/shared/auth/return-to'
+import { redirectToPath } from '@/shared/api/redirect-to-path'
 
 const ALLOWED_SCREEN_HINTS = new Set(['signup'])
 const ALLOWED_IDENTITY_PROVIDERS = new Set(['Google'])
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
     config = await getCognitoConfig()
   } catch (err) {
     console.error('No se pudo iniciar el login con Cognito:', err)
-    return NextResponse.redirect(new URL(LOGIN_UNAVAILABLE_REDIRECT, request.url))
+    return redirectToPath(LOGIN_UNAVAILABLE_REDIRECT)
   }
   const state = randomState()
   const nonce = randomNonce()

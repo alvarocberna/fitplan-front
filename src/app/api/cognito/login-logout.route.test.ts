@@ -45,7 +45,7 @@ describe('GET /api/cognito/login', () => {
     const response = await login(request('/api/cognito/login'));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/login?error=login_unavailable');
+    expect(response.headers.get('location')).toBe('/login?error=login_unavailable');
     expect(consoleError).toHaveBeenCalled();
   });
 
@@ -54,7 +54,7 @@ describe('GET /api/cognito/login', () => {
 
     const response = await login(request('/api/cognito/login'));
 
-    expect(response.headers.get('location')).toBe('http://localhost:3000/login?error=login_unavailable');
+    expect(response.headers.get('location')).toBe('/login?error=login_unavailable');
     expect(getCognitoConfig).not.toHaveBeenCalled();
   });
 });
@@ -67,6 +67,15 @@ describe('GET /api/cognito/logout', () => {
     expect(response.headers.get('location')).toContain('https://auth.example.com/logout?client_id=client-1');
   });
 
+  it('sends Cognito the public site URL as logout_uri, not the internal request URL', async () => {
+    vi.stubEnv('COGNITO_REDIRECT_URI', 'https://app.fitplan.cl/api/cognito/callback');
+
+    const response = await logout(new Request('https://localhost:3000/api/cognito/logout'));
+
+    const location = new URL(response.headers.get('location') as string);
+    expect(location.searchParams.get('logout_uri')).toBe('https://app.fitplan.cl/');
+  });
+
   it('still deletes the local session and goes home when the Cognito config is missing', async () => {
     vi.stubEnv('COGNITO_DOMAIN', '');
 
@@ -74,7 +83,7 @@ describe('GET /api/cognito/logout', () => {
 
     expect(deleteSession).toHaveBeenCalled();
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/');
+    expect(response.headers.get('location')).toBe('/');
   });
 
   it.each([
@@ -85,7 +94,7 @@ describe('GET /api/cognito/logout', () => {
     const response = await logout(request('/api/cognito/logout', headers));
 
     expect(deleteSession).not.toHaveBeenCalled();
-    expect(response.headers.get('location')).toBe('http://localhost:3000/');
+    expect(response.headers.get('location')).toBe('/');
   });
 
   it.each([

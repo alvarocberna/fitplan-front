@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET } from './route';
 import { cookies } from 'next/headers';
 import { authorizationCodeGrant, fetchUserInfo } from 'openid-client';
@@ -63,14 +63,31 @@ beforeEach(() => {
   mockedGetCognitoConfig.mockResolvedValue({} as never);
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe('GET /api/cognito/callback', () => {
+  it('exchanges the code using the public callback URL (COGNITO_REDIRECT_URI), not the internal request URL', async () => {
+    // detrás del hosting el handler ve https://localhost:3000/...; el redirect_uri debe ser el registrado
+    vi.stubEnv('COGNITO_REDIRECT_URI', 'https://app.fitplan.cl/api/cognito/callback');
+    mockedAuthorizationCodeGrant.mockResolvedValue(makeTokens() as never);
+    mockedFetchUserInfo.mockResolvedValue({ sub: 'sub-123' } as never);
+    mockedApiFetch.mockResolvedValue({ profileComplete: true });
+
+    await GET(makeRequest());
+
+    const currentUrl = mockedAuthorizationCodeGrant.mock.calls[0][1] as URL;
+    expect(currentUrl.toString()).toBe('https://app.fitplan.cl/api/cognito/callback?code=abc&state=xyz');
+  });
+
   it('redirects to /login?error=callback_failed when the token exchange fails', async () => {
     mockedAuthorizationCodeGrant.mockRejectedValue(new Error('boom'));
 
     const response = await GET(makeRequest());
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/login?error=callback_failed');
+    expect(response.headers.get('location')).toBe('/login?error=callback_failed');
     expect(mockedCreateSession).not.toHaveBeenCalled();
     expect(mockedApiFetch).not.toHaveBeenCalled();
   });
@@ -81,7 +98,7 @@ describe('GET /api/cognito/callback', () => {
     const response = await GET(makeRequest());
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/login?error=callback_failed');
+    expect(response.headers.get('location')).toBe('/login?error=callback_failed');
     expect(mockedCreateSession).not.toHaveBeenCalled();
     expect(mockedApiFetch).not.toHaveBeenCalled();
   });
@@ -94,7 +111,7 @@ describe('GET /api/cognito/callback', () => {
     const response = await GET(makeRequest());
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/inicio');
+    expect(response.headers.get('location')).toBe('/inicio');
     expect(mockedCreateSession).toHaveBeenCalledTimes(1);
   });
 
@@ -106,7 +123,7 @@ describe('GET /api/cognito/callback', () => {
     const response = await GET(makeRequest());
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/consulta/inicio');
+    expect(response.headers.get('location')).toBe('/consulta/inicio');
   });
 
   it('redirects to /consulta/inicio (fail-safe) when the profile check itself fails, but still creates the session', async () => {
@@ -117,7 +134,7 @@ describe('GET /api/cognito/callback', () => {
     const response = await GET(makeRequest());
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/consulta/inicio');
+    expect(response.headers.get('location')).toBe('/consulta/inicio');
     expect(mockedCreateSession).toHaveBeenCalledTimes(1);
   });
 
@@ -134,7 +151,7 @@ describe('GET /api/cognito/callback', () => {
     const response = await GET(makeRequest());
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/carrito');
+    expect(response.headers.get('location')).toBe('/carrito');
     // el chequeo crea la identidad que el backend necesita para crear la orden
     expect(mockedApiFetch).toHaveBeenCalledWith('me/sync', 'POST', undefined, 'token-abc');
     expect(cookieStore.delete).toHaveBeenCalledWith('post_login_return_to');
@@ -152,7 +169,7 @@ describe('GET /api/cognito/callback', () => {
 
     const response = await GET(makeRequest());
 
-    expect(response.headers.get('location')).toBe('http://localhost:3000/inicio');
+    expect(response.headers.get('location')).toBe('/inicio');
   });
 
   it('calls me/sync WITHOUT an email (the backend asks Cognito for it) and with the access token from the token exchange', async () => {
@@ -173,6 +190,6 @@ describe('GET /api/cognito/callback', () => {
     const response = await GET(makeRequest());
 
     expect(vi.mocked(deleteSession)).toHaveBeenCalled();
-    expect(response.headers.get('location')).toBe('http://localhost:3000/login?error=email_not_verified');
+    expect(response.headers.get('location')).toBe('/login?error=email_not_verified');
   });
 });

@@ -170,7 +170,7 @@ describe('SesionShell', () => {
       expect(screen.getAllByRole('contentinfo')).toHaveLength(1);
       expect(
         within(screen.getByRole('navigation', { name: 'Enlaces del pie de página' })).getAllByRole('link'),
-      ).toHaveLength(3);
+      ).toHaveLength(4);
     });
 
     it('renders the Footer as a sibling of <main>, not inside it', () => {
