@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Política de privacidad | Fitplan',
+  title: 'Política de privacidad',
   description: 'Qué datos personales trata Fitplan, para qué los usa, con quién los comparte y cómo ejercer tus derechos.',
 }
 
