@@ -287,6 +287,23 @@ describe('PaymentPage (/pago/[orderId])', () => {
       vi.unstubAllEnvs();
       vi.resetModules();
     });
+
+    it('sin NEXT_PUBLIC_WEBPAY_ENABLED avisa que Webpay aún no está validado y no deja pagar', async () => {
+      vi.stubEnv('NEXT_PUBLIC_WEBPAY_ENABLED', '');
+      vi.resetModules();
+      const { default: PageWithoutWebpay } = await import('@/app/(sesion)/pago/[orderId]/page');
+      const { PlanSelectionProvider: Provider } = await import('@/shared');
+      render(
+        <Provider>
+          <PageWithoutWebpay />
+        </Provider>
+      );
+
+      expect(await screen.findByRole('status')).toHaveTextContent('El pago con Webpay aún no está validado');
+      expect(screen.getByRole('button', { name: 'Pagar con Webpay' })).toBeDisabled();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    });
   });
 
   it('sesión vencida al pagar: lleva a iniciar sesión en vez de mostrar un toast', async () => {

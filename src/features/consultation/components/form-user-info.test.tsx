@@ -26,10 +26,10 @@ const baseProfile: PerfilStatus = {
   rutCheckDigit: null,
 };
 
-function renderForm(profile: PerfilStatus | null = baseProfile) {
+function renderForm(profile: PerfilStatus | null = baseProfile, nextHref?: string) {
   return render(
     <ConsultationProvider>
-      <FormUserInfo profile={profile} />
+      <FormUserInfo profile={profile} nextHref={nextHref} />
     </ConsultationProvider>
   );
 }
@@ -72,6 +72,18 @@ describe('FormUserInfo', () => {
       gender: 'FEMENINO',
       athlete: true,
     });
+  });
+
+  it('navigates to nextHref (/inicio) when it only came to complete the personal info after logging in', async () => {
+    mockedUpdateProfileAction.mockResolvedValue({ ok: true, data: { ...baseProfile, firstName: 'Ana' } });
+    const user = userEvent.setup();
+    renderForm(baseProfile, '/inicio');
+    await fillRequiredFields(user);
+
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/inicio'));
+    expect(pushMock).not.toHaveBeenCalledWith('/consulta/anamnesis');
   });
 
   it('does not navigate and shows the backend error when updateProfileAction fails', async () => {

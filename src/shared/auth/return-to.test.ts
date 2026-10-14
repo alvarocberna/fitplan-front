@@ -4,6 +4,7 @@ import { sanitizeReturnTo } from './return-to'
 describe('sanitizeReturnTo', () => {
   it('acepta las rutas permitidas', () => {
     expect(sanitizeReturnTo('/carrito')).toBe('/carrito')
+    expect(sanitizeReturnTo('/consulta/inicio')).toBe('/consulta/inicio')
   })
 
   it.each([

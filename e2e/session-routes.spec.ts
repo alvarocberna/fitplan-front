@@ -12,7 +12,12 @@ test.describe('Session gating (sin sesión)', () => {
     test(`redirects ${path} to /login`, async ({ page }) => {
       await page.goto(path);
 
-      await expect(page).toHaveURL(/\/login$/);
+      // las rutas de la consulta llevan la intención de empezar una: el login vuelve a /consulta/inicio
+      if (path.startsWith('/consulta/')) {
+        await expect(page).toHaveURL(/\/login\?return_to=%2Fconsulta%2Finicio$/);
+      } else {
+        await expect(page).toHaveURL(/\/login$/);
+      }
     });
   }
 

@@ -51,12 +51,12 @@ beforeEach(() => {
 });
 
 describe('StartConsultation (/consulta/inicio)', () => {
-  it('points "Iniciar" to /login when there is no session', async () => {
+  it('points "Iniciar" to /login (con return_to=/consulta/inicio) when there is no session', async () => {
     mockedGetSession.mockResolvedValue({ isAuthenticated: false, status: 'anonymous', userInfo: null });
 
     await renderPage();
 
-    expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAttribute('href', '/login');
+    expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAttribute('href', '/login?return_to=%2Fconsulta%2Finicio');
     expect(mockedSyncProfileAction).not.toHaveBeenCalled();
   });
 
@@ -69,16 +69,16 @@ describe('StartConsultation (/consulta/inicio)', () => {
     expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAttribute('href', '/consulta/informacion-personal');
   });
 
-  it('points "Iniciar" to /inicio when authenticated and the profile is already complete', async () => {
+  it('points "Iniciar" to /consulta/anamnesis (salta informacion-personal) when authenticated and the profile is already complete', async () => {
     mockedGetSession.mockResolvedValue({ isAuthenticated: true, status: 'authenticated', userInfo: {} });
     mockedSyncProfileAction.mockResolvedValue({ ok: true, data: profile({ profileComplete: true }) });
 
     await renderPage();
 
-    expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAttribute('href', '/inicio');
+    expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAttribute('href', '/consulta/anamnesis');
   });
 
-  it('falls back to /consulta/informacion-personal (never /inicio) when syncProfileAction fails', async () => {
+  it('falls back to /consulta/informacion-personal (never anamnesis) when syncProfileAction fails', async () => {
     mockedGetSession.mockResolvedValue({ isAuthenticated: true, status: 'authenticated', userInfo: {} });
     mockedSyncProfileAction.mockResolvedValue({ ok: false, message: 'Token inválido' });
 

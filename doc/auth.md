@@ -91,9 +91,10 @@ accessTokenExpiresAt })` — guarda los tokens, no solo el perfil (necesario par
 autenticadas al backend).
 
 **Volver a un destino concreto (`return_to`)**: `/api/cognito/login` acepta `?return_to=<ruta>` (lo agrega el modal de
-registro al pagar desde `/carrito`) y lo guarda en una cookie httpOnly de 10 minutos (`post_login_return_to`; si no se
+registro al pagar desde `/carrito`, y `/login` lo reenvía a sus tres opciones cuando llega con `?return_to=/consulta/inicio`
+desde "Iniciar Consulta") y lo guarda en una cookie httpOnly de 10 minutos (`post_login_return_to`; si no se
 pide destino, borra una vieja de un intento abandonado). El callback la lee y la borra, y **solo** si la ruta está en la
-lista permitida de `src/shared/auth/return-to.ts` (hoy `/carrito`) redirige ahí en vez de a `/inicio` o `/consulta/inicio`;
+lista permitida de `src/shared/auth/return-to.ts` (hoy `/carrito` y `/consulta/inicio`) redirige ahí en vez de al destino por defecto;
 cualquier otro valor se ignora (evita usar el login como redirección abierta). El chequeo de perfil (`POST /me/sync`)
 se ejecuta igual: es lo que crea la identidad que el backend necesita para crear la orden.
 
@@ -105,15 +106,20 @@ Al terminar (éxito), hace un chequeo **best-effort** del estado del perfil ante
 redirect: llama `POST /me/sync` (mismo endpoint que ya usaba `syncProfileAction()`) directo vía
 `apiFetch`, con el `accessToken` que ya tiene en memoria de este mismo request (sin body: el email lo obtiene
 el backend desde Cognito) — sin releer
-la cookie de sesión recién escrita. Si `profileComplete === true`, redirige directo a **`/inicio`**,
-saltándose `/consulta/inicio`. Si da `false`, o si la llamada falla (red, backend caído), redirige a
-**`/consulta/inicio`** como antes — un fallo en este chequeo nunca bloquea el login ni manda a la
-pantalla de error, porque la sesión ya se creó independientemente de él (el `try/catch` de este
-chequeo es separado del que envuelve el intercambio de tokens). `/consulta/inicio/page.tsx` no
-cambió: sigue llamando a `syncProfileAction()` por su cuenta como defensa en profundidad para quien
-llegue ahí con perfil incompleto (o si el chequeo del callback falló) — en el caso "perfil
-incompleto" eso implica una llamada duplicada a `POST /me/sync` (una en el callback, otra en
-`/consulta/inicio`), aceptada como trade-off porque el endpoint es idempotente.
+la cookie de sesión recién escrita. El destino respeta la **intención** con la que se inició el login:
+
+| Botón (intención) | `return_to` | Perfil completo | Perfil incompleto (o el chequeo falla) |
+|---|---|---|---|
+| "Iniciar sesión" (navbar de la landing, `/login` a secas): solo entrar | — | `/inicio` | `/consulta/informacion-personal?destino=inicio` → al guardar, `/inicio` |
+| "Iniciar Consulta" (hero/navbar, o una ruta `/consulta/*` sin sesión vía el proxy) | `/consulta/inicio` | `/consulta/inicio` → "Iniciar" → `/consulta/anamnesis` | `/consulta/inicio` → `informacion-personal` → `anamnesis` |
+| Registro al pagar desde el carro | `/carrito` | `/carrito` | `/carrito` |
+
+Con "Iniciar sesión" y el perfil incompleto no se pasa por `/consulta/inicio` (presenta una consulta nueva): el usuario
+solo completa sus datos. `informacion-personal` acepta `?destino=inicio` (lista cerrada) y le pasa a `FormUserInfo`
+el `nextHref` `/inicio`; sin él, sigue a `/consulta/anamnesis`. Un fallo del chequeo nunca bloquea el login ni manda a
+la pantalla de error, porque la sesión ya se creó independientemente de él (el `try/catch` de este chequeo es separado
+del que envuelve el intercambio de tokens): cae a `informacion-personal`, que vuelve a llamar a `syncProfileAction()`
+por su cuenta (llamada duplicada a `POST /me/sync`, aceptada porque el endpoint es idempotente).
 
 ### `src/app/api/cognito/logout/route.ts`
 `deleteSession()` + redirección al `/logout` propietario del Hosted UI de Cognito (arma la URL a
@@ -127,13 +133,16 @@ redirigen a `/` sin tocar la sesión. Por eso "Cerrar sesión" es un `<a>` comú
 Tres opciones: **"Continuar con Google"** (`/api/cognito/login?identity_provider=Google`, con
 ícono), separador "o con tu correo", **"Registro"** (`/api/cognito/login?screen_hint=signup`) e
 **"Inicio de sesión"** (`/api/cognito/login`, nativo). Muestra el mensaje de error si
-`?error=callback_failed` está presente en la URL.
+`?error=callback_failed` está presente en la URL. Si llega con `?return_to=` válido (`sanitizeReturnTo`), lo agrega a
+las tres opciones (`LoginOptions returnTo`).
 
 ### Botones "Iniciar Consulta" de la home — `getStartConsultationHref()`
 Los dos botones "Iniciar Consulta" del sitio (navbar global y hero de la home) usan
 `getStartConsultationHref()` (`session.ts`) para no mandar a todo el mundo a `/consulta/inicio` por
-igual: sin sesión (o expirada) van directo a `/login`; con sesión, a `/consulta/inicio`
-(que a su vez decide entre `informacion-personal`/`inicio` según el perfil).
+igual: sin sesión (o expirada) van directo a `/login?return_to=/consulta/inicio` (constante
+`START_CONSULTATION_LOGIN_HREF` de `return-to.ts`, también usada por `src/proxy.ts` para las rutas `/consulta/*`); con
+sesión, a `/consulta/inicio`, cuyo botón "Iniciar" decide entre `informacion-personal` (perfil incompleto) y
+`/consulta/anamnesis` (perfil completo: se salta los datos personales).
 
 **Gotcha de bundling a tener presente**: `Hero` (`hero.component.tsx`) y `NavbarLanding`
 (`navbar-landing.component.tsx`) se re-exportan desde el barrel `@/features/index.ts`, que también
@@ -399,5 +408,5 @@ Ver `fitplan-back/doc/auth.md` para el detalle completo. Resumen:
 `tsc --noEmit`, `npm run build` y la suite de Vitest compilan/pasan limpio en cada paso. Probado
 manualmente end-to-end contra el User Pool real: login nativo, registro, gating de rutas, creación
 de orden autenticada, refresh silencioso del access_token, y el flujo completo de
-`consulta/inicio` → `informacion-personal` (o directo a `/inicio` si el perfil ya está completo).
+`consulta/inicio` → `informacion-personal` (o directo a `/consulta/anamnesis` si el perfil ya está completo).
 Login vía Google integrado en el código pero no ejercitado todavía contra el User Pool real.

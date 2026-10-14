@@ -28,7 +28,9 @@ Requires a `.env` (see `.env.template`) with:
   Provider). `SESSION_SECRET` — key material for the app's own **encrypted** `session` cookie (JWE; at least 32
   characters, enforced in production). See `doc/auth.md`.
 - Optional: `NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true` shows the simulated-payment buttons on `/pago/[orderId]`
-  (dev/test only, never in production); `WEBPAY_FORM_ORIGINS` replaces the Webpay origins allowed by the CSP
+  (dev/test only, never in production); `NEXT_PUBLIC_WEBPAY_ENABLED=true` enables "Pagar con Webpay" there — unset,
+  the page shows a "Webpay aún no está validado" notice and the button is disabled (keep it unset in production until
+  Transbank validates the integration; read at build time; `.env.test` and `vitest.config.ts` set it); `WEBPAY_FORM_ORIGINS` replaces the Webpay origins allowed by the CSP
   `form-action` (the e2e point it at the fake Webpay); `PLANS_S3_BUCKET_ORIGIN` replaces the plans bucket origin
   allowed by the CSP `img-src` (defaults to the current bucket). Deployment: Amplify exposes console variables only
   during the build, not to the SSR runtime, so `next.config.ts` inlines the server-only ones into the server bundle
@@ -52,7 +54,7 @@ silently via `src/shared/auth/tokens.ts` when it's expired.
 
 ## Architecture
 
-Next.js 15 App Router + React 19 + TypeScript, Tailwind CSS 4. Code is organized `src/app` (routes only) / `src/features/<feature>` (components, dtos, entities, services per feature) / `src/shared` (cross-feature components, context, api clients). Each of `src/features` and `src/shared` has a barrel `index.ts` that re-exports everything; other code imports from `@/features` / `@/shared` rather than deep paths.
+Next.js 16 App Router + React 19 + TypeScript, Tailwind CSS 4. Code is organized `src/app` (routes only) / `src/features/<feature>` (components, dtos, entities, services per feature) / `src/shared` (cross-feature components, context, api clients). Each of `src/features` and `src/shared` has a barrel `index.ts` that re-exports everything; other code imports from `@/features` / `@/shared` rather than deep paths.
 
 **Barrel gotcha (found while making `Hero`/`NavbarLanding` session-aware)**:
 `src/features/index.ts` re-exports both plain components and Client Components (`'use client'`,
@@ -132,18 +134,19 @@ Requires an authenticated Cognito session from `/consulta/inicio` onward (`src/p
 `/consulta/*` except `/consulta`, and also `/pago/*` and `/ordenes/*` — see the section above; login
 lives at `/login`, outside those prefixes, so it doesn't need special-casing there; the backend
 separately gates order creation and chat — see `doc/auth.md`). The "Iniciar Consulta" buttons on the home page (navbar, hero) already check session
-before routing (`getStartConsultationHref()`) — no session goes straight to `/login`, skipping
-`/consulta/inicio` entirely; without that, direct navigation/a bookmark hits the same proxy gate and
-gets redirected to `/login` anyway. With a session, `/consulta/inicio`'s own "Iniciar" button routes
+before routing (`getStartConsultationHref()`) — no session goes straight to `/login?return_to=/consulta/inicio`
+(the proxy does the same for any `/consulta/*` route), so after logging in the user lands on `/consulta/inicio`.
+The landing navbar's "Iniciar sesión" goes to `/login` with no `return_to` ("just log in"): the Cognito callback
+sends a complete profile to `/inicio` and an incomplete one to `/consulta/informacion-personal?destino=inicio`,
+which returns to `/inicio` after saving (see `doc/auth.md`). With a session, `/consulta/inicio`'s own "Iniciar" button routes
 to one of three places depending on session + profile-completion state: `/login` (session became
 invalid in between — the proxy already re-checks this on every request, so this branch inside the
 page is defense-in-depth, not the primary gate), `/consulta/informacion-personal` (incomplete
-profile — RUT/name/gender/DOB aren't in Cognito, the user fills them once), or straight to `/inicio`
-(profile already complete — `/inicio` lives under `src/app/(sesion)/inicio`, gated by `src/proxy.ts`
-just like the rest of the flow: no session redirects to `/login`).
+profile — RUT/name/gender/DOB aren't in Cognito, the user fills them once), or straight to
+`/consulta/anamnesis` (profile already complete — the anamnesis page pulls `personalInfo` from the backend).
 
 Routes: `/consulta/inicio` → `/consulta/informacion-personal` (skipped if the profile is already
-complete, in which case `/consulta/inicio` sends the user to `/inicio` instead) → `/consulta/anamnesis`
+complete, in which case `/consulta/inicio` goes straight to anamnesis) → `/consulta/anamnesis`
 → `/consulta/evaluacion-fisica` → `/consulta/generar-orden` → `/pago/[orderId]` → `/ordenes/[id]`.
 
 State lives in `ConsultationProvider` / `useConsultation` (`src/shared/context/consultation.context.tsx`), persisted to `localStorage` under `consulta_context` on every mutation (so it survives a refresh, except in-progress, unconfirmed anamnesis chat). It holds four independent pieces — `personalInfo`, `anamnesis`, `measurements`, `nutritionPlan` — each with its own setter and reset. `getCompleteConsultation()` assembles the full DTO from the first three, returning `null` if any is missing. Note: `nutritionPlan` in this context is effectively unused by the live flow — the actual plan is read via polling in `/ordenes/[id]` (`plan_json` from `OrderStatusDto`), not from context.
@@ -183,7 +186,7 @@ S3 naming: `../doc/flows/purchase-flow-predefined-plan.md`.
   `/ordenes/[id]`). `/pago/*` and `/inicio` need a session (`src/proxy.ts`); the cart and the plan pages don't.
 - **Login with return**: `/api/cognito/login?return_to=/carrito` stores the destination in a short-lived httpOnly cookie
   (`post_login_return_to`); `/api/cognito/callback` consumes it. Only routes in the allowlist of `src/shared/auth/return-to.ts`
-  are accepted (no open redirect). The callback still runs the profile sync, which creates the identity the backend needs.
+  (`/carrito`, `/consulta/inicio`) are accepted (no open redirect). The callback still runs the profile sync, which creates the identity the backend needs.
 - Code: `src/features/plans/` (components, `hooks/use-predefined-product.ts`, `services/plans.{actions,service}.ts`).
   `ActionResult` carries `code` (`'unauthenticated'` when there is no valid session → `SessionRequiredError`,
   which `CartView` turns into the `LoginModal`).

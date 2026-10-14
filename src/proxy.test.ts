@@ -75,11 +75,11 @@ describe('proxy — session gating', () => {
   });
 
   describe('/consulta/* (todo protegido salvo /consulta, que sigue siendo pública)', () => {
-    it('redirects /consulta/inicio to /login without a session (ya no es una ruta pública)', async () => {
+    it('redirects /consulta/inicio to /login (con return_to=/consulta/inicio) without a session (ya no es una ruta pública)', async () => {
       const response = await proxy(makeRequest('/consulta/inicio'));
 
       expect(response.status).toBe(307);
-      expect(response.headers.get('location')).toBe('http://localhost:3000/login');
+      expect(response.headers.get('location')).toBe('http://localhost:3000/login?return_to=%2Fconsulta%2Finicio');
     });
 
     it('lets /consulta/inicio through with a valid session', async () => {
@@ -90,11 +90,11 @@ describe('proxy — session gating', () => {
       expect(response.headers.get('location')).toBeNull();
     });
 
-    it('redirects a protected /consulta/* route (e.g. /consulta/anamnesis) to /login without a session', async () => {
+    it('redirects a protected /consulta/* route (e.g. /consulta/anamnesis) to /login, retomando la consulta, without a session', async () => {
       const response = await proxy(makeRequest('/consulta/anamnesis'));
 
       expect(response.status).toBe(307);
-      expect(response.headers.get('location')).toBe('http://localhost:3000/login');
+      expect(response.headers.get('location')).toBe('http://localhost:3000/login?return_to=%2Fconsulta%2Finicio');
     });
 
     it('lets a protected /consulta/* route through with a valid session', async () => {

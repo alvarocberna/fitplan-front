@@ -7,7 +7,10 @@ import { apiFetch, ApiError } from '@/shared/api/client'
 import { redirectToPath } from '@/shared/api/redirect-to-path'
 import type { PerfilStatus } from '@/shared/auth/profile.actions'
 
-const POST_LOGIN_REDIRECT = '/consulta/inicio'
+// Login sin return_to = el usuario solo quiere entrar (botón "Iniciar sesión"): con el perfil completo va
+// a su inicio; si no, a completar sus datos personales y de ahí a /inicio (sin pasar por /consulta/inicio,
+// que presenta una consulta nueva). "Iniciar Consulta" llega con return_to=/consulta/inicio.
+const PROFILE_INCOMPLETE_REDIRECT = '/consulta/informacion-personal?destino=inicio'
 const PROFILE_COMPLETE_REDIRECT = '/inicio'
 const LOGIN_ERROR_REDIRECT = '/login?error=callback_failed'
 const EMAIL_NOT_VERIFIED_REDIRECT = '/login?error=email_not_verified'
@@ -28,7 +31,8 @@ export async function GET(request: Request) {
   const cookieStore = await cookies()
   const state = cookieStore.get('cognito_state')?.value
   const nonce = cookieStore.get('cognito_nonce')?.value
-  // Destino pedido por quien inició el login (p. ej. /carrito desde el modal de registro al pagar).
+  // Destino pedido por quien inició el login (p. ej. /carrito desde el modal de registro al pagar, o
+  // /consulta/inicio desde "Iniciar Consulta").
   const returnTo = sanitizeReturnTo(cookieStore.get(RETURN_TO_COOKIE)?.value)
 
   cookieStore.delete('cognito_state')
@@ -68,9 +72,9 @@ export async function GET(request: Request) {
   }
 
   // El login ya fue exitoso acá (la sesión ya se creó): un fallo en este chequeo nunca debe
-  // mandar a error, solo mantiene el destino de siempre (/consulta/inicio), que reintenta la
-  // sincronización con su propia lógica de fallback.
-  let postLoginRedirect: string = POST_LOGIN_REDIRECT
+  // mandar a error, solo mantiene el destino de perfil incompleto (informacion-personal), que reintenta
+  // la sincronización por su cuenta y nunca deja avanzar sin el perfil guardado.
+  let postLoginRedirect: string = PROFILE_INCOMPLETE_REDIRECT
   try {
     // sin body: el backend obtiene el email de Cognito con el access token
     const perfil = await apiFetch<PerfilStatus>('me/sync', 'POST', undefined, accessToken)
@@ -84,7 +88,7 @@ export async function GET(request: Request) {
       await deleteSession()
       return redirectToPath(EMAIL_NOT_VERIFIED_REDIRECT)
     }
-    console.error('No se pudo confirmar el estado del perfil tras el login (se continúa a /consulta/inicio):', err)
+    console.error('No se pudo confirmar el estado del perfil tras el login (se continúa a informacion-personal):', err)
   }
 
   // Si el login se inició para volver a un lugar concreto, ese destino manda sobre el por defecto (que

@@ -115,7 +115,7 @@ describe('GET /api/cognito/callback', () => {
     expect(mockedCreateSession).toHaveBeenCalledTimes(1);
   });
 
-  it('redirects to /consulta/inicio when the profile check confirms the profile is incomplete', async () => {
+  it('sin return_to ("Iniciar sesión") y perfil incompleto: va a completar los datos personales y de ahí a /inicio', async () => {
     mockedAuthorizationCodeGrant.mockResolvedValue(makeTokens() as never);
     mockedFetchUserInfo.mockResolvedValue({ sub: 'sub-123', email: 'user@test.com' } as never);
     mockedApiFetch.mockResolvedValue({ profileComplete: false } as never);
@@ -123,10 +123,10 @@ describe('GET /api/cognito/callback', () => {
     const response = await GET(makeRequest());
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('/consulta/inicio');
+    expect(response.headers.get('location')).toBe('/consulta/informacion-personal?destino=inicio');
   });
 
-  it('redirects to /consulta/inicio (fail-safe) when the profile check itself fails, but still creates the session', async () => {
+  it('redirects to informacion-personal (fail-safe) when the profile check itself fails, but still creates the session', async () => {
     mockedAuthorizationCodeGrant.mockResolvedValue(makeTokens() as never);
     mockedFetchUserInfo.mockResolvedValue({ sub: 'sub-123', email: 'user@test.com' } as never);
     mockedApiFetch.mockRejectedValue(new Error('backend caido'));
@@ -134,7 +134,7 @@ describe('GET /api/cognito/callback', () => {
     const response = await GET(makeRequest());
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('/consulta/inicio');
+    expect(response.headers.get('location')).toBe('/consulta/informacion-personal?destino=inicio');
     expect(mockedCreateSession).toHaveBeenCalledTimes(1);
   });
 
@@ -155,6 +155,21 @@ describe('GET /api/cognito/callback', () => {
     // el chequeo crea la identidad que el backend necesita para crear la orden
     expect(mockedApiFetch).toHaveBeenCalledWith('me/sync', 'POST', undefined, 'token-abc');
     expect(cookieStore.delete).toHaveBeenCalledWith('post_login_return_to');
+  });
+
+  it.each([true, false])('con return_to=/consulta/inicio ("Iniciar Consulta") vuelve a /consulta/inicio (perfil completo: %s)', async (profileComplete) => {
+    const cookieStore = {
+      get: vi.fn((name: string) => (name === 'post_login_return_to' ? { value: '/consulta/inicio' } : undefined)),
+      delete: vi.fn(),
+    };
+    vi.mocked(cookies).mockResolvedValueOnce(cookieStore as never);
+    mockedAuthorizationCodeGrant.mockResolvedValue(makeTokens() as never);
+    mockedFetchUserInfo.mockResolvedValue({ sub: 'sub-123', email: 'user@test.com' } as never);
+    mockedApiFetch.mockResolvedValue({ profileComplete } as never);
+
+    const response = await GET(makeRequest());
+
+    expect(response.headers.get('location')).toBe('/consulta/inicio');
   });
 
   it('ignora un return_to fuera de la lista permitida y usa el destino por defecto', async () => {
