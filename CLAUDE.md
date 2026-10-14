@@ -54,7 +54,7 @@ silently via `src/shared/auth/tokens.ts` when it's expired.
 
 ## Architecture
 
-Next.js 15 App Router + React 19 + TypeScript, Tailwind CSS 4. Code is organized `src/app` (routes only) / `src/features/<feature>` (components, dtos, entities, services per feature) / `src/shared` (cross-feature components, context, api clients). Each of `src/features` and `src/shared` has a barrel `index.ts` that re-exports everything; other code imports from `@/features` / `@/shared` rather than deep paths.
+Next.js 16 App Router + React 19 + TypeScript, Tailwind CSS 4. Code is organized `src/app` (routes only) / `src/features/<feature>` (components, dtos, entities, services per feature) / `src/shared` (cross-feature components, context, api clients). Each of `src/features` and `src/shared` has a barrel `index.ts` that re-exports everything; other code imports from `@/features` / `@/shared` rather than deep paths.
 
 **Barrel gotcha (found while making `Hero`/`NavbarLanding` session-aware)**:
 `src/features/index.ts` re-exports both plain components and Client Components (`'use client'`,
