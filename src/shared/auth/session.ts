@@ -1,6 +1,7 @@
 import 'server-only'
 import { cookies } from 'next/headers'
 import { EncryptJWT, jwtDecrypt, errors as joseErrors, type JWTPayload } from 'jose'
+import { START_CONSULTATION_LOGIN_HREF, START_CONSULTATION_PATH } from './return-to'
 
 export const SESSION_COOKIE = 'session'
 const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7 // 7 días
@@ -144,9 +145,11 @@ export async function getSession(): Promise<{
 }
 
 // Usado por los botones "Iniciar Consulta" del sitio (navbar, hero): sin sesión (o expirada) van
-// directo a login en vez de a /consulta/inicio. /consulta/inicio mantiene su propia verificación
-// (llega igual por navegación directa/bookmark), esto solo evita el salto extra por esos botones.
+// directo a login en vez de a /consulta/inicio, con return_to=/consulta/inicio para que el callback
+// respete la intención de empezar una consulta (sin él, el login es "solo entrar": /inicio o completar
+// datos personales). /consulta/inicio mantiene su propia verificación (llega igual por navegación
+// directa/bookmark), esto solo evita el salto extra por esos botones.
 export async function getStartConsultationHref(): Promise<string> {
   const { isAuthenticated } = await getSession()
-  return isAuthenticated ? '/consulta/inicio' : '/login'
+  return isAuthenticated ? START_CONSULTATION_PATH : START_CONSULTATION_LOGIN_HREF
 }

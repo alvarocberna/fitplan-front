@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { hasValidSession, SESSION_COOKIE } from "@/shared/auth/session";
 import { isSesionRoute, isSessionGatedPrefix } from "@/shared/auth/sesion-routes";
+import { START_CONSULTATION_LOGIN_HREF } from "@/shared/auth/return-to";
 
 const apiCMSUrl =
   process.env.NEXT_PUBLIC_BACKEND_CMS_URL || "http://localhost:3001";
@@ -26,7 +27,7 @@ const webpayFormOrigins =
 
 // Rutas bajo /consulta/* que deben quedar accesibles sin sesión: solo /consulta (vacía, sin uso).
 // /consulta/inicio ahora requiere sesión igual que el resto — sin ella, el proxy redirige a /login
-// antes de que la página se renderice. El login vive en /login (fuera de /consulta/*, así que no
+// (con return_to=/consulta/inicio, para que el login retome la consulta) antes de que la página se renderice. El login vive en /login (fuera de /consulta/*, así que no
 // necesita estar acá para no crear un loop de redirects). Cualquier otra ruta que empiece con
 // "/consulta/" queda protegida por defecto, incluidas las que se agreguen a futuro.
 // El resto del flujo (/pago/* y /ordenes/*) y el área de usuario (/inicio, /planes, /mediciones, /perfil) exigen sesión
@@ -49,7 +50,11 @@ export async function proxy(request: NextRequest) {
     const isAuthenticated = sessionCookie ? await hasValidSession(sessionCookie) : false;
 
     if (!isAuthenticated) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      // Una ruta de la consulta indica la intención de empezar una: el login vuelve a /consulta/inicio.
+      const loginPath = request.nextUrl.pathname.startsWith("/consulta/")
+        ? START_CONSULTATION_LOGIN_HREF
+        : "/login";
+      return NextResponse.redirect(new URL(loginPath, request.url));
     }
   }
 

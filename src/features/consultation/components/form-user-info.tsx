@@ -12,13 +12,15 @@ import { updateProfileAction, type PerfilStatus } from '@/shared/auth/profile.ac
 
 interface FormUserInfoProps {
     profile: PerfilStatus | null
+    //a dónde ir tras guardar: el siguiente paso de la consulta, o /inicio si se llegó solo a completar datos
+    nextHref?: string
 }
 
 //nivel deportivo elegido en el select "Deportista"; solo 'professional' marca al usuario como athlete
 type SportLevel = 'none' | 'recreational' | 'professional'
 type FormUserInfoValues = Omit<FormPersonalInfoInterface, 'athlete'> & { sportLevel: SportLevel }
 
-export function FormUserInfo({ profile }: FormUserInfoProps) {
+export function FormUserInfo({ profile, nextHref = '/consulta/anamnesis' }: FormUserInfoProps) {
     //router
     const router = useRouter();
     //llamamos al estado de PersonalInfo desde el context
@@ -67,7 +69,7 @@ export function FormUserInfo({ profile }: FormUserInfoProps) {
             email: profile?.email ?? data.email,
             dateOfBirth: data.dateOfBirth,
         })
-        router.push('/consulta/anamnesis'); //enviamos al siguiente paso
+        router.push(nextHref); //enviamos al siguiente paso
     }
 
     return (

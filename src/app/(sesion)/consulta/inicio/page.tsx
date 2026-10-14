@@ -6,6 +6,7 @@ import { faUser, faNotesMedical, faRulerVertical, faCreditCard, faClipboardCheck
 //shared
 import {Card, SubsectionHead, SubsectionTitle} from '@/shared'
 import { getSession } from '@/shared/auth/session'
+import { START_CONSULTATION_LOGIN_HREF } from '@/shared/auth/return-to'
 import { syncProfileAction } from '@/shared/auth/profile.actions'
 //features - plans (la action se importa directo: es server-only y no va por el barrel)
 import { getPersonalizedProductAction } from '@/features/plans/services/plans.actions'
@@ -26,7 +27,7 @@ export default async function StartConsultation() {
   const product = await getPersonalizedProductAction()
   const steps = buildSteps(product.ok ? formatPrice(product.data.price, product.data.currency) : null)
 
-  let href = '/login'
+  let href = START_CONSULTATION_LOGIN_HREF
   if (isAuthenticated) {
     const result = await syncProfileAction()
     // Si falla la sincronización (token inválido, backend caído), se cae a informacion-personal
@@ -35,8 +36,9 @@ export default async function StartConsultation() {
       // la cookie de sesión sigue viva pero el token ya no se puede refrescar: hay que volver a entrar
       href = '/login?error=session_expired'
     } else {
+      // perfil completo: salta informacion-personal (anamnesis trae los datos del backend)
       href = result.ok && result.data.profileComplete
-        ? '/inicio'
+        ? '/consulta/anamnesis'
         : '/consulta/informacion-personal'
     }
   }
