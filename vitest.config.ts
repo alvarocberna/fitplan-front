@@ -24,6 +24,8 @@ export default defineConfig({
       NEXT_PUBLIC_PROYECTO_ID: 'test-project-id',
       // muestra los botones de pago simulado de /pago/[orderId] (en producción no se define)
       NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION: 'true',
+      // habilita "Pagar con Webpay" (sin él, la página avisa que Webpay aún no está validado)
+      NEXT_PUBLIC_WEBPAY_ENABLED: 'true',
     },
     coverage: {
       provider: 'v8',

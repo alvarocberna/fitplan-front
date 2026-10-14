@@ -88,6 +88,11 @@ Pago con **Webpay Plus** (Transbank):
 Si la confirmación falla (backend o Transbank caídos), el handler redirige a **`/pago/error`**, que ofrece
 "Reintentar confirmación" (vuelve a `/api/webpay/return` con el mismo token; es idempotente, no cobra dos veces).
 
+**Webpay aún no validado.** Mientras Transbank no valide la integración, `NEXT_PUBLIC_WEBPAY_ENABLED` queda sin
+definir: la página muestra un aviso ("El pago con Webpay aún no está validado…") y "Pagar con Webpay" queda
+deshabilitado. Con `NEXT_PUBLIC_WEBPAY_ENABLED=true` (se lee en el build) el pago funciona normalmente; `.env.test` y
+`vitest.config.ts` lo definen para las pruebas.
+
 **Pago simulado (solo desarrollo y pruebas).** Con `NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true` la página
 muestra además "Simular pago" (`simulatePaymentAction` → `POST dev/orders/{orderId}/simulate-payment`) y
 "Simular rechazo" (`simulatePaymentRejectionAction`), que marcan la orden sin pasar por Webpay. En el backend

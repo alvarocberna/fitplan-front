@@ -16,6 +16,9 @@ import { usePlanSelection, isNotFoundError, isSessionRequiredError, notifyError 
 // Con NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true (desarrollo y pruebas) aparecen además "Simular pago"
 // y "Simular rechazo", que marcan la orden sin pasar por Webpay.
 const SIMULATION_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION === 'true'
+// Mientras Transbank no valide la integración, el pago con Webpay queda deshabilitado y se avisa al
+// usuario. NEXT_PUBLIC_WEBPAY_ENABLED=true lo habilita (se lee en el build: cambiarlo exige reconstruir).
+const WEBPAY_ENABLED = process.env.NEXT_PUBLIC_WEBPAY_ENABLED === 'true'
 
 // Avisos de ?resultado=, que agrega /api/webpay/return cuando el estado de la orden no basta para
 // explicar qué pasó. Solo se muestran los valores de esta lista.
@@ -220,10 +223,17 @@ function Payment() {
                     </p>
                 )}
 
+                {!WEBPAY_ENABLED && (
+                    <p role="status" className="text-sm text-amber-900 bg-amber-100 rounded-lg px-3 py-2">
+                        El pago con Webpay aún no está validado, por lo que todavía no es posible realizar el pago.
+                        Tu orden queda guardada y podrás pagarla apenas esté disponible.
+                    </p>
+                )}
+
                 <button
                     type="button"
                     onClick={onPay}
-                    disabled={isPaying}
+                    disabled={isPaying || !WEBPAY_ENABLED}
                     className="w-full py-2.5 rounded-full text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
                     style={{ backgroundColor: 'var(--color-primary)' }}
                 >

@@ -28,7 +28,9 @@ Requires a `.env` (see `.env.template`) with:
   Provider). `SESSION_SECRET` — key material for the app's own **encrypted** `session` cookie (JWE; at least 32
   characters, enforced in production). See `doc/auth.md`.
 - Optional: `NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true` shows the simulated-payment buttons on `/pago/[orderId]`
-  (dev/test only, never in production); `WEBPAY_FORM_ORIGINS` replaces the Webpay origins allowed by the CSP
+  (dev/test only, never in production); `NEXT_PUBLIC_WEBPAY_ENABLED=true` enables "Pagar con Webpay" there — unset,
+  the page shows a "Webpay aún no está validado" notice and the button is disabled (keep it unset in production until
+  Transbank validates the integration; read at build time; `.env.test` and `vitest.config.ts` set it); `WEBPAY_FORM_ORIGINS` replaces the Webpay origins allowed by the CSP
   `form-action` (the e2e point it at the fake Webpay); `PLANS_S3_BUCKET_ORIGIN` replaces the plans bucket origin
   allowed by the CSP `img-src` (defaults to the current bucket). Deployment: Amplify exposes console variables only
   during the build, not to the SSR runtime, so `next.config.ts` inlines the server-only ones into the server bundle
