@@ -55,8 +55,8 @@ export function FormMeasurements(){
     const requiredNumber = (min: number, max: number, label: string) => ({
         required: 'Campo requerido',
         valueAsNumber: true,
-        validate: (value: number) =>
-            (value >= min && value <= max) || `${label} debe estar entre ${min} y ${max}`,
+        validate: (value: string | number) =>
+            (Number(value) >= min && Number(value) <= max) || `${label} debe estar entre ${min} y ${max}`,
     })
 
     if (notFeasibleMessage) {

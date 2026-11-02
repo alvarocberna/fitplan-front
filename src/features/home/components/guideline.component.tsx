@@ -34,7 +34,7 @@ export function Guideline() {
   const startTilt = useRef({ ...DEFAULT_TILT })
 
   useEffect(() => {
-    const onMouseMove = (e: any) => {
+    const onMouseMove = (e: MouseEvent) => {
       if (!isDragging.current) return
       const dx = e.clientX - startPos.current.x
       const dy = e.clientY - startPos.current.y
@@ -62,12 +62,12 @@ export function Guideline() {
 
   useEffect(() => {
     if (!isModalOpen) return
-    const onKeyDown = (e: any) => { if (e.key === 'Escape') setIsModalOpen(false) }
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsModalOpen(false) }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [isModalOpen])
 
-  const onMouseDown = (e: any) => {
+  const onMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true
     hasDragged.current = false
     setIsGrabbing(true)
@@ -76,14 +76,14 @@ export function Guideline() {
     e.preventDefault()
   }
 
-  const onTouchStart = (e: any) => {
+  const onTouchStart = (e: React.TouchEvent) => {
     isDragging.current = true
     hasDragged.current = false
     startPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
     startTilt.current = { ...tilt }
   }
 
-  const onTouchMove = (e: any) => {
+  const onTouchMove = (e: React.TouchEvent) => {
     if (!isDragging.current) return
     const dx = e.touches[0].clientX - startPos.current.x
     const dy = e.touches[0].clientY - startPos.current.y

@@ -2,7 +2,7 @@
 //next
 import dynamic from 'next/dynamic'
 //shared
-import { GeneralContainer, SectionTitle, Card } from '@/shared'
+import { Card } from '@/shared'
 //features
 import { useConsultation } from '@/shared'
 //app

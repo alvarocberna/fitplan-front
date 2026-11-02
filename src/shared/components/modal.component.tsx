@@ -22,7 +22,9 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
     //onClose suele ser una función nueva en cada render del padre: se guarda en un ref para que el
     //efecto dependa solo de `open` y no vuelva a enfocar el diálogo (quitando el foco de un input) cada vez
     const onCloseRef = useRef(onClose)
-    onCloseRef.current = onClose
+    useEffect(() => {
+        onCloseRef.current = onClose
+    })
 
     useEffect(() => {
         if (!open) return

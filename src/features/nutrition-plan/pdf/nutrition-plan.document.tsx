@@ -13,17 +13,6 @@ type MealTime = NutritionPlanDto['mealTimes'][number]
 // nutrition-plan-pdf.styles.ts
 // ============================================================
 
-// Encabezado repetido en cada página: nombre del paciente + subtítulo de la página actual.
-function Header({ plan, subtitle }: { plan: NutritionPlanDto; subtitle: string }) {
-    const { name, lastName, date } = plan.personalInfo
-    return (
-        <View style={styles.header} fixed>
-            <Text style={styles.headerBrand}>{name} {lastName} · {subtitle}</Text>
-            <Text style={styles.headerSubtitle}>{date}</Text>
-        </View>
-    )
-}
-
 // Numeración de página, fija al pie de cada hoja.
 function PageFooter() {
     return (
@@ -218,17 +207,6 @@ function CoverDecoration() {
     const triangleWidth = width * 0.53
     const triangleScale = triangleWidth / 1332
     const triangleOffsetX = width - triangleWidth
-    // veta de esquina superior derecha: ocupa el 30% del ancho, pegada arriba y a la derecha
-    const cornerWidth = width * 0.3
-    const cornerScale = cornerWidth / 842
-    const cornerOffsetX = width - cornerWidth
-    // veta lateral derecha: alto = 25% del alto del documento, pegada al borde derecho,
-    // a una distancia del borde superior equivalente al 24% del alto del documento
-    const sideHeight = height * 0.25
-    const sideScale = sideHeight / 888
-    const sideWidth = 760 * sideScale
-    const sideOffsetX = width - sideWidth
-    const sideOffsetY = height * 0.24
     // veta inferior izquierda: ancho = 48% del ancho del documento, pegada a la esquina inferior izquierda
     const bottomWidth = width * 0.48
     const bottomScale = bottomWidth / 1180
@@ -376,7 +354,7 @@ function IconDataField({ icon, label, value, first }: { icon: React.ReactNode; l
 }
 
 // Fila "régimen nutricional" / "objetivo principal": ícono en badge + label/valor.
-function IconTextItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function IconTextItem({ label, value }: { icon: React.ReactNode; label: string; value: string }) {
     return (
         <View style={styles.coverIconTextItem}>
             {/* <View style={styles.coverIconBadge}>{icon}</View> */}

@@ -24,7 +24,7 @@ async function fetchCms(input: string, init: RequestInit): Promise<Response> {
 // Convierte una respuesta no-2xx en CmsApiError. Solo se muestra el `message` del CMS si es un texto;
 // un cuerpo que no es JSON (o un 5xx sin mensaje) usa el genérico, nunca "Error HTTP 502".
 async function toCmsError(res: Response): Promise<CmsApiError> {
-  let errorData: any = null;
+  let errorData: { message?: unknown } | null = null;
   try {
     errorData = await res.json();
   } catch {
@@ -88,7 +88,7 @@ async function refreshSession(): Promise<boolean> {
 export async function apiFetchCMS<T>(
   endpoint: string,
   method: string = 'GET',
-  data?: any,
+  data?: unknown,
   credentials: RequestCredentials = 'include',
   isRetry = false // evita loop infinito
 ): Promise<T> {

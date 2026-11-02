@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef, useCallback, ReactNode } from 'react'
 import { EMPTY_PLAN_SELECTION, PlanSelection } from '../data/plan-code'
 
 const STORAGE_KEY = 'plan_selection'
@@ -70,11 +70,15 @@ export function PlanSelectionProvider({ children }: { children: ReactNode }) {
     //espejo del estado siempre actualizado, para que un setter lea el valor más reciente aunque se
     //invoque desde un closure viejo y no pise en localStorage el campo que se modificó justo antes
     const stateRef = useRef<PersistedState>({ selection, cartItem })
-    stateRef.current = { selection, cartItem }
+    useLayoutEffect(() => {
+        stateRef.current = { selection, cartItem }
+    }, [selection, cartItem])
 
     //carga el estado persistido recién montado en el cliente, para que el primer render coincida con el del servidor y no genere un hydration mismatch
     useEffect(() => {
         const saved = loadFromStorage()
+        // localStorage solo existe en el cliente: leerlo en el primer render causaría un hydration mismatch.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         _setSelection(saved.selection)
         _setCartItem(saved.cartItem)
         setIsHydrated(true)

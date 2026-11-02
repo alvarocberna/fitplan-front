@@ -1,7 +1,7 @@
 //next
 import { redirect } from 'next/navigation'
 //shared
-import {GeneralContainer, SubsectionTitle, SubsectionHead, Card, SubsectionBody} from '@/shared'
+import {SubsectionTitle, SubsectionHead, Card, SubsectionBody} from '@/shared'
 import { syncProfileAction } from '@/shared/auth/profile.actions'
 //feature
 import {FormUserInfo} from '@/features'

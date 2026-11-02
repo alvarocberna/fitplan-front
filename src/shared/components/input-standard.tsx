@@ -1,5 +1,5 @@
 
-export function InputStandard(props: any){
+export function InputStandard(props: { label: string }){
     const label = props.label;
     return(
           <div className="relative z-0 mt-3">
