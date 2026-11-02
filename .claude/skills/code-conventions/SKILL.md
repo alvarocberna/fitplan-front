@@ -9,7 +9,7 @@ metadata:
 
 Estandariza cómo se nombran tipos, componentes, variables, funciones, constantes, archivos y carpetas en este repo. El proyecto es **TypeScript** (`strict`) sobre Next.js 16 App Router + React 19 + Tailwind CSS 4, con runtime de servidor (Server Actions, route handlers, `src/proxy.ts`).
 
-Esta skill cubre **nombres y estilo**. Dónde va cada pieza y cómo se conectan (capas `app` / `features` / `shared`, `apiFetch`, barrels, manejo de errores, seguridad) está en `CLAUDE.md` y `doc/`; no se repite aquí.
+Esta skill cubre **nombres y estilo**. Dónde va cada pieza y cómo se conectan (capas `app` / `features` / `shared`, `apiFetch`, barrels, manejo de errores, seguridad) está en `CLAUDE.md` y `../doc/doc-front/`; no se repite aquí.
 
 ## 1. Reglas generales de nomenclatura
 

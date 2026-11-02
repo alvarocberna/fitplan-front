@@ -1,0 +1,1511 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/me/sync": {
+      "post": {
+        "operationId": "MeController_sync",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncIdentityDtoImpl"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "MeController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Me"
+        ]
+      },
+      "patch": {
+        "operationId": "MeController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDtoImpl"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/me/summary": {
+      "get": {
+        "operationId": "MeController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/consultations/chat": {
+      "post": {
+        "operationId": "ConsultationsController_chat",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InputChatDtoImpl"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutputChatDtoImpl"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Consultations"
+        ]
+      }
+    },
+    "/api/v1/consultations/goal-feasibility": {
+      "post": {
+        "operationId": "ConsultationsController_goalFeasibility",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalFeasibilityRequestDtoImpl"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalFeasibilityResponseDtoImpl"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Consultations"
+        ]
+      }
+    },
+    "/api/v1/consultations": {
+      "post": {
+        "operationId": "ConsultationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteConsultationDtoImpl"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Consultations"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}/status": {
+      "get": {
+        "operationId": "OrdersController_status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}/payments": {
+      "post": {
+        "operationId": "OrdersController_pay",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/api/v1/payments/webpay/commit": {
+      "post": {
+        "operationId": "PaymentsController_commitWebpay",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommitWebpayPaymentDtoImpl"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/dev/orders/{id}/simulate-payment": {
+      "post": {
+        "operationId": "DevPaymentsController_simulate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "DevPayments"
+        ]
+      }
+    },
+    "/api/v1/dev/orders/{id}/simulate-payment-rejection": {
+      "post": {
+        "operationId": "DevPaymentsController_simulateRejection",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "DevPayments"
+        ]
+      }
+    },
+    "/api/v1/plans/standard/previews": {
+      "get": {
+        "operationId": "StandardPlansController_previews",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "StandardPlans"
+        ]
+      }
+    },
+    "/api/v1/plans/standard/{code}": {
+      "get": {
+        "operationId": "StandardPlansController_get",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "StandardPlans"
+        ]
+      }
+    },
+    "/api/v1/plans/standard/{code}/purchase": {
+      "post": {
+        "operationId": "StandardPlansController_purchase",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "StandardPlans"
+        ]
+      }
+    },
+    "/api/v1/plans/personalized": {
+      "get": {
+        "operationId": "PersonalizedPlansController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "PersonalizedPlans"
+        ]
+      }
+    },
+    "/api/v1/me/plans": {
+      "get": {
+        "operationId": "MyPlansController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "MyPlans"
+        ]
+      }
+    },
+    "/api/v1/me/plans/latest/projection": {
+      "get": {
+        "operationId": "MyPlansController_latestProjection",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "MyPlans"
+        ]
+      }
+    },
+    "/api/v1/me/plans/{orderId}": {
+      "get": {
+        "operationId": "MyPlansController_getOne",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "MyPlans"
+        ]
+      }
+    },
+    "/api/v1/me/consultations": {
+      "get": {
+        "operationId": "MyConsultationsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "MyConsultations"
+        ]
+      }
+    },
+    "/api/v1/me/consultations/{consultationId}": {
+      "get": {
+        "operationId": "MyConsultationsController_getOne",
+        "parameters": [
+          {
+            "name": "consultationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "MyConsultations"
+        ]
+      }
+    },
+    "/api/v1/me/measurements": {
+      "get": {
+        "operationId": "MyMeasurementsController_list",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "MyMeasurements"
+        ]
+      },
+      "post": {
+        "operationId": "MyMeasurementsController_record",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordMeasurementDtoImpl"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "MyMeasurements"
+        ]
+      }
+    },
+    "/api/v1/me/measurements/{measurementId}": {
+      "get": {
+        "operationId": "MyMeasurementsController_getOne",
+        "parameters": [
+          {
+            "name": "measurementId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "MyMeasurements"
+        ]
+      },
+      "patch": {
+        "operationId": "MyMeasurementsController_update",
+        "parameters": [
+          {
+            "name": "measurementId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeasurementDtoImpl"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "MyMeasurements"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Fitplan API",
+    "description": "",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "SyncIdentityDtoImpl": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateProfileDtoImpl": {
+        "type": "object",
+        "properties": {
+          "rut": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          },
+          "rutCheckDigit": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          },
+          "firstName": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          },
+          "paternalLastName": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true
+          },
+          "maternalLastName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          },
+          "gender": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "nullable": true
+          },
+          "athlete": {
+            "type": "boolean",
+            "nullable": true
+          }
+        }
+      },
+      "ChatMessageDtoImpl": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ]
+      },
+      "GoalsDtoImpl": {
+        "type": "object",
+        "properties": {
+          "primaryGoal": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "secondaryGoal": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          }
+        }
+      },
+      "ClinicalAnamnesisDtoImpl": {
+        "type": "object",
+        "properties": {
+          "pathology": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "familyMedicalHistory": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "allergies": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "intolerances": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "medications": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "gastrointestinalHistory": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "bowelMovements": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "surgeries": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          }
+        }
+      },
+      "MealDtoImpl": {
+        "type": "object",
+        "properties": {
+          "mealTime": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "cereals": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "freeConsumptionVegetable": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "generalConsumptionVegetable": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "fruit": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "highFatProtein": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "lowFatProtein": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "highFatDairy": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "mediumFatDairy": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "lowFatDairy": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "highProteinDairy": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "highLipid": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "oil": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "sugar": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "alcohol": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "mealTime"
+        ]
+      },
+      "FoodPreferenceGroupDtoImpl": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "frequentConsumption": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "nullable": true
+          },
+          "occasionalConsumption": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "nullable": true
+          },
+          "rareConsumption": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "nullable": true
+          },
+          "avoidedFoods": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "nullable": true
+          }
+        },
+        "required": [
+          "group"
+        ]
+      },
+      "SportsStrategyDtoImpl": {
+        "type": "object",
+        "properties": {
+          "supplement": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 300
+            }
+          },
+          "hydration": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 300
+            }
+          },
+          "preActivityMeal": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "duringActivityMeal": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "postActivityMeal": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          }
+        }
+      },
+      "DietaryAnamnesisDtoImpl": {
+        "type": "object",
+        "properties": {
+          "r24h": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MealDtoImpl"
+            }
+          },
+          "foodPreferenceGroups": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodPreferenceGroupDtoImpl"
+            }
+          },
+          "sportsStrategy": {
+            "$ref": "#/components/schemas/SportsStrategyDtoImpl",
+            "nullable": true
+          }
+        }
+      },
+      "SportSessionDtoImpl": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "discipline": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "duration": {
+            "type": "number",
+            "nullable": true
+          },
+          "intensity": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "eventType": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "days": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "schedule": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          }
+        }
+      },
+      "HealthyLifestyleDtoImpl": {
+        "type": "object",
+        "properties": {
+          "alcohol": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "tobacco": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "physicalActivityLevel": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "sport": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 300
+            }
+          },
+          "sportSession": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SportSessionDtoImpl"
+            }
+          }
+        }
+      },
+      "AnamnesisDtoImpl": {
+        "type": "object",
+        "properties": {
+          "goals": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GoalsDtoImpl"
+              }
+            ]
+          },
+          "clinical": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalAnamnesisDtoImpl"
+              }
+            ]
+          },
+          "dietary": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DietaryAnamnesisDtoImpl"
+              }
+            ]
+          },
+          "lifestyle": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HealthyLifestyleDtoImpl"
+              }
+            ]
+          }
+        }
+      },
+      "InputChatDtoImpl": {
+        "type": "object",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatMessageDtoImpl"
+            }
+          },
+          "anamnesis": {
+            "$ref": "#/components/schemas/AnamnesisDtoImpl",
+            "nullable": true
+          }
+        },
+        "required": [
+          "messages"
+        ]
+      },
+      "OutputChatDtoImpl": {
+        "type": "object",
+        "properties": {
+          "reply": {
+            "type": "string"
+          },
+          "titleReply": {
+            "type": "string"
+          },
+          "anamnesis": {
+            "$ref": "#/components/schemas/AnamnesisDtoImpl"
+          },
+          "isComplete": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "reply",
+          "titleReply",
+          "anamnesis",
+          "isComplete"
+        ]
+      },
+      "GoalFeasibilityMeasurementsDtoImpl": {
+        "type": "object",
+        "properties": {
+          "weight": {
+            "type": "number",
+            "maximum": 500,
+            "minimum": 1
+          },
+          "height": {
+            "type": "number",
+            "maximum": 300,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "weight",
+          "height"
+        ]
+      },
+      "GoalFeasibilityRequestDtoImpl": {
+        "type": "object",
+        "properties": {
+          "goals": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GoalsDtoImpl"
+              }
+            ]
+          },
+          "measurements": {
+            "$ref": "#/components/schemas/GoalFeasibilityMeasurementsDtoImpl"
+          }
+        },
+        "required": [
+          "measurements"
+        ]
+      },
+      "GoalFeasibilityResponseDtoImpl": {
+        "type": "object",
+        "properties": {
+          "feasible": {
+            "type": "boolean"
+          },
+          "goal": {
+            "type": "string",
+            "enum": [
+              "definicion",
+              "volumen",
+              "mantencion"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "feasible",
+          "goal",
+          "message"
+        ]
+      },
+      "PersonalInfoDtoImpl": {
+        "type": "object",
+        "properties": {
+          "rut": {
+            "type": "number",
+            "nullable": true
+          },
+          "dvRut": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "firstName": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "paternalLastName": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "maternalLastName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "gender": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "athlete": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "dateOfBirth": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "firstName",
+          "paternalLastName",
+          "gender",
+          "athlete",
+          "dateOfBirth"
+        ]
+      },
+      "MeasurementsDtoImpl": {
+        "type": "object",
+        "properties": {
+          "weight": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "somatotype": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "weight",
+          "height"
+        ]
+      },
+      "CompleteConsultationDtoImpl": {
+        "type": "object",
+        "properties": {
+          "personalInfo": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PersonalInfoDtoImpl"
+              }
+            ]
+          },
+          "anamnesis": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnamnesisDtoImpl"
+              }
+            ]
+          },
+          "measurements": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MeasurementsDtoImpl"
+              }
+            ]
+          }
+        },
+        "required": [
+          "personalInfo",
+          "anamnesis",
+          "measurements"
+        ]
+      },
+      "CommitWebpayPaymentDtoImpl": {
+        "type": "object",
+        "properties": {
+          "tokenWs": {
+            "type": "string",
+            "maxLength": 64,
+            "nullable": true
+          },
+          "tbkToken": {
+            "type": "string",
+            "maxLength": 64,
+            "nullable": true
+          },
+          "tbkBuyOrder": {
+            "type": "string",
+            "maxLength": 26,
+            "nullable": true
+          }
+        }
+      },
+      "MeasurementValueDtoImpl": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "minimum": 1
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "PERCENTAGE",
+              "KG"
+            ]
+          }
+        },
+        "required": [
+          "value",
+          "unit"
+        ]
+      },
+      "RecordMeasurementDtoImpl": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "BASIC",
+              "BIOIMPEDANCE"
+            ]
+          },
+          "measuredAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 20,
+            "maximum": 300
+          },
+          "height": {
+            "type": "number",
+            "minimum": 100,
+            "maximum": 250
+          },
+          "bodyFat": {
+            "$ref": "#/components/schemas/MeasurementValueDtoImpl",
+            "nullable": true
+          },
+          "muscleMass": {
+            "$ref": "#/components/schemas/MeasurementValueDtoImpl",
+            "nullable": true
+          },
+          "visceralFat": {
+            "$ref": "#/components/schemas/MeasurementValueDtoImpl",
+            "nullable": true
+          },
+          "boneMass": {
+            "$ref": "#/components/schemas/MeasurementValueDtoImpl",
+            "nullable": true
+          }
+        },
+        "required": [
+          "level",
+          "weight",
+          "height"
+        ]
+      },
+      "UpdateMeasurementDtoImpl": {
+        "type": "object",
+        "properties": {
+          "measuredAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 20,
+            "maximum": 300,
+            "nullable": true
+          },
+          "height": {
+            "type": "number",
+            "minimum": 100,
+            "maximum": 250,
+            "nullable": true
+          },
+          "bodyFat": {
+            "$ref": "#/components/schemas/MeasurementValueDtoImpl",
+            "nullable": true
+          },
+          "muscleMass": {
+            "$ref": "#/components/schemas/MeasurementValueDtoImpl",
+            "nullable": true
+          },
+          "visceralFat": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MeasurementValueDtoImpl"
+              }
+            ]
+          },
+          "boneMass": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MeasurementValueDtoImpl"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

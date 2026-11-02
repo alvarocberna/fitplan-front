@@ -2,9 +2,11 @@ import { test, expect } from './fixtures';
 import {
   getBackendCalls,
   mockCreatePredefinedOrder,
+  mockOrderStatusSequence,
   mockPlansList,
   mockPredefinedProduct,
   mockSimulatePayment,
+  orderStatus,
 } from './helpers/mock-backend';
 
 const CODE = 'plan-gimnasio-volumen-50-60-m-joven';
@@ -71,7 +73,8 @@ test.describe('Planes predefinidos - pago con sesión', () => {
   test('paga el plan del carro y termina en /inicio', async ({ page }) => {
     await mockPredefinedProduct({ price: 14990 });
     await mockCreatePredefinedOrder({ orderId: 'aaaaaaaa-0000-4000-8000-0000000000f1' });
-    await mockSimulatePayment();
+    await mockOrderStatusSequence([orderStatus()]);
+    await mockSimulatePayment({ statusAfter: [orderStatus({ paymentStatus: 'PAID', generationStatus: 'COMPLETED' })] });
     await mockPlansList([
       {
         orderId: 'aaaaaaaa-0000-4000-8000-0000000000f1',
@@ -115,7 +118,7 @@ test.describe('Planes predefinidos - pago con sesión', () => {
 
     await page.getByRole('button', { name: 'Pagar' }).click();
 
-    await expect(page.getByText('Error al crear la orden')).toBeVisible();
+    await expect(page.getByRole('alert').filter({ hasText: 'Error al crear la orden' })).toBeVisible();
     await expect(page).toHaveURL(/\/carrito$/);
   });
 });

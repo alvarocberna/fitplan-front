@@ -34,7 +34,7 @@ alterna con el botón de flecha del borde derecho o con un click en el sidebar) 
 en `/inicio`, `/planes`, `/mediciones` y `/perfil` arranca desacoplado. La elección manual se mantiene entre páginas de una misma
 sección y se reinicia al pasar de una a la otra. Todo el flujo exige sesión: el proxy protege `/consulta/*`
 (salvo la raíz vacía `/consulta`), `/pago/*` y `/ordenes/*` además de `/inicio`, `/planes`, `/mediciones` y `/perfil`; sin sesión válida
-redirige a `/login`. Detalle del gating en `doc/auth.md`.
+redirige a `/login`. Detalle del gating en `../doc/doc-front/auth.md`.
 
 ### 1. Información personal — `/consulta/informacion-personal`
 Componente `FormUserInfo`. Formulario (react-hook-form) con los datos personales (`InformacionPersonalDto`:

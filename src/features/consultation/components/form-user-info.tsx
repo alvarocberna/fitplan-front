@@ -98,6 +98,7 @@ export function FormUserInfo({ profile, nextHref = '/consulta/anamnesis' }: Form
                 <option value="FEMENINO">Femenino</option>
             </select>
             <label
+                htmlFor="floating-outlined"
                 className="absolute text-sm text-zinc-700 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2
                 peer-focus:px-2 peer-focus:text-primary
                 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
@@ -119,6 +120,7 @@ export function FormUserInfo({ profile, nextHref = '/consulta/anamnesis' }: Form
                 <option value="professional">Sí, de forma profesional o alto rendimiento</option>
             </select>
             <label
+                htmlFor="floating-outlined-deportista"
                 className="absolute text-sm text-zinc-700 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2
                 peer-focus:px-2 peer-focus:text-primary
                 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2

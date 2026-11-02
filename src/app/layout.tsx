@@ -1,5 +1,6 @@
 //NEXR
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Geist, Geist_Mono } from "next/font/google";
 //SHARED
 import { Providers } from "@/shared/providers/toast.provider";
@@ -36,6 +37,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // El CSP de src/proxy.ts exige un nonce por request, y Next solo lo aplica al renderizar de forma dinámica:
+  // una página estática sale sin nonce y el navegador bloquea todos sus scripts (la página no responde).
+  await connection();
+
   return (
     <html lang="en">
       <body
