@@ -10,11 +10,14 @@ npm run build    # production build
 npm run start    # serve production build on :3000
 npm run lint     # next lint (no ESLint config in the repo yet — it doesn't run)
 npm run test     # unit tests (Vitest + React Testing Library), once
-npm run test:e2e # e2e (Playwright): starts a fake backend on :3101 + `next dev` on :3100 by itself
+npm run test:e2e # e2e (Playwright): fake backend on :3101 + production build (.next-e2e) on :3100, by itself
+npm run test:e2e:dev # same against `next dev`: faster to start, for writing tests
+npm run test:e2e:types # type-check, including e2e mocks against the DTOs
+npm run e2e:contract:update # regenerate e2e/contract/openapi.json from ../fitplan-back
 ```
 
-Test setup and what's covered: `doc/testing.md`. E2E reads its own env from `.env.test` (committed, dummy
-values): `BACKEND_URL` points at the fake backend, `SESSION_SECRET` signs the session cookie the tests fabricate.
+Test setup and what's covered: `../doc/doc-front/testing.md`. E2E reads its own env from `.env.test` (committed, dummy
+values, and complete: nothing comes from the local `.env`): `BACKEND_URL` points at the fake backend, `SESSION_SECRET` signs the session cookie the tests fabricate.
 
 ## Environment
 
@@ -26,7 +29,7 @@ Requires a `.env` (see `.env.template`) with:
 - `COGNITO_ISSUER_URL`, `COGNITO_CLIENT_ID`, `COGNITO_CLIENT_SECRET`, `COGNITO_REDIRECT_URI`,
   `COGNITO_DOMAIN` — Amazon Cognito (Hosted UI, native login + Google as a federated Identity
   Provider). `SESSION_SECRET` — key material for the app's own **encrypted** `session` cookie (JWE; at least 32
-  characters, enforced in production). See `doc/auth.md`.
+  characters, enforced in production). See `../doc/doc-front/auth.md`.
 - Optional: `NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true` shows the simulated-payment buttons on `/pago/[orderId]`
   (dev/test only, never in production); `NEXT_PUBLIC_WEBPAY_ENABLED=true` enables "Pagar con Webpay" there — unset,
   the page shows a "Webpay aún no está validado" notice and the button is disabled (keep it unset in production until
@@ -44,7 +47,7 @@ Path alias: `@/*` → `./src/*` (see `tsconfig.json`).
 
 ## Authentication (Amazon Cognito)
 
-Implemented — see `doc/auth.md` (frontend pieces: Hosted UI, session cookie, token refresh, Server
+Implemented — see `../doc/doc-front/auth.md` (frontend pieces: Hosted UI, session cookie, token refresh, Server
 Actions; it also covers why identity and profile-completion are two separate steps). Backend side documented in
 `fitplan-back/doc/auth.md`. Key point for this repo: the browser **never** calls
 `BACKEND_URL` directly — every call goes through a Server Action
@@ -69,10 +72,10 @@ instead of importing server-only code inside a component that's re-exported from
 
 This app talks to **two unrelated backends**, each with its own fetch wrapper — don't mix them up:
 
-- **Order/consultation backend** (`src/shared/api/client.ts`, `apiFetch`) — `server-only`, hits the private `BACKEND_URL` and prepends the backend's `api/v1` prefix (`API_PREFIX`) to every endpoint (routes: `me`, `consultations`, `orders/:id/status`, `plans/standard/...`, `orders/:id/payments`, `payments/webpay/commit`, `dev/orders/:id/simulate-payment`; see the backend README). Only ever called from Server Actions (`consultation.actions.ts`, `profile.actions.ts`) and from two route handlers (`/api/cognito/callback`, `/api/webpay/return`), which attach `Authorization: Bearer <access_token>` for the endpoints that require a session (order creation, chat, order status polling — see `doc/auth.md`). `ConsultationService` (`src/features/consultation/services/consultation.service.ts`) is the public-facing wrapper Client Components actually call — same shape as before this became auth-aware, so call sites didn't change.
+- **Order/consultation backend** (`src/shared/api/client.ts`, `apiFetch`) — `server-only`, hits the private `BACKEND_URL` and prepends the backend's `api/v1` prefix (`API_PREFIX`) to every endpoint (routes: `me`, `consultations`, `orders/:id/status`, `plans/standard/...`, `orders/:id/payments`, `payments/webpay/commit`, `dev/orders/:id/simulate-payment`; see the backend README). Only ever called from Server Actions (`consultation.actions.ts`, `profile.actions.ts`) and from two route handlers (`/api/cognito/callback`, `/api/webpay/return`), which attach `Authorization: Bearer <access_token>` for the endpoints that require a session (order creation, chat, order status polling — see `../doc/doc-front/auth.md`). `ConsultationService` (`src/features/consultation/services/consultation.service.ts`) is the public-facing wrapper Client Components actually call — same shape as before this became auth-aware, so call sites didn't change.
 - **CMS backend** (`src/shared/api/client-cms.ts`, `apiFetchCMS` / `apiFetchFormData`) — used by `ArticlesServicePublic` and the testimonials service. In the browser it always goes through the `/api/*` → CMS rewrite in `next.config.ts` (never calls the CMS origin directly), carries cookies (`credentials: 'include'`), fetches a CSRF token for mutating requests, and auto-retries once on 401 via `/auth/refresh`. On the server it calls `NEXT_PUBLIC_BACKEND_CMS_URL` directly.
 
-The Content-Security-Policy is nonce-based and generated per-request in `src/proxy.ts` (Next.js 16's replacement for the `middleware.ts` file convention), since the nonce must change on every response. `next.config.ts` keeps only the static security headers (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Strict-Transport-Security` in prod) and the `images.remotePatterns` allowlist (local uploads + the S3 bucket the CMS serves images from) — extend that allowlist, and the `img-src`/`connect-src` directives in `src/proxy.ts`, rather than loosening CSP if a new image host or backend origin is needed. See `../doc/security/frontend-security.md` for details.
+The Content-Security-Policy is nonce-based and generated per-request in `src/proxy.ts` (Next.js 16's replacement for the `middleware.ts` file convention), since the nonce must change on every response. Next only applies the nonce to dynamically rendered pages, so the root layout forces dynamic rendering with `connection()`: a static page would ship without a nonce and have all its scripts blocked in production (not visible in `next dev`). `next.config.ts` keeps only the static security headers (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Strict-Transport-Security` in prod) and the `images.remotePatterns` allowlist (local uploads + the S3 bucket the CMS serves images from) — extend that allowlist, and the `img-src`/`connect-src` directives in `src/proxy.ts`, rather than loosening CSP if a new image host or backend origin is needed. See `../doc/security/frontend-security.md` for details.
 
 ### Session area: `(sesion)` route group and route gating
 
@@ -105,7 +108,7 @@ Gating is by `src/proxy.ts`, which redirects to `/login` without a valid session
 put the page under `(sesion)`; `isSesionRoute` (proxy) is deliberately separate from
 `isFocusRoute` / `usesSesionLayout` (presentation only).
 
-**Error handling** (full picture in `doc/error-handling.md` — read it before adding a `try/catch`):
+**Error handling** (full picture in `../doc/doc-front/error-handling.md` — read it before adding a `try/catch`):
 `apiFetch` throws `ApiError` (`status`, `code`, `requestId`; `message` is always user-facing Spanish, also for
 network failures and timeouts) → `runAction` returns it as `{ ok: false, message, status, code }` (a backend 401
 becomes `code: 'unauthenticated'`) → services use the shared `unwrap` / `unwrapOrNull` (`src/shared/api/unwrap.ts`),
@@ -133,12 +136,12 @@ call `toast.error(error.message)` directly. Server Components of `(sesion)` load
 Requires an authenticated Cognito session from `/consulta/inicio` onward (`src/proxy.ts` gates
 `/consulta/*` except `/consulta`, and also `/pago/*` and `/ordenes/*` — see the section above; login
 lives at `/login`, outside those prefixes, so it doesn't need special-casing there; the backend
-separately gates order creation and chat — see `doc/auth.md`). The "Iniciar Consulta" buttons on the home page (navbar, hero) already check session
+separately gates order creation and chat — see `../doc/doc-front/auth.md`). The "Iniciar Consulta" buttons on the home page (navbar, hero) already check session
 before routing (`getStartConsultationHref()`) — no session goes straight to `/login?return_to=/consulta/inicio`
 (the proxy does the same for any `/consulta/*` route), so after logging in the user lands on `/consulta/inicio`.
 The landing navbar's "Iniciar sesión" goes to `/login` with no `return_to` ("just log in"): the Cognito callback
 sends a complete profile to `/inicio` and an incomplete one to `/consulta/informacion-personal?destino=inicio`,
-which returns to `/inicio` after saving (see `doc/auth.md`). With a session, `/consulta/inicio`'s own "Iniciar" button routes
+which returns to `/inicio` after saving (see `../doc/doc-front/auth.md`). With a session, `/consulta/inicio`'s own "Iniciar" button routes
 to one of three places depending on session + profile-completion state: `/login` (session became
 invalid in between — the proxy already re-checks this on every request, so this branch inside the
 page is defense-in-depth, not the primary gate), `/consulta/informacion-personal` (incomplete
@@ -201,20 +204,20 @@ Routes were renamed from English to Spanish (`/consultation/...` → `/consulta/
 
 ## Documentation maintenance
 
-After making a **large or structurally significant** change — a new route/page, a new feature directory, a change to the consultation/payment/order flow, a new or changed backend integration/API contract, or a project-wide naming/convention change — invoke the `doc-writer` subagent (via the Agent tool) to update `README.md` and/or `doc/` accordingly. Small or purely internal changes (refactors with no behavior/contract change, styling, bugfixes) don't need it. This is not wired to a hook — you (Claude) are responsible for deciding when a change qualifies and triggering it yourself.
+After making a **large or structurally significant** change — a new route/page, a new feature directory, a change to the consultation/payment/order flow, a new or changed backend integration/API contract, or a project-wide naming/convention change — invoke the `doc-writer` subagent (via the Agent tool) to update `README.md` and/or `../doc/doc-front/` accordingly. Small or purely internal changes (refactors with no behavior/contract change, styling, bugfixes) don't need it. This is not wired to a hook — you (Claude) are responsible for deciding when a change qualifies and triggering it yourself.
 
 ## Test maintenance
 
-The project has unit tests (Vitest + React Testing Library, see `vitest.config.ts`) and e2e tests (Playwright, see `playwright.config.ts`), documented in `doc/testing.md`. After changing code covered by an existing test — or adding a component/service/page in an already-covered area (consultation feature, `shared/api`, `shared/context`, `nutrition-plan`, session routing/layout) — invoke the `test-maintainer` subagent (via the Agent tool) to update or extend the relevant tests. Not wired to a hook — you (Claude) decide when it applies and trigger it yourself.
+The project has unit tests (Vitest + React Testing Library, see `vitest.config.ts`) and e2e tests (Playwright, see `playwright.config.ts`), documented in `../doc/doc-front/testing.md`. After changing code covered by an existing test — or adding a component/service/page in an already-covered area (consultation feature, `shared/api`, `shared/context`, `nutrition-plan`, session routing/layout) — invoke the `test-maintainer` subagent (via the Agent tool) to update or extend the relevant tests. Not wired to a hook — you (Claude) decide when it applies and trigger it yourself.
 
-E2E gotchas (details in `doc/testing.md`): the backend is called from Server Actions (Node), so `page.route` can't mock it — specs configure the fake backend `e2e/fake-backend/server.mjs` through `e2e/helpers/mock-backend.ts`, and import `test`/`expect` from `e2e/fixtures.ts`, which resets that backend and installs a signed `session` cookie before each test (`test.use({ authenticated: false })` to opt out). Any new backend endpoint a page/action hits needs a handler in the fake backend (unmocked ones answer `501` on purpose). The suite runs serially because the fake backend's state is global.
+E2E gotchas (details in `../doc/doc-front/testing.md`): the backend is called from Server Actions (Node), so `page.route` can't mock it — specs configure the fake backend `e2e/fake-backend/server.mjs` through `e2e/helpers/mock-backend.ts`, and import `test`/`expect` from `e2e/fixtures.ts`, which resets that backend and installs a signed `session` cookie before each test (`test.use({ authenticated: false })` to opt out). Any new backend endpoint a page/action hits needs a handler in the fake backend. The fixture fails a test, even if its assertions pass, on a call to an unmocked endpoint (`501`), on a request the real backend would reject (validated against `e2e/contract/openapi.json`: run `npm run e2e:contract:update` when a backend route or input DTO changes) and on a browser exception or `console.error`, including CSP violations (`test.use({ expectedBrowserErrors: /pattern/ })` when one is expected). Mocks are typed with the frontend DTOs; simulate backend errors with `mockFailure(name, { status, code, message })`. The suite runs serially because the fake backend's state is global.
 
 ## Known technical debt (from README)
 
-- ~~The order/consultation backend URL is exposed as a public env var...~~ — **resolved**: `BACKEND_URL` is private, every call goes through a Server Action carrying the Cognito Access Token. See `doc/auth.md`.
+- ~~The order/consultation backend URL is exposed as a public env var...~~ — **resolved**: `BACKEND_URL` is private, every call goes through a Server Action carrying the Cognito Access Token. See `../doc/doc-front/auth.md`.
 - Anamnesis state is only persisted to context/localStorage once the chat completes; a mid-chat reload re-runs (and re-bills, token-wise) the whole conversation. Intended fix: persist incrementally per turn, plus add an explicit reset action for users who want to restart.
 - `athlete` ("Deportista" in `informacion-personal`) is persisted on the backend `User` via `PATCH /me` (`updateProfileAction`) and prefilled from `PerfilStatus.athlete`. The select has three levels (`none` / `recreational` / `professional`, form-only field `sportLevel`); only `professional` maps to `athlete = true`. Since only the boolean is stored, a previous "recreational" answer is prefilled as `none`. (The BOLA on `GET /orders/:id/status` is recorded as **resolved** in the backend repo; not re-verified from this repo.)
-- E2E doesn't cover the real Cognito login (the session cookie is fabricated). The fake backend (`e2e/fake-backend/server.mjs`) mirrors the backend's `/api/v1` routes and rejects calls without the prefix; `/perfil` has no e2e spec yet.
+- E2E doesn't cover the real Cognito login (the session cookie is fabricated). The fake backend (`e2e/fake-backend/server.mjs`) mirrors the backend's `/api/v1` routes and rejects calls without the prefix.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

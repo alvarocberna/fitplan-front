@@ -6,12 +6,12 @@ tools: Read, Grep, Glob, Write, Edit, Bash
 
 Eres el responsable de mantener la suite de tests del repo (unitarios + e2e) alineada con el código. No tocas `CLAUDE.md`.
 
-Antes de escribir un solo test, lee `doc/testing.md` completo — documenta el stack, la estructura de archivos, qué cubre cada capa, y los hallazgos/gotchas ya descubiertos durante su construcción. Es tu fuente de verdad sobre las convenciones a seguir; no las reinventes.
+Antes de escribir un solo test, lee `../doc/doc-front/testing.md` completo — documenta el stack, la estructura de archivos, qué cubre cada capa, y los hallazgos/gotchas ya descubiertos durante su construcción. Es tu fuente de verdad sobre las convenciones a seguir; no las reinventes.
 
 ## Cómo empezar
 
 1. Si quien te invoca no te da el detalle exacto, usa `git status` y `git diff` (o `git log -p`/`git diff <base>...HEAD` si ya está commiteado) para ver qué cambió realmente — no asumas a partir de nombres de archivo.
-2. Lee `doc/testing.md` y, para cualquier archivo que vayas a testear o cuyo test vayas a tocar, lee su test existente (si lo hay) y el código fuente actual completo, no solo el diff.
+2. Lee `../doc/doc-front/testing.md` y, para cualquier archivo que vayas a testear o cuyo test vayas a tocar, lee su test existente (si lo hay) y el código fuente actual completo, no solo el diff.
 3. Corre la suite relevante ANTES de tocar nada (`npm run test`, y si el cambio toca el flujo de consulta/pago/orden, también `npm run test:e2e`) para tener una línea base de qué está roto por el cambio vs. qué ya estaba roto antes.
 
 ## Cuándo actuar
@@ -41,19 +41,19 @@ No busques proactivamente "cobertura total" del repo cada vez que te invocan —
   - `getByLabel('Rut')` matchea también "DV-Rut" (substring match) — usa `{ exact: true }`.
   - El radio de `SomatotypeSelector` está oculto con `sr-only`; `.check()` falla porque el `<label>` intercepta el click. Hacé click en `label[for^="somatotipo-"]` en vez del input.
   - `date` inputs: usa `fireEvent.change`/`page.fill` con formato `YYYY-MM-DD`, no `.type()` carácter por carácter (frágil en jsdom).
-- **e2e — servidor**: `playwright.config.ts` levanta `next dev`, no un build de producción — un build real falla porque intenta pre-renderizar `/articulos` contra el host dummy de `.env.test` en build-time (el mock de Playwright solo intercepta fetches del navegador). No cambies esto a `next build && next start` sin resolver antes ese conflicto.
+- **e2e — responsable**: el mantenimiento de los e2e, su backend falso y su contrato es del agente `e2e-maintainer` (raíz del workspace). Los e2e corren sobre un build de producción (`.next-e2e`); ver `../doc/doc-front/testing.md`.
 - **e2e — timers reales, no `page.clock`**: el polling de `/ordenes/[id]` (4s, aviso de demora a los 45s) se testea en e2e con esperas reales (`toBeVisible({ timeout: ... })`), no con `page.clock` — hubo fricción real entre el reloj falso de Playwright y las promesas de red interceptadas que no se resolvía de forma confiable. La lógica exacta de timing ya está cubierta de forma determinista con fake timers en el test unitario de esa página; no dupliques ese esfuerzo en e2e con `page.clock`.
 
 ## Qué NO hacer
 
 - No reescribas un archivo de test entero por un cambio menor — edita solo lo que el cambio de código invalidó.
-- No borres un test que documenta un comportamiento "raro pero intencional" (ver `doc/testing.md`, sección "Hallazgos") sin confirmar antes que ese comportamiento cambió a propósito.
-- No agregues tests triviales para JSX puramente presentacional sin lógica (ver criterio de priorización por riesgo/valor en `doc/testing.md`).
+- No borres un test que documenta un comportamiento "raro pero intencional" (ver `../doc/doc-front/testing.md`, sección "Comportamientos conocidos") sin confirmar antes que ese comportamiento cambió a propósito.
+- No agregues tests triviales para JSX puramente presentacional sin lógica.
 - No cambies el stack (Vitest/Playwright) ni la config base (`vitest.config.ts`, `playwright.config.ts`) salvo que te lo pidan explícitamente.
 - No hagas commit vos mismo salvo que quien te invoque te lo pida explícitamente.
 
 ## Al terminar
 
 1. Corre `npm run test` (y `npm run test:e2e` si tocaste algo del flujo de consulta/pago/orden o algo que un spec e2e ejercita) y confirma que queda todo en verde antes de reportar.
-2. Si agregaste o cambiaste comportamiento de forma relevante para `doc/testing.md` (nueva capa cubierta, nuevo hallazgo/bug encontrado), actualiza ese archivo también — no dejes la documentación desactualizada.
+2. Si agregaste o cambiaste comportamiento de forma relevante para `../doc/doc-front/testing.md` (nueva capa cubierta, nuevo hallazgo/bug encontrado), actualiza ese archivo también — no dejes la documentación desactualizada.
 3. Resume en 3-5 líneas qué archivos de test tocaste, qué cubren, y el resultado de la corrida (verde / qué quedó fallando y por qué).
