@@ -1,12 +1,12 @@
 import { test, expect } from './fixtures';
-import { seedConsultationContext } from './helpers/seed-context';
+import { EMPTY_ANAMNESIS, VALID_PERSONAL_INFO, seedConsultationContext } from './helpers/seed-context';
 
-const VALID_ANAMNESIS = { goals: null, clinical: null, dietary: null, lifestyle: null };
-const VALID_PERSONAL_INFO = { firstName: 'Ana', gender: 'FEMENINO' };
+
+
 
 test.describe('Consultation - physical assessment', () => {
   test('submits measurements, persists them and advances to generate-order', async ({ page }) => {
-    await seedConsultationContext(page, { personalInfo: VALID_PERSONAL_INFO, anamnesis: VALID_ANAMNESIS });
+    await seedConsultationContext(page, { personalInfo: VALID_PERSONAL_INFO, anamnesis: EMPTY_ANAMNESIS });
     await page.goto('/consulta/evaluacion-fisica');
 
     await page.getByLabel('Peso').fill('65');

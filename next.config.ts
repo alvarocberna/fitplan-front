@@ -26,6 +26,9 @@ for (const key of SERVER_ENV_KEYS) {
 }
 
 const nextConfig: NextConfig = {
+  // Los e2e construyen aparte (playwright.config.ts): su build lleva configuración de prueba incrustada.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+
   env: serverEnv,
 
   // Evita que Next.js agregue el header "X-Powered-By: Next.js" a las respuestas

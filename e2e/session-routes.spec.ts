@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { mockOrderStatusSequence } from './helpers/mock-backend';
+import { mockOrderStatusSequence, orderStatus } from './helpers/mock-backend';
 
 const FLOW_PATHS = ['/consulta/inicio', '/consulta/anamnesis', '/pago/aaaaaaaa-0000-4000-8000-000000000123', '/ordenes/aaaaaaaa-0000-4000-8000-000000000123'];
 
@@ -42,9 +42,10 @@ const topbarOf = (page: Page) => page.getByRole('banner');
 test.describe('Session layout (con sesión)', () => {
   for (const path of FLOW_PATHS) {
     test(`${path} shows the topbar, the docked session sidebar and no landing navbar`, async ({ page }) => {
-      // /ordenes/[id] hace polling al montar; el resto de las rutas no llama a este endpoint
+      // /pago/[id] y /ordenes/[id] leen el estado de la orden al montar; una pagada generándose se queda en
+      // /ordenes y una pendiente en /pago
       await mockOrderStatusSequence([
-        { paymentStatus: 'PAID', generationStatus: 'GENERATING', planJson: null, pdfUrl: null, thumbnailUrl: null },
+        path.startsWith('/ordenes/') ? orderStatus({ paymentStatus: 'PAID', generationStatus: 'GENERATING' }) : orderStatus(),
       ]);
       await page.goto(path);
 
@@ -65,6 +66,7 @@ test.describe('Session layout (con sesión)', () => {
   }
 
   test('undocks the sidebar to reveal its links and docks it again', async ({ page }) => {
+    await mockOrderStatusSequence([orderStatus()]);
     await page.goto('/pago/aaaaaaaa-0000-4000-8000-000000000123');
     const sidebar = sidebarOf(page);
     const newConsultation = topbarOf(page).getByRole('link', { name: 'Nueva consulta' });
@@ -91,6 +93,7 @@ test.describe('Session layout (con sesión)', () => {
 
   test('on small screens the navigation is a panel opened and closed with the menu button of the topbar', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
+    await mockOrderStatusSequence([orderStatus()]);
     await page.goto('/pago/aaaaaaaa-0000-4000-8000-000000000123');
 
     // el botón de acoplar/desacoplar es solo de escritorio

@@ -14,9 +14,8 @@ test.describe('Consultation - personal info', () => {
     await page.getByLabel('Primer nombre').fill('Ana');
     await page.getByLabel('Apellido paterno').fill('Pérez');
     await page.getByLabel('Fecha nacimiento').fill('1990-05-20');
-    const selects = page.getByRole('combobox');
-    await selects.nth(0).selectOption('FEMENINO');
-    await selects.nth(1).selectOption('professional');
+    await page.getByLabel('Género').selectOption('FEMENINO');
+    await page.getByLabel('Deportista').selectOption('professional');
 
     await page.getByRole('button', { name: 'Siguiente' }).click();
 
@@ -64,15 +63,15 @@ test.describe('Consultation - personal info', () => {
     await page.getByLabel('Fecha nacimiento').fill('1990-05-20');
     await page.getByRole('button', { name: 'Siguiente' }).click();
 
-    await expect(page.getByText('No se pudo guardar el perfil')).toBeVisible();
+    // acotado al toast: en `next dev` el overlay de errores repite el mensaje que registra el servidor
+    await expect(page.getByRole('alert').filter({ hasText: 'No se pudo guardar el perfil' })).toBeVisible();
     await expect(page).toHaveURL(/\/consulta\/informacion-personal$/);
   });
 
   test('only offers Masculino/Femenino as gender options (no "Otro")', async ({ page }) => {
     await page.goto('/consulta/informacion-personal');
 
-    const genderSelect = page.getByRole('combobox').nth(0);
-    const optionLabels = await genderSelect.locator('option').allTextContents();
+    const optionLabels = await page.getByLabel('Género').locator('option').allTextContents();
 
     expect(optionLabels).toEqual(['Masculino', 'Femenino']);
   });

@@ -1,19 +1,14 @@
 import { test, expect } from './fixtures';
-import { getBackendCalls, mockOrderStatusSequence, mockWebpay } from './helpers/mock-backend';
+import type { GenerationStatus, PaymentStatus } from '../src/features/consultation/dtos/order.dto';
+import { getBackendCalls, mockOrderStatusSequence, mockWebpay, orderStatus } from './helpers/mock-backend';
 
 // Pago con Webpay de punta a punta: /pago/[orderId] -> formulario de Webpay (falso, lo sirve el backend
 // falso) -> /api/webpay/return -> confirmación en el backend -> de vuelta a /pago/[orderId].
 const ORDER_ID = 'aaaaaaaa-0000-4000-8000-000000000123';
 const WEBPAY_TOKEN = 'e2ewebpaytoken0001';
 
-const status = (paymentStatus: string, generationStatus = 'NOT_STARTED') => ({
-  paymentStatus,
-  expirationDate: '2099-01-02T00:00:00.000Z',
-  generationStatus,
-  planJson: null,
-  pdfUrl: null,
-  thumbnailUrl: null,
-});
+const status = (paymentStatus: PaymentStatus, generationStatus: GenerationStatus = 'NOT_STARTED') =>
+  orderStatus({ paymentStatus, generationStatus });
 
 test.describe('Pago con Webpay', () => {
   test('pago aprobado: confirma el pago al volver y sigue a la página de la orden', async ({ page }) => {
@@ -94,7 +89,7 @@ test.describe('Pago con Webpay', () => {
 
     await page.getByRole('button', { name: 'Pagar con Webpay' }).click();
 
-    await expect(page.getByText('No pudimos conectar con el medio de pago')).toBeVisible();
+    await expect(page.getByRole('alert').filter({ hasText: 'No pudimos conectar con el medio de pago' })).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`/pago/${ORDER_ID}$`));
   });
 });

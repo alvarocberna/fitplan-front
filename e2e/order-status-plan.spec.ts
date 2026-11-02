@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { mockOrderStatusSequence } from './helpers/mock-backend';
+import { mockOrderStatusSequence, orderStatus } from './helpers/mock-backend';
 import { nutritionPlanMock } from '../src/features/nutrition-plan/dtos/nutrition-plan.mock';
 
 // URLs firmadas que el backend real devolvería una vez generado el plan. La miniatura es un data:
@@ -9,14 +9,14 @@ const PDF_URL = 'https://fitplan-planes-pdfs.s3.us-east-1.amazonaws.com/plan-e2e
 const THUMBNAIL_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
-const GENERATING = { paymentStatus: 'PAID', generationStatus: 'GENERATING', planJson: null, pdfUrl: null, thumbnailUrl: null };
-const COMPLETED = {
+const GENERATING = orderStatus({ paymentStatus: 'PAID', generationStatus: 'GENERATING' });
+const COMPLETED = orderStatus({
   paymentStatus: 'PAID',
   generationStatus: 'COMPLETED',
   planJson: nutritionPlanMock,
   pdfUrl: PDF_URL,
   thumbnailUrl: THUMBNAIL_URL,
-};
+});
 
 // El polling real es cada 4s (ver POLLING_INTERVAL_MS en src/app/(sesion)/ordenes/[id]/page.tsx). Se
 // usa tiempo real de Playwright en vez de page.clock: el backend falso responde desde otro proceso,
@@ -78,7 +78,7 @@ test.describe('Order status & plan', () => {
   });
 
   test('shows a reassuring error state and no download button when generation fails', async ({ page }) => {
-    await mockOrderStatusSequence([{ ...GENERATING, generationStatus: 'ERROR' }]);
+    await mockOrderStatusSequence([orderStatus({ paymentStatus: 'PAID', generationStatus: 'ERROR' })]);
 
     await page.goto('/ordenes/aaaaaaaa-0000-4000-8000-000000000123');
 

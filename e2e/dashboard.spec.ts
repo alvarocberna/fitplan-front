@@ -1,4 +1,7 @@
 import { test, expect } from './fixtures';
+import type { ConsultationPlanSummaryDto, ConsultationSummaryDto } from '../src/features/dashboard/dtos/consultation-summary.dto';
+import type { MyPlanSummaryDto } from '../src/features/dashboard/dtos/my-plan.dto';
+import type { MeasurementDetailDto } from '../src/features/measurements/dtos/measurement.dto';
 import {
   getBackendCalls,
   mockConsultationDetail,
@@ -6,11 +9,13 @@ import {
   mockLatestPlanProjection,
   mockMeasurementDetail,
   mockMeasurementsList,
+  mockOrderStatusSequence,
   mockPlanDetail,
   mockPlansList,
+  orderStatus,
 } from './helpers/mock-backend';
 
-const PENDING = {
+const PENDING: ConsultationSummaryDto = {
   consultationId: 'cccccccc-0000-4000-8000-000000000002',
   consultationNumber: 2,
   consultationDate: '2026-05-10T12:00:00.000Z',
@@ -20,7 +25,7 @@ const PENDING = {
   plan: null,
 };
 
-const PLAN = {
+const PLAN: ConsultationPlanSummaryDto = {
   planName: 'Plan personalizado',
   goal: 'definicion',
   dietRegimen: 'Hipocalórico',
@@ -30,7 +35,7 @@ const PLAN = {
   lipidIntake: 60,
 };
 
-const READY = {
+const READY: ConsultationSummaryDto = {
   consultationId: 'cccccccc-0000-4000-8000-000000000001',
   consultationNumber: 1,
   consultationDate: '2026-03-15T12:00:00.000Z',
@@ -70,6 +75,7 @@ test.describe('Inicio', () => {
 
   test('marca solo la consulta por pagar y permite retomar su pago', async ({ page }) => {
     await mockConsultationsList([PENDING, READY]);
+    await mockOrderStatusSequence([orderStatus()]);
     await page.goto('/inicio');
 
     const pending = page.getByRole('listitem', { name: 'Consulta N°2' });
@@ -172,11 +178,21 @@ test.describe('Inicio', () => {
 
     await expect(page.getByRole('heading', { name: 'Consulta no encontrada' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/inicio');
+    // uuidParam corta un id con forma inválida antes de llegar al backend
+    expect((await getBackendCalls()).filter((c) => c.path.startsWith('/me/consultations/'))).toHaveLength(0);
+  });
+
+  test('una consulta con id válido que el backend no encuentra (404: inexistente o de otro usuario) muestra lo mismo', async ({ page }) => {
+    const id = 'cccccccc-0000-4000-8000-00000000dead';
+    await page.goto(`/inicio/consultas/${id}`);
+
+    await expect(page.getByRole('heading', { name: 'Consulta no encontrada' })).toBeVisible();
+    expect((await getBackendCalls()).find((c) => c.path === `/me/consultations/${id}`)).toMatchObject({ authorized: true });
   });
 });
 
 test.describe('Mis planes (/planes)', () => {
-  const PLAN_ROW = {
+  const PLAN_ROW: MyPlanSummaryDto = {
     orderId: 'aaaaaaaa-0000-4000-8000-000000000001',
     type: 'GENERATED',
     name: 'Plan personalizado',
@@ -259,11 +275,20 @@ test.describe('Mis planes (/planes)', () => {
     await page.goto('/planes/no-existe');
 
     await expect(page.getByRole('heading', { name: 'Plan no encontrado' })).toBeVisible();
+    expect((await getBackendCalls()).filter((c) => c.path.startsWith('/me/plans/'))).toHaveLength(0);
+  });
+
+  test('un plan con id válido que el backend no encuentra (404) muestra lo mismo', async ({ page }) => {
+    const id = 'aaaaaaaa-0000-4000-8000-00000000dead';
+    await page.goto(`/planes/${id}`);
+
+    await expect(page.getByRole('heading', { name: 'Plan no encontrado' })).toBeVisible();
+    expect((await getBackendCalls()).find((c) => c.path === `/me/plans/${id}`)).toMatchObject({ authorized: true });
   });
 });
 
 test.describe('Mediciones', () => {
-  const DETAIL = {
+  const DETAIL: MeasurementDetailDto = {
     measurementId: 'dddddddd-0000-4000-8000-000000000001',
     measurementNumber: 1,
     measuredAt: '2026-05-10T12:00:00.000Z',
@@ -311,8 +336,8 @@ test.describe('Mediciones', () => {
   test('el gráfico de evolución abre en el plan actual y en "Todas" permite quitar mediciones', async ({ page }) => {
     const summary = {
       measurementNumber: 1,
-      level: 'BASIC',
-      origin: 'SELF_REPORTED',
+      level: 'BASIC' as const,
+      origin: 'SELF_REPORTED' as const,
       consultationId: null,
       consultationNumber: null,
       height: 172,
@@ -345,7 +370,8 @@ test.describe('Mediciones', () => {
     await page.goto('/mediciones');
 
     await expect(page.getByRole('button', { name: 'Plan actual' })).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByText('27/09/2026 al 27/12/2026')).toBeVisible();
+    // el período aparece en el encabezado del gráfico y en su resumen
+    await expect(page.getByText('27/09/2026 al 27/12/2026').first()).toBeVisible();
     await expect(page.getByRole('region', { name: 'Resumen actual' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Todas las mediciones' }).click();
@@ -371,10 +397,36 @@ test.describe('Mediciones', () => {
     expect(post).toMatchObject({ authorized: true, body: { level: 'BASIC', weight: 70, height: 172 } });
   });
 
+  test('corrige una medición: precarga sus datos, guarda por PATCH y vuelve al detalle', async ({ page }) => {
+    await mockMeasurementDetail(DETAIL);
+    await page.goto(`/mediciones/${DETAIL.measurementId}/editar`);
+
+    await expect(page.getByRole('heading', { name: 'Editar medición N°1' })).toBeVisible();
+    await expect(page.getByLabel('Peso (kg)')).toHaveValue('70');
+    await expect(page.getByLabel('Tipo de medición')).toBeDisabled();
+    await page.getByLabel('Peso (kg)').fill('68');
+    await page.getByRole('button', { name: /Guardar/ }).click();
+
+    await expect(page).toHaveURL(new RegExp(`/mediciones/${DETAIL.measurementId}$`));
+    const patch = (await getBackendCalls()).find((c) => c.method === 'PATCH');
+    expect(patch).toMatchObject({ path: `/me/measurements/${DETAIL.measurementId}`, authorized: true, body: { weight: 68, height: 172 } });
+    // el tipo no viaja al corregir: el backend real lo rechazaría
+    expect(patch?.body).not.toHaveProperty('level');
+  });
+
   test('una medición inexistente o ajena muestra "Medición no encontrada"', async ({ page }) => {
     await page.goto('/mediciones/no-existe');
 
     await expect(page.getByRole('heading', { name: 'Medición no encontrada' })).toBeVisible();
+    expect((await getBackendCalls()).filter((c) => c.path.startsWith('/me/measurements/'))).toHaveLength(0);
+  });
+
+  test('una medición con id válido que el backend no encuentra (404) muestra lo mismo', async ({ page }) => {
+    const id = 'dddddddd-0000-4000-8000-00000000dead';
+    await page.goto(`/mediciones/${id}`);
+
+    await expect(page.getByRole('heading', { name: 'Medición no encontrada' })).toBeVisible();
+    expect((await getBackendCalls()).find((c) => c.path === `/me/measurements/${id}`)).toMatchObject({ authorized: true });
   });
 });
 

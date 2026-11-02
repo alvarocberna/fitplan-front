@@ -1,12 +1,10 @@
 import { test, expect } from './fixtures';
 import { mockChatFailure, mockChatTurn } from './helpers/mock-backend';
-import { seedConsultationContext } from './helpers/seed-context';
-
-const EMPTY_ANAMNESIS = { goals: null, clinical: null, dietary: null, lifestyle: null };
+import { EMPTY_ANAMNESIS, VALID_PERSONAL_INFO, seedConsultationContext } from './helpers/seed-context';
 
 test.describe('Consultation - anamnesis chat', () => {
   test('sends messages, reaches completion and advances to physical assessment', async ({ page }) => {
-    await seedConsultationContext(page, { personalInfo: { firstName: 'Ana' } });
+    await seedConsultationContext(page, { personalInfo: VALID_PERSONAL_INFO });
     await mockChatTurn([
       { reply: 'Cuéntame más', titleReply: 'Objetivos', anamnesis: EMPTY_ANAMNESIS, isComplete: false },
       {
@@ -36,7 +34,7 @@ test.describe('Consultation - anamnesis chat', () => {
   });
 
   test('shows an error toast without breaking the chat when the backend call fails', async ({ page }) => {
-    await seedConsultationContext(page, { personalInfo: { firstName: 'Ana' } });
+    await seedConsultationContext(page, { personalInfo: VALID_PERSONAL_INFO });
     await mockChatFailure('Error interno');
 
     await page.goto('/consulta/anamnesis');
