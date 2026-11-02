@@ -49,7 +49,7 @@ Path alias: `@/*` → `./src/*` (see `tsconfig.json`).
 
 Implemented — see `../doc/doc-front/auth.md` (frontend pieces: Hosted UI, session cookie, token refresh, Server
 Actions; it also covers why identity and profile-completion are two separate steps). Backend side documented in
-`fitplan-back/doc/auth.md`. Key point for this repo: the browser **never** calls
+`../doc/doc-back/auth.md`. Key point for this repo: the browser **never** calls
 `BACKEND_URL` directly — every call goes through a Server Action
 (`src/features/consultation/services/consultation.actions.ts`,
 `src/shared/auth/profile.actions.ts`) that attaches the Cognito Access Token, refreshing it
@@ -208,7 +208,14 @@ After making a **large or structurally significant** change — a new route/page
 
 ## Test maintenance
 
-The project has unit tests (Vitest + React Testing Library, see `vitest.config.ts`) and e2e tests (Playwright, see `playwright.config.ts`), documented in `../doc/doc-front/testing.md`. After changing code covered by an existing test — or adding a component/service/page in an already-covered area (consultation feature, `shared/api`, `shared/context`, `nutrition-plan`, session routing/layout) — invoke the `test-maintainer` subagent (via the Agent tool) to update or extend the relevant tests. Not wired to a hook — you (Claude) decide when it applies and trigger it yourself.
+The project has unit tests (Vitest + React Testing Library, see `vitest.config.ts`) and e2e tests (Playwright, see `playwright.config.ts`), documented in `../doc/doc-front/testing.md`.
+
+The test agents are expensive in tokens, so they do **not** run after every change. **Rule: invoke `front-test-maintainer` (unit tests) and/or `e2e-maintainer` (e2e tests), whichever the change affects, only in these 2 cases:**
+
+1. **Large, important changes that really require updating tests**, such as modifying DTOs or backend contracts.
+2. **When the user asks for it.**
+
+Do not invoke them for small changes, internal fixes, refactors, styling, comments or documentation. Tests are never changed just to make them pass.
 
 E2E gotchas (details in `../doc/doc-front/testing.md`): the backend is called from Server Actions (Node), so `page.route` can't mock it — specs configure the fake backend `e2e/fake-backend/server.mjs` through `e2e/helpers/mock-backend.ts`, and import `test`/`expect` from `e2e/fixtures.ts`, which resets that backend and installs a signed `session` cookie before each test (`test.use({ authenticated: false })` to opt out). Any new backend endpoint a page/action hits needs a handler in the fake backend. The fixture fails a test, even if its assertions pass, on a call to an unmocked endpoint (`501`), on a request the real backend would reject (validated against `e2e/contract/openapi.json`: run `npm run e2e:contract:update` when a backend route or input DTO changes) and on a browser exception or `console.error`, including CSP violations (`test.use({ expectedBrowserErrors: /pattern/ })` when one is expected). Mocks are typed with the frontend DTOs; simulate backend errors with `mockFailure(name, { status, code, message })`. The suite runs serially because the fake backend's state is global.
 
