@@ -2,7 +2,7 @@
 //next
 import { useRouter } from 'next/navigation'
 //react
-import { useForm, SubmitHandler, UseFormRegister } from 'react-hook-form'
+import { useForm, useWatch, SubmitHandler, UseFormRegister } from 'react-hook-form'
 //toast
 import { toast } from 'react-toastify'
 //shared
@@ -70,7 +70,7 @@ export function MeasurementForm({ measurement }: MeasurementFormProps) {
     const visceralFat = storedValue(measurement, 'VISCERAL_FAT')
     const boneMass = storedValue(measurement, 'BONE_MASS')
 
-    const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<MeasurementFormValues>({
+    const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<MeasurementFormValues>({
         defaultValues: {
             level: measurement?.level ?? 'BASIC',
             measuredAt: toLocalInput(measurement ? new Date(measurement.measuredAt) : new Date()),
@@ -86,7 +86,7 @@ export function MeasurementForm({ measurement }: MeasurementFormProps) {
             boneMassUnit: boneMass.unit,
         },
     })
-    const isBioimpedance = watch('level') === 'BIOIMPEDANCE'
+    const isBioimpedance = useWatch({ control, name: 'level' }) === 'BIOIMPEDANCE'
 
     const onSubmit: SubmitHandler<MeasurementFormValues> = async (data) => {
         const component = (name: ComponentName): MeasurementValueDto | undefined =>

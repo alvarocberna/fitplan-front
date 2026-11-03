@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef, ReactNode } from 'react'
 import { CompleteConsultationDto, PersonalInfoDto, AnamnesisDto, MeasurementsDto, NutritionPlanDto } from '@/features';
 
 const STORAGE_KEY = 'consulta_context'
@@ -51,12 +51,14 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     //indica si ya se terminó de leer el estado persistido en el cliente (útil para mostrar skeletons mientras tanto)
     const [isHydrated, setIsHydrated] = useState(false)
 
-    // espejo del estado siempre actualizado (se reasigna en cada render, no en un efecto), para que los
+    // espejo del estado siempre actualizado (useLayoutEffect: corre antes que cualquier useEffect, también los de los hijos), para que los
     // setters de storage lean el valor más reciente aunque se invoquen desde un closure viejo (ej. un
     // callback capturado en un useEffect con dependencias fijas de otro componente, como el polling de
     // /ordenes/[id]) y así no pisen en localStorage campos que ya fueron hidratados después de ese closure
     const stateRef = useRef({ personalInfo, anamnesis, measurements, nutritionPlan })
-    stateRef.current = { personalInfo, anamnesis, measurements, nutritionPlan }
+    useLayoutEffect(() => {
+        stateRef.current = { personalInfo, anamnesis, measurements, nutritionPlan }
+    }, [personalInfo, anamnesis, measurements, nutritionPlan])
 
     // actualiza el espejo en el acto (sin esperar al próximo render) y persiste: así dos mutaciones
     // seguidas en el mismo evento (ej. resetAnamnesis() + resetMeasurements()) no se pisan en storage
@@ -68,6 +70,8 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     //carga el estado persistido recién montado en el cliente, para que el primer render coincida con el del servidor y no genere un hydration mismatch
     useEffect(() => {
         const saved = loadFromStorage()
+        // localStorage solo existe en el cliente: leerlo en el primer render causaría un hydration mismatch.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         _setPersonalInfo(saved.personalInfo)
         _setAnamnesis(saved.anamnesis)
         _setMeasurements(saved.measurements)

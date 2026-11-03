@@ -1,17 +1,17 @@
 //react
-import { UseFormRegister } from "react-hook-form";
+import { FieldValues, Path, RegisterOptions, UseFormRegister } from "react-hook-form";
 
-interface InputFieldProps {
+interface InputFieldProps<T extends FieldValues> {
   label: string;
-  name: string;
+  name: Path<T>;
   type?: string;
-  register: UseFormRegister<any>; // recibe el register del form
-  rules?: object; // reglas de validación
+  register: UseFormRegister<T>; // recibe el register del form
+  rules?: RegisterOptions<T, Path<T>>; // reglas de validación
   defaultValue?: number | string;
   disabled?: boolean;
 }
 
-export function InputOutlined({ label, name, type = "text", register, rules, defaultValue = "", disabled = false }: InputFieldProps) {
+export function InputOutlined<T extends FieldValues>({ label, name, type = "text", register, rules, defaultValue = "", disabled = false }: InputFieldProps<T>) {
   return (
     <div className="relative w-full mt-3">
       <input

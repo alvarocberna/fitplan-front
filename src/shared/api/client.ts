@@ -64,7 +64,7 @@ async function toApiError(res: Response, requestId: string): Promise<ApiError> {
 export async function apiFetch<T>(
     endpoint: string,
     method?: string,
-    data?: any,
+    data?: unknown,
     accessToken?: string | null,
 ): Promise<T>{
 

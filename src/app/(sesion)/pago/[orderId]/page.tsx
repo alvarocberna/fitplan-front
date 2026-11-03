@@ -113,6 +113,8 @@ function Payment() {
         return () => {
             cancelled = true
         }
+        // Solo debe correr al entrar o al cambiar de orden: las funciones que usa se recrean en cada render.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [orderId])
 
     const onPay = async () => {

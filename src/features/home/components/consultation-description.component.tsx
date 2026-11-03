@@ -1,10 +1,5 @@
-//next
-import Link from 'next/link';
 //fontawesome
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faNotesMedical, faRulerVertical, faCreditCard, faClipboardCheck } from '@fortawesome/free-solid-svg-icons'
-//shared
-import {Card, SubsectionHead, SubsectionTitle} from '@/shared';
 
 const steps = [
   {

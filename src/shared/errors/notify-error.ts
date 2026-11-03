@@ -15,6 +15,8 @@ const ERROR_TOAST_MS = 6000
 // Devuelve true si redirigió a login.
 export function notifyError(error: unknown, fallback: string): boolean {
     if (isSessionRequiredError(error)) {
+        // Se llama fuera de un componente y debe recargar la página completa, sin el estado de la sesión vencida.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.assign(SESSION_EXPIRED_LOGIN_URL)
         return true
     }

@@ -40,9 +40,10 @@ export default function OrderPage() {
     const [pollingRun, setPollingRun] = useState(0)
 
     //referencia para calcular cuánto tiempo lleva generando, sin re-crear el intervalo en cada render
-    const startRef = useRef(Date.now())
+    const startRef = useRef<number | null>(null)
 
     useEffect(() => {
+        startRef.current ??= Date.now()
         // variable local (no un ref) a propósito: cada invocación de este efecto necesita su
         // propia bandera. Con un ref compartido, el doble montaje de Strict Mode en desarrollo
         // (mount -> cleanup -> mount) deja `stopped` en `true` para siempre desde el primer
@@ -120,7 +121,7 @@ export default function OrderPage() {
                     setViewState('unreachable')
                     return
                 }
-                if (Date.now() - startRef.current > DELAY_THRESHOLD_MS) setIsDelayed(true)
+                if (Date.now() - (startRef.current ?? Date.now()) > DELAY_THRESHOLD_MS) setIsDelayed(true)
             }
         }
 
@@ -130,6 +131,8 @@ export default function OrderPage() {
             cancelled = true
             clearInterval(intervalId)
         }
+        // setNutritionPlan cambia en cada render del provider: incluirlo reiniciaría el polling; lee su estado por un ref.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [orderId, pollingRun])
 
     const onRetry = () => {

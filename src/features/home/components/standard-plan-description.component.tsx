@@ -93,7 +93,7 @@ export function StandardPlanDescription() {
     //depende de la cantidad de ítems (no de la referencia de `items`, que cambia cada vez que
     //recalcula el respaldo/BD): si la cantidad no cambió (hoy siempre 4), el carrusel sigue
     //girando sin reiniciarse justo cuando llegan los datos reales.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [items.length])
 
   return (

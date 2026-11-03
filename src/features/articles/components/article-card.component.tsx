@@ -17,8 +17,8 @@ interface ArticleCardProps {
 const STYLE = INTEGRATION_CONFIG.article.style;
 
 export function ArticleCardPublic({ article }: ArticleCardProps){
-    let date = new Date(article.fecha_publicacion)
-    let fecha = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }).replace(/\//g, '-');
+    const date = new Date(article.fecha_publicacion)
+    const fecha = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }).replace(/\//g, '-');
 
     return(
         <>

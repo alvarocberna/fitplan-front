@@ -8,7 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev      # Next.js dev server (turbopack) on :3000
 npm run build    # production build
 npm run start    # serve production build on :3000
-npm run lint     # next lint (no ESLint config in the repo yet — it doesn't run)
+npm run lint     # eslint . --fix (flat config in eslint.config.mjs; `next lint` no longer exists)
+npm run lint:check # same, without --fix: the one for CI
 npm run test     # unit tests (Vitest + React Testing Library), once
 npm run test:e2e # e2e (Playwright): fake backend on :3101 + production build (.next-e2e) on :3100, by itself
 npm run test:e2e:dev # same against `next dev`: faster to start, for writing tests

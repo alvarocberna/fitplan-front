@@ -151,57 +151,6 @@ function MealTimeSummary({ mealTime }: { mealTime: MyPlanMealTimeDto }) {
     )
 }
 
-function macrosLine(macros: MacrosDto): string {
-    return MACRO_ROWS.map(({ key, label, unit }) => `${label}: ${macros[key]} ${unit}`).join(' · ')
-}
-
-function NoteList({ title, notes }: { title: string; notes: string[] }) {
-    if (notes.length === 0) return null
-    return (
-        <div>
-            <p className="text-zinc-500">{title}</p>
-            <ul className="list-disc pl-6">
-                {notes.map((note) => (
-                    <li key={note}>{note}</li>
-                ))}
-            </ul>
-        </div>
-    )
-}
-
-function MealTime({ mealTime }: { mealTime: MyPlanMealTimeDto }) {
-    const label = MEAL_TIME_LABELS[mealTime.time] ?? mealTime.time
-    const portions = portionGroupsOf(mealTime)
-
-    return (
-        <section
-            aria-label={label}
-            className="w-full border border-zinc-200 rounded-2xl p-4 flex flex-col gap-2 text-left text-sm text-zinc-700"
-        >
-            <div className="flex flex-wrap items-baseline gap-2">
-                <h3 className="font-semibold text-zinc-900">{label}</h3>
-                {mealTime.hour && <span className="text-zinc-500">{mealTime.hour}</span>}
-            </div>
-            <p>{macrosLine(mealTime.intake)}</p>
-            {portions.length > 0 && (
-                <div>
-                    <p className="text-zinc-500">Porciones:</p>
-                    <ul className="list-disc pl-6">
-                        {portions.map((group) => (
-                            <li key={group}>
-                                {PORTION_GROUP_LABELS[group]}: {mealTime.portions[group]}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-            <NoteList title="Ejemplos:" notes={mealTime.examples} />
-            <NoteList title="Equivalencias:" notes={mealTime.equivalences} />
-            <NoteList title="Comentarios:" notes={mealTime.comments} />
-        </section>
-    )
-}
-
 // Card de un suplemento: nombre con ícono; Dosis (1/4) y Toma (3/4) en una fila; aporte nutricional en un card
 // interno de 4 columnas; y Efectos y Consideraciones en 2 columnas.
 function Supplement({ supplement }: { supplement: MyPlanSupplementDto }) {
