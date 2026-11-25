@@ -2,16 +2,74 @@
 
 Aplicación web construida con [Next.js](https://nextjs.org) que sirve como interfaz de un agente de IA experto en nutrición deportiva. El frontend recopila la información del usuario en varios pasos (datos personales, anamnesis conversacional y evaluación física), la envía a un backend en NestJS que la procesa con IA, y genera un plan nutricional en formato PDF. El plan solo se genera una vez que el usuario paga la consulta.
 
-El backend es un proyecto aparte (NestJS + SQLite) y no vive en este repo. Su base de datos tiene una única entidad: **`orden`**, que concentra tanto los datos de la consulta como el estado de pago y de generación del plan. El frontend habla con él a través de `NEXT_PUBLIC_BACKEND_URL` (`src/shared/api/client.ts`).
+Es uno de los tres repos del workspace Fitplan: el backend (NestJS + PostgreSQL) vive en `../fitplan-back` y la base de datos local en `../fitplan-db`. El navegador nunca llama al backend directo: todo pasa por Server Actions que corren en el servidor (`src/shared/api/client.ts`).
 
 ## Stack
 
-- [Next.js](https://nextjs.org) 15 (App Router) + React 19 + TypeScript
+- [Next.js](https://nextjs.org) 16 (App Router) + React 19 + TypeScript
 - Tailwind CSS 4
 - React Hook Form para formularios
 - `@react-pdf/renderer` para la generación del plan en PDF
 - `@nivo` para gráficos
 - FontAwesome / Heroicons para iconografía
+- Autenticación con AWS Cognito (OIDC) y pago con Webpay Plus (Transbank)
+- Vitest (unit) y Playwright (e2e)
+
+## Requisitos previos
+
+- Node.js 22
+- El backend corriendo en `http://localhost:3001` (ver `../fitplan-back/README.md`), con su base de datos levantada (`docker compose up -d` en `../fitplan-db`)
+- Un User Pool de Cognito para el login (ver `../doc/flows/auth-flow.md`)
+
+## Puesta en marcha
+
+```bash
+cp .env.template .env   # y completar las variables (ver abajo)
+npm install
+npm run dev             # http://localhost:3000
+```
+
+## Variables de entorno
+
+El detalle de cada una está comentado en `.env.template`.
+
+| Variable | Obligatoria | Para qué sirve |
+|---|---|---|
+| `BACKEND_URL` | Sí | URL del backend (solo servidor). Ej.: `http://localhost:3001` |
+| `SESSION_SECRET` | Sí | Cifra la cookie de sesión (mínimo 32 caracteres) |
+| `COGNITO_ISSUER_URL`, `COGNITO_CLIENT_ID`, `COGNITO_CLIENT_SECRET`, `COGNITO_REDIRECT_URI`, `COGNITO_DOMAIN` | Sí | Login con Cognito (solo servidor) |
+| `NEXT_PUBLIC_WEBPAY_ENABLED` | No | `true` habilita el pago con Webpay. En `npm run dev` viene habilitado por defecto. Se lee en el build |
+| `NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION` | No | `true` muestra los botones de pago simulado (solo desarrollo y pruebas) |
+| `WEBPAY_FORM_ORIGINS` | No | Orígenes a los que el CSP deja enviar el formulario de pago (por defecto, Webpay) |
+| `PLANS_S3_BUCKET_ORIGIN` | No | Origen del bucket S3 de los planes, permitido por el CSP |
+| `NEXT_PUBLIC_BACKEND_CMS_URL`, `NEXT_PUBLIC_PROYECTO_ID` | No | Backend CMS de artículos y testimonios, y el id del proyecto en ese CMS |
+
+## Comandos
+
+```bash
+npm run dev              # servidor de desarrollo (:3000)
+npm run build            # build de producción
+npm run lint:check       # ESLint (npm run lint además corrige)
+npm test                 # tests unitarios (Vitest)
+npm run test:e2e         # e2e (Playwright): backend falso en :3101 + build de producción en :3100
+npm run test:e2e:dev     # e2e contra next dev, más rápido de arrancar
+npm run e2e:contract:update  # regenera el contrato del backend que validan los e2e
+```
+
+Más detalle sobre los tests en `../doc/doc-front/testing.md`.
+
+## Estructura
+
+```
+src/
+  app/        rutas (App Router); el área con sesión vive en el route group (sesion)
+  features/   un módulo por funcionalidad: consultation, plans, dashboard, profile, measurements, ...
+  shared/     componentes, contexto, cliente de la API, auth y errores compartidos
+  proxy.ts    CSP con nonce y protección de rutas
+e2e/          specs de Playwright, backend falso y copia del contrato del backend
+```
+
+Las reglas de arquitectura (Server Actions, barrels, DTOs) están en `CLAUDE.md`.
 
 ## Flujo principal
 
@@ -91,7 +149,11 @@ Si la confirmación falla (backend o Transbank caídos), el handler redirige a *
 **Webpay aún no validado.** Mientras Transbank no valide la integración, `NEXT_PUBLIC_WEBPAY_ENABLED` queda sin
 definir: la página muestra un aviso ("El pago con Webpay aún no está validado…") y "Pagar con Webpay" queda
 deshabilitado. Con `NEXT_PUBLIC_WEBPAY_ENABLED=true` (se lee en el build) el pago funciona normalmente; `.env.test` y
-`vitest.config.ts` lo definen para las pruebas.
+`vitest.config.ts` lo definen para las pruebas. En desarrollo (`npm run dev`) Webpay queda **habilitado por defecto**: el
+backend usa el ambiente de integración de Transbank y se paga con sus
+[tarjetas de prueba](https://www.transbankdevelopers.cl/documentacion/como_empezar#tarjetas-de-prueba) (p. ej. VISA
+`4051 8856 0044 6623`, CVV `123`, cualquier fecha futura; RUT `11.111.111-1`, clave `123`). Para apagarlo en desarrollo:
+`NEXT_PUBLIC_WEBPAY_ENABLED=false`.
 
 **Pago simulado (solo desarrollo y pruebas).** Con `NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION=true` la página
 muestra además "Simular pago" (`simulatePaymentAction` → `POST dev/orders/{orderId}/simulate-payment`) y
@@ -187,49 +249,15 @@ Vive en otro repo (`../fitplan-back`). Su contrato está documentado en su READM
 | GET | `plans/personalized` | `getPersonalizedProductAction` | precio del plan personalizado (lo muestran `/consulta/inicio` y `/consulta/generar-orden`; es el monto con que el backend crea la orden) |
 | POST | `plans/standard/:code/purchase` | `createPredefinedOrderAction` | compra de un plan estándar (sin body) |
 
-## Deuda técnica
 
-La URL del backend está como variable de entorno publica. Eso es innecesario y peligroso. No debería
-exponer la url de backend. Cambiar a una variable privada, y cambiar el método de fetch para que sea
-compatible con este cambio.
+## Despliegue y CI
 
-Sería bueno que la información recopilada en anamnesis se vaya almacenando en cada respuesta, y no solo
-al final del chat. Esto ayudaría economicamente en caso de que el usuario recargue la página, ya que
-se evitaría volver a hacer las mismas request que van consumiendo tokens. Además mejoraría la experiencia
-del usuario. Habría que añadir un button de reset eso si por si el usario abandona intencionalmente, y luego
-quiere una nueva conversación desde cero.
+- **Despliegue**: AWS Amplify, configurado en `amplify.yml`. Amplify solo expone las variables durante el build, así que las de servidor se incrustan al construir (`SERVER_ENV_KEYS` en `next.config.ts`): una variable de servidor nueva se agrega ahí y en el `grep` de `amplify.yml`. Más detalle en `../doc/architecture/deployment-guide.md`.
+- **CI**: GitHub Actions (`.github/workflows/ci.yml`) en cada PR y en cada push a `main` y `dev`: lint, tipos, tests unitarios, e2e y `npm audit`. Ver `../doc/architecture/ci.md`.
 
-## Getting Started
 
-First, run the development server:
+## Contribuir
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Ramas desde `dev`, con PR hacia `dev`/`main`. El CI debe pasar.
+- Commits con el formato `tipo(alcance): descripción` en español, p. ej. `fix(csp): ...`, `update(doc): ...`.
+- Un cambio en el contrato con el backend se despliega junto con `fitplan-back` y actualiza el backend falso de los e2e.
